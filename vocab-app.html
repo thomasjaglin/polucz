@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stable Fluid Glass Navigation</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
+  <style>
+    .font-instrument { font-family: 'Instrument Sans', sans-serif; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+    ::view-transition-group(*) {
+      animation-duration: 0.4s;
+      animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* 3D Flip Architecture */
+    .perspective { perspective: 1200px; }
+    
+    .card-inner {
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out;
+      transform-style: preserve-3d;
+      transform-origin: center center;
+    }
+    .card-inner.flip-out { 
+      transform: rotateX(90deg); 
+      opacity: 0; 
+      transition: transform 0.3s ease-in, opacity 0.3s ease-in; 
+    }
+
+    #modal-content-wrapper {
+      transform: rotateX(-90deg) scale(0.85);
+      opacity: 0;
+      transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+      transform-style: preserve-3d;
+      transform-origin: center center;
+    }
+    #modal-content-wrapper.flip-in {
+      transform: rotateX(0deg) scale(1);
+      opacity: 1;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out;
+    }
+
+    /* Hiding standard scrollbar for cleaner UI */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* The Advanced Liquid Backdrop Class */
+    .kube-glass-bg {
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: url(#kube-liquid-glass);
+      backdrop-filter: url(#kube-liquid-glass);
+      transform: translateZ(0); 
+    }
+  </style>
+</head>
+<body class="bg-[#121212] overflow-hidden">
+
+  <!-- The Exact Kube.io Pipeline (Adapted for procedural noise) -->
+  <svg class="absolute w-0 h-0 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="kube-liquid-glass" color-interpolation-filters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
+        <!-- 1. Blur Source -->
+        <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blurred_source"></feGaussianBlur>
+        <!-- Procedural Map Generation -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="2" result="displacement_map"></feTurbulence>
+        <!-- 2. Displace -->
+        <feDisplacementMap in="blurred_source" in2="displacement_map" scale="55" xChannelSelector="R" yChannelSelector="G" result="displaced"></feDisplacementMap>
+        <!-- 3. Saturate -->
+        <feColorMatrix in="displaced" type="saturate" result="displaced_saturated" values="4"></feColorMatrix>
+        <!-- Procedural Specular Lighting Generation -->
+        <feSpecularLighting in="displacement_map" surfaceScale="3" specularConstant="1.2" specularExponent="40" lighting-color="#ffffff" result="specular_raw">
+          <feDistantLight azimuth="90" elevation="45"></feDistantLight>
+        </feSpecularLighting>
+        <feColorMatrix in="specular_raw" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.33 0.33 0.33 0 0" result="specular_layer"></feColorMatrix>
+        <!-- 4. The Blending Pipeline -->
+        <feComposite in="displaced_saturated" in2="specular_layer" operator="in" result="specular_saturated"></feComposite>
+        <feComponentTransfer in="specular_layer" result="specular_faded">
+          <feFuncA type="linear" slope="0.2"></feFuncA>
+        </feComponentTransfer>
+        <feBlend in="specular_saturated" in2="displaced" mode="normal" result="withSaturation"></feBlend>
+        <feBlend in="specular_faded" in2="withSaturation" mode="normal"></feBlend>
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- Dotted Background & Overlay -->
+  <div class="absolute inset-0 z-0" style="background-image: radial-gradient(circle, rgba(217, 217, 217, 0.52) 3px, transparent 3px); background-size: 10px 10px;"></div>
+  <div class="absolute inset-0 z-10" style="background: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(18, 18, 18, 0.99) 62.02%, rgba(18, 18, 18, 0.65) 100%);"></div>
+
+  <!-- Heavy Blur Overlay Modal -->
+  <div id="modal-overlay" onclick="if(event.target === this) closeModal()" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/60 backdrop-blur-xl transition-opacity duration-300 opacity-0 cursor-pointer">
+    <div id="modal-content-wrapper" class="w-full max-w-[400px] cursor-default">
+      <!-- Content injected by JS -->
+    </div>
+  </div>
+
+  <!-- Page Specific Gradients Layer -->
+  <div id="page-gradient-container" class="pointer-events-none absolute inset-0 z-20 flex justify-center overflow-hidden" style="view-transition-name: page-gradient;"></div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pt-[82px] pb-[120px] overflow-y-auto no-scrollbar">
+    
+    <!-- Top Header Container -->
+    <div id="top-header" class="absolute top-4 right-6 flex items-center gap-[12px] z-50"></div>
+
+    <div id="main-content" class="flex w-full flex-col h-full relative z-30" style="view-transition-name: page-content;"></div>
+
+    <!-- Bottom Navigation Area -->
+    <div id="bottom-nav-wrapper" class="fixed bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-[60] transition-all duration-300">
+      <!-- Static Background Glow -->
+      <div class="pointer-events-none absolute top-1/2 left-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="367" height="82" viewBox="0 0 367 82" fill="none">
+          <g opacity="0.42" filter="url(#filter0_fn_36_4379)">
+            <rect x="14" y="14" width="339" height="54" rx="24" fill="#080144"/>
+            <rect x="23.6033" y="21.8389" width="326.516" height="43.5484" rx="21.7742" fill="#170B6E"/>
+            <rect x="33.2067" y="30.5483" width="313.071" height="33.9677" rx="16.9839" fill="#3D309D"/>
+            <rect x="42.8103" y="37.5156" width="288.102" height="20.0323" rx="10.0161" fill="#695DCA"/>
+            <rect x="110.994" y="41.8711" width="200.711" height="9.58065" rx="4.79032" fill="#988DEF"/>
+          </g>
+          <defs>
+            <filter id="filter0_fn_36_4379" x="0" y="0" width="367" height="82" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+              <feGaussianBlur stdDeviation="7" result="effect1_foregroundBlur_36_4379"/>
+            </filter>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- Interactive Nav Container -->
+      <nav id="nav-container" class="flex w-[332px] items-center justify-between" style="view-transition-name: nav-bar;"></nav>
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------------------------
+    // DATA & STATE
+    // ---------------------------------------------
+    
+    let activeFilters = { noun: true, verb: true, adjective: true, unknown: true };
+    let activeId = 'folder';
+    let searchQuery = '';
+    let activeCardElement = null;
+
+    const tagGradients = {
+      noun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19.114" cy="11.3499" rx="19.114" ry="11.3499" transform="matrix(0.891202 -0.453606 0.39995 0.916537 -11.1111 -5.65967)" fill="#FFE79E"/><ellipse cx="25.0001" cy="20" rx="24.0741" ry="14" fill="#FF5D00" fill-opacity="0.74"/><ellipse cx="47.2221" cy="7.99805" rx="9.25926" ry="11" fill="#FDCF2D" fill-opacity="0.49"/></svg>`,
+      verb: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 47 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19.0426" cy="11.3414" rx="19.0426" ry="11.3414" transform="matrix(0.890334 -0.455307 0.398367 0.917226 -11.0588 -5.65967)" fill="#CB9EFF"/><ellipse cx="23.9608" cy="20" rx="23.9608" ry="14" fill="#0099FF" fill-opacity="0.74"/><ellipse cx="47.0001" cy="7.99805" rx="9.21569" ry="11" fill="#2DFD8E" fill-opacity="0.49"/></svg>`,
+      adjective: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19.2056" cy="12.795" rx="19.2056" ry="12.795" transform="matrix(0.8923 -0.451444 0.401972 0.915652 -11.178 -5.65967)" fill="#9BBD21"/><ellipse cx="32.1369" cy="20" rx="29.3425" ry="14" fill="#6AFF00" fill-opacity="0.74"/><ellipse cx="62.411" cy="7" rx="9.31507" ry="11" fill="#055015" fill-opacity="0.97"/></svg>`,
+      unknown: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="11.9186" cy="-2.61409" rx="20.3379" ry="12.9517" transform="rotate(-25.2336 11.9186 -2.61409)" fill="#4821BD"/><ellipse cx="33" cy="20" rx="30" ry="14" fill="#BF00FF" fill-opacity="0.74"/><ellipse cx="67" cy="7" rx="10" ry="11" fill="#50052B" fill-opacity="0.97"/></svg>`
+    };
+
+    const vocabularyData = [
+      { 
+        pl: 'mówić', en: 'to speak', type: 'verb', left: 'impf', right: 'impf',
+        tags: ['verb'],
+        conjugations: {
+          present: ['mówię', 'mówisz', 'mówi', 'mówimy', 'mówicie', 'mówią'],
+          past: ['mówiłem', 'mówiłeś', 'mówił', 'mówiliśmy', 'mówiliście', 'mówili'],
+          past2: ['mówiłam', 'mówiłaś', 'mówiła', 'mówiłyśmy', 'mówiłyście', 'mówiły']
+        },
+        otherForm: { label: 'pf form', word: 'powiedzieć' }
+      },
+      { 
+        pl: 'książka', en: 'book', type: 'noun', left: 'nom', right: 'f',
+        tags: ['noun'],
+        gender: 'f.', plAlt: 'książki',
+        declensions: {
+          cases: ['mianownik', 'dopełniacz', 'celownik', 'biernik', 'narzędnik', 'miejscownik', 'wołacz'],
+          singular: ['książka', 'książki', 'książce', 'książkę', 'książką', 'książce', 'książko'],
+          plural: ['książki', 'książek', 'książkom', 'książki', 'książkami', 'książkach', 'książki']
+        }
+      },
+      { 
+        pl: 'dom', en: 'house', type: 'noun', left: 'nom', right: 'm',
+        tags: ['noun'],
+        gender: 'm.', plAlt: 'domy',
+        declensions: {
+          cases: ['mianownik', 'dopełniacz', 'celownik', 'biernik', 'narzędnik', 'miejscownik', 'wołacz'],
+          singular: ['dom', 'domu', 'domowi', 'dom', 'domem', 'domu', 'domu'],
+          plural: ['domy', 'domów', 'domom', 'domy', 'domami', 'domach', 'domy']
+        }
+      },
+      { 
+        pl: 'piękny', en: 'beautiful', type: 'adjective', left: 'nom', right: 'm',
+        tags: ['adjective'],
+        info: 'Used for describing appearances.'
+      }
+    ];
+
+    const pages = {
+      'folder': { title: 'Vocabulary List', icon: 'folder', desc: 'Browse and manage your vocabulary.', gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#4A0101"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#8B0909"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#C82A2A"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#F57D7D"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>` },
+      'dynamic_feed': { title: 'Flashcard Game', icon: 'dynamic_feed', desc: 'Memorize terms using spaced repetition.', gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#014A2D"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#098B42"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#2AC87C"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#B3F57D"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>` },
+      'question_mark': { title: 'Quiz Game', icon: 'question_mark', desc: 'Test your knowledge.', gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#484A01"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#8B8009"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#C8AB2A"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#FFDEB3"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>` },
+      'spatial_audio': { title: 'Audio Playback', icon: 'spatial_audio', desc: 'Listen to pronunciation guides.', gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#14014A"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#16098B"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#2A59C8"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#7DD1F5"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>` },
+      'add_page': { 
+        title: 'Add Vocabulary', 
+        icon: 'add_box', 
+        desc: 'Ingest new terms into your list.', 
+        gradient: `
+          <!-- Top Left Gradient -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 401 463" fill="none" class="absolute -top-[5%] -left-[20%] w-[509px] max-w-none opacity-[0.28] blur-[46px] mix-blend-screen transition-all">
+            <ellipse cx="-11.3347" cy="72.7827" rx="254.534" ry="325.96" transform="rotate(-57.5101 -11.3347 72.7827)" fill="#014A2D"/>
+            <ellipse cx="-44.6114" cy="51.5914" rx="254.534" ry="286.508" transform="rotate(-57.5101 -44.6114 51.5914)" fill="#094A8B"/>
+            <ellipse cx="-84.4344" cy="26.2312" rx="254.534" ry="239.296" transform="rotate(-57.5101 -84.4344 26.2312)" fill="#2A5FC8"/>
+            <ellipse cx="-128.622" cy="-1.90822" rx="254.534" ry="186.909" transform="rotate(-57.5101 -128.622 -1.90822)" fill="#A97DF5"/>
+            <ellipse cx="-165.171" cy="-25.184" rx="254.534" ry="143.577" transform="rotate(-57.5101 -165.171 -25.184)" fill="white"/>
+          </svg>
+          <!-- Bottom Right Gradient -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 535" fill="none" class="absolute top-[35%] -right-[40%] w-[779px] max-w-none opacity-[0.31] blur-[46px] mix-blend-screen transition-all">
+            <ellipse cx="420.864" cy="636.619" rx="389.525" ry="509.094" transform="rotate(149.296 420.864 636.619)" fill="#014A2D"/>
+            <ellipse cx="452.325" cy="689.598" rx="389.525" ry="447.477" transform="rotate(149.296 452.325 689.598)" fill="#094A8B"/>
+            <ellipse cx="489.975" cy="753" rx="389.525" ry="373.739" transform="rotate(149.296 489.975 753)" fill="#2A5FC8"/>
+            <ellipse cx="531.751" cy="823.349" rx="389.525" ry="291.921" transform="rotate(149.296 531.751 823.349)" fill="#A97DF5"/>
+            <ellipse cx="566.307" cy="881.539" rx="389.525" ry="224.244" transform="rotate(149.296 566.307 881.539)" fill="white"/>
+          </svg>
+        `
+      },
+      'api_config': { 
+        title: 'API Configuration', 
+        icon: 'api', 
+        desc: 'Configure your LLM provider.', 
+        gradient: `
+          <!-- Top Left Gradient -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 401 463" fill="none" class="absolute -top-[5%] -left-[20%] w-[509px] max-w-none opacity-[0.28] blur-[46px] mix-blend-screen transition-all">
+            <ellipse cx="-11.3347" cy="72.7827" rx="254.534" ry="325.96" transform="rotate(-57.5101 -11.3347 72.7827)" fill="#4A014A"/>
+            <ellipse cx="-44.6114" cy="51.5914" rx="254.534" ry="286.508" transform="rotate(-57.5101 -44.6114 51.5914)" fill="#8B098B"/>
+            <ellipse cx="-84.4344" cy="26.2312" rx="254.534" ry="239.296" transform="rotate(-57.5101 -84.4344 26.2312)" fill="#C82AC8"/>
+            <ellipse cx="-128.622" cy="-1.90822" rx="254.534" ry="186.909" transform="rotate(-57.5101 -128.622 -1.90822)" fill="#F57DF5"/>
+            <ellipse cx="-165.171" cy="-25.184" rx="254.534" ry="143.577" transform="rotate(-57.5101 -165.171 -25.184)" fill="white"/>
+          </svg>
+        `
+      }
+    };
+
+    const pageOrder = ['folder', 'dynamic_feed', 'question_mark', 'spatial_audio'];
+
+    const activeSvgMask = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 42 42" fill="none" style="transform: rotate(165deg) scale(1.2);">
+        <g filter="url(#filter0_fn_13_8836_active)">
+          <ellipse cx="13.2037" cy="40.9201" rx="23.6306" ry="24.644" transform="rotate(165 13.2037 40.9201)" fill="#4A0101"/>
+          <ellipse cx="13.9757" cy="43.8012" rx="23.6306" ry="21.6613" transform="rotate(165 13.9757 43.8012)" fill="#8B0909"/>
+          <ellipse cx="14.8996" cy="47.2491" rx="23.6306" ry="18.0919" transform="rotate(165 14.8996 47.2491)" fill="#C82A2A"/>
+          <ellipse cx="15.9246" cy="51.0747" rx="23.6306" ry="14.1312" transform="rotate(165 15.9246 51.0747)" fill="#F57D7D"/>
+          <ellipse cx="16.7726" cy="54.2392" rx="23.6306" ry="10.8551" transform="rotate(165 16.7726 54.2392)" fill="white"/>
+        </g>
+        <defs>
+          <filter id="filter0_fn_13_8836_active" x="-44.0021" y="-17.1631" width="117.275" height="117.043" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feGaussianBlur stdDeviation="10.35" result="effect1_foregroundBlur_13_8836"/>
+          </filter>
+        </defs>
+      </svg>
+    `;
+
+    // ---------------------------------------------
+    // LOGIC & RENDERERS
+    // ---------------------------------------------
+
+    function toggleSettings() {
+      const dropdown = document.getElementById('settings-dropdown');
+      if (dropdown) {
+        if (dropdown.classList.contains('hidden')) {
+          dropdown.classList.remove('hidden');
+          dropdown.classList.add('flex');
+        } else {
+          dropdown.classList.add('hidden');
+          dropdown.classList.remove('flex');
+        }
+      }
+    }
+
+    // Close settings when clicking outside
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('settings-dropdown');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!e.target.closest('#settings-dropdown') && !e.target.closest('button[onclick="toggleSettings()"]')) {
+          toggleSettings();
+        }
+      }
+    });
+
+    function importJson() {
+      alert('Importing JSON...');
+      toggleSettings();
+    }
+
+    function exportJson() {
+      alert('Exporting JSON...');
+      toggleSettings();
+    }
+
+    function handleSearch(val) {
+      searchQuery = val.toLowerCase();
+      renderVocabList();
+    }
+
+    function toggleFilter(id) {
+      activeFilters[id] = !activeFilters[id];
+      triggerRender();
+    }
+
+    function generateFilterTag(id, label) {
+      const isActive = activeFilters[id];
+      const svgBg = isActive ? tagGradients[id] : '';
+      const textStyle = isActive ? 'text-[#F8FAFC]' : 'text-[#F8FAFC]/50';
+      const borderStyle = isActive ? 'border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]' : 'border-transparent hover:bg-[#F8FAFC]/10';
+
+      return `
+        <button onclick="toggleFilter('${id}')" class="relative flex overflow-hidden items-center justify-center rounded-[124px] border bg-[#F8FAFC]/10 px-[12px] py-[4px] transition-all duration-300 ${borderStyle} kube-glass-bg">
+          ${isActive ? `<div class="absolute inset-0 z-0 flex items-center justify-center mix-blend-screen opacity-80">${svgBg}</div>` : ''}
+          <span class="relative z-10 font-instrument text-[10px] font-normal ${textStyle} transition-colors">${label}</span>
+        </button>
+      `;
+    }
+
+    function refreshCard(dataIndex) {
+      const btn = document.getElementById(`refresh-btn-${dataIndex}`);
+      if (btn) {
+        btn.querySelector('span').classList.add('animate-spin');
+        btn.classList.add('text-white');
+        setTimeout(() => {
+          btn.querySelector('span').classList.remove('animate-spin');
+          btn.classList.remove('text-white');
+        }, 1200); // Mock AI refresh time
+      }
+    }
+
+    function findExamples(dataIndex) {
+      const container = document.getElementById(`examples-container-${dataIndex}`);
+      const btn = document.getElementById(`find-examples-btn-${dataIndex}`);
+      if (container && btn) {
+        btn.innerHTML = '<span class="material-symbols-rounded animate-spin">progress_activity</span>';
+        btn.classList.add('text-white');
+        setTimeout(() => {
+          container.classList.remove('hidden');
+          container.classList.add('flex');
+          btn.style.display = 'none';
+        }, 800); // Mock AI generation time
+      }
+    }
+
+    // Modal Builder Logic
+    function openModal(dataIndex, el) {
+      activeCardElement = el.querySelector('.card-inner');
+      const modal = document.getElementById('modal-overlay');
+      const wrapper = document.getElementById('modal-content-wrapper');
+      
+      const v = vocabularyData[dataIndex];
+      
+      let modalInnerHtml = `
+        <div class="relative w-full rounded-[40px] bg-gradient-to-br from-white/20 via-white/5 to-transparent p-[1px] shadow-[0_16px_64px_rgba(0,0,0,0.6)]">
+          <div class="flex w-full flex-col rounded-[39px] bg-[#1a1a1a]/95 p-[32px] backdrop-blur-3xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] transition-all duration-300">
+            
+            <!-- Close Button -->
+            <button onclick="closeModal()" class="absolute -top-16 right-0 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all z-10 backdrop-blur-md border border-white/10">
+              <span class="material-symbols-rounded text-[28px]">close</span>
+            </button>
+
+            <!-- Top Row: Tag & Refresh -->
+            <div class="flex items-center justify-between w-full mb-8">
+              <div class="relative flex overflow-hidden items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[16px] py-[6px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                 <div class="absolute inset-0 z-0 flex items-center justify-center mix-blend-screen opacity-70">${tagGradients[v.type] || tagGradients['unknown']}</div>
+                 <span class="relative z-10 font-instrument text-[12px] font-medium text-[#F8FAFC] capitalize">${v.type}</span>
+              </div>
+              
+              <button onclick="refreshCard(${dataIndex})" class="flex h-[38px] w-[38px] items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all" id="refresh-btn-${dataIndex}">
+                <span class="material-symbols-rounded text-[20px]">refresh</span>
+              </button>
+            </div>
+
+            <!-- Word & Translation -->
+            <div class="flex flex-col gap-1 mb-8">
+              <h1 class="font-instrument text-[42px] font-bold tracking-tight text-[#F8FAFC] leading-none flex items-baseline gap-3">
+                ${v.pl}
+                ${v.type === 'noun' ? '<span class="text-[#e879f9] italic text-[24px] font-medium">' + v.gender + '</span>' : ''}
+              </h1>
+              ${v.type === 'noun' ? '<h3 class="font-instrument text-[20px] text-white/40 leading-none mt-1 mb-1">' + v.plAlt + '</h3>' : ''}
+              <h2 class="font-instrument text-[22px] font-medium text-[#B4A0FF] mt-1">${v.en}</h2>
+            </div>
+      `;
+
+      if (v.type === 'verb' && v.conjugations) {
+        modalInnerHtml += `
+            <!-- Verb Conjugations -->
+            <div class="flex flex-col w-full mb-8">
+              <div class="grid grid-cols-3 gap-2">
+                <!-- Present Column -->
+                <div class="flex flex-col">
+                  <span class="font-instrument text-[14px] text-white/20 mb-3">present</span>
+                  ${v.conjugations.present.map(c => `<span class="font-instrument text-[16px] text-white/80 italic mb-1.5 leading-none">${c}</span>`).join('')}
+                </div>
+                <!-- Past Column 1 -->
+                <div class="flex flex-col">
+                  <span class="font-instrument text-[14px] text-white/20 mb-3">past</span>
+                  ${v.conjugations.past.map(c => `<span class="font-instrument text-[16px] text-white/80 italic mb-1.5 leading-none">${c}</span>`).join('')}
+                </div>
+                <!-- Past Column 2 (No Header) -->
+                <div class="flex flex-col pt-[34px]">
+                  ${v.conjugations.past2.map(c => `<span class="font-instrument text-[16px] text-white/80 italic mb-1.5 leading-none">${c}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+            
+            <div class="my-6 h-[1px] w-full bg-white/10"></div>
+            
+            <!-- Other Form -->
+            <div class="flex items-center gap-4 mb-2">
+               <span class="font-instrument text-[15px] text-white/20">${v.otherForm.label}</span>
+               <span class="font-instrument text-[18px] text-[#B4A0FF] italic">${v.otherForm.word}</span>
+            </div>
+        `;
+      } else if (v.type === 'noun' && v.declensions) {
+        modalInnerHtml += `
+            <!-- Noun Declensions -->
+            <div class="flex flex-col w-full mb-8">
+              <div class="grid grid-cols-3 gap-2">
+                <!-- Cases Column -->
+                <div class="flex flex-col">
+                  <span class="font-instrument text-[14px] text-white/20 mb-3">przypadek</span>
+                  ${v.declensions.cases.map(c => `<span class="font-instrument text-[16px] text-white/40 italic mb-1.5 leading-none">${c}</span>`).join('')}
+                </div>
+                <!-- Singular Column -->
+                <div class="flex flex-col">
+                  <span class="font-instrument text-[14px] text-white/20 mb-3">li. pojedyncza</span>
+                  ${v.declensions.singular.map(c => `<span class="font-instrument text-[16px] text-white/80 italic mb-1.5 leading-none">${c}</span>`).join('')}
+                </div>
+                <!-- Plural Column -->
+                <div class="flex flex-col">
+                  <span class="font-instrument text-[14px] text-white/20 mb-3">li. mnoga</span>
+                  ${v.declensions.plural.map(c => `<span class="font-instrument text-[16px] text-white/80 italic mb-1.5 leading-none">${c}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+        `;
+      } else {
+        // Fallback for other cards
+        modalInnerHtml += `
+            <div class="flex flex-col gap-4 rounded-[24px] border border-white/5 bg-white/5 p-5">
+              <p class="font-instrument text-[16px] text-white/80">${v.info || 'No additional info available.'}</p>
+            </div>
+        `;
+      }
+
+      modalInnerHtml += `
+            <!-- AI Generated Examples Section (Hidden initially) -->
+            <div id="examples-container-${dataIndex}" class="hidden flex-col gap-4 mt-6 pt-6 border-t border-white/10">
+               <span class="font-instrument text-[14px] text-white/20 mb-2">Examples</span>
+               <div class="flex flex-col gap-5">
+                 <p class="font-instrument text-[17px] text-white/90 leading-tight"><span class="text-[#B4A0FF]">Mówię</span> po polsku. <br><span class="text-[14px] text-white/40 mt-1 block">I speak Polish.</span></p>
+                 <p class="font-instrument text-[17px] text-white/90 leading-tight">Co ty <span class="text-[#B4A0FF]">mówisz</span>? <br><span class="text-[14px] text-white/40 mt-1 block">What are you saying?</span></p>
+               </div>
+            </div>
+
+            <!-- Find Examples Trigger Button -->
+            <button id="find-examples-btn-${dataIndex}" onclick="findExamples(${dataIndex})" class="mt-8 flex w-full items-center justify-center rounded-[24px] bg-white/5 py-4 font-instrument text-[16px] text-white/40 hover:bg-white/10 hover:text-white transition-all shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+              Find examples
+            </button>
+          </div>
+        </div>
+      `;
+
+      wrapper.innerHTML = modalInnerHtml;
+      
+      // 1. Flip card out (Hides it)
+      activeCardElement.classList.add('flip-out');
+      
+      // 2. Wait for card to turn, then reveal and bounce-flip the modal in
+      setTimeout(() => {
+        modal.classList.remove('hidden');
+        void modal.offsetWidth; // Force CSS reflow
+        modal.classList.remove('opacity-0');
+        modal.classList.add('opacity-100');
+        
+        requestAnimationFrame(() => {
+           wrapper.classList.remove('flip-out');
+           wrapper.classList.add('flip-in');
+        });
+      }, 250);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal-overlay');
+      const wrapper = document.getElementById('modal-content-wrapper');
+      
+      // 1. Flip modal out
+      wrapper.classList.remove('flip-in');
+      wrapper.classList.add('flip-out');
+      
+      // 2. Hide modal background and spring the original card back in
+      setTimeout(() => {
+        modal.classList.remove('opacity-100');
+        modal.classList.add('opacity-0');
+        
+        if (activeCardElement) {
+           activeCardElement.classList.remove('flip-out'); // Triggers natural spring fallback
+        }
+        
+        setTimeout(() => {
+          modal.classList.add('hidden');
+        }, 300); 
+      }, 300); 
+    }
+
+    function renderVocabList() {
+      const listContainer = document.getElementById('vocab-list-container');
+      if (!listContainer) return;
+
+      const filtered = vocabularyData.filter(v => 
+        activeFilters[v.type] && 
+        (v.pl.toLowerCase().includes(searchQuery) || v.en.toLowerCase().includes(searchQuery))
+      );
+      
+      if (filtered.length === 0) {
+        listContainer.innerHTML = `<p class="text-center text-[#F8FAFC]/40 mt-8 font-instrument text-[16px]">No cards match your search.</p>`;
+        return;
+      }
+
+      listContainer.innerHTML = filtered.map(v => {
+        const trueIndex = vocabularyData.indexOf(v);
+        return `
+        <div class="perspective w-full cursor-pointer" onclick="openModal(${trueIndex}, this)">
+          <div class="card-inner relative w-full flex flex-col rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-transform">
+            <div class="flex w-full flex-col rounded-[35px] bg-[#1a1a1a]/40 p-[20px] kube-glass-bg border border-white/5">
+              
+              <div class="flex justify-between items-start">
+                <div class="flex flex-col gap-1">
+                  <span class="font-instrument text-[24px] font-semibold text-[#F8FAFC] tracking-wide leading-tight">${v.pl}</span>
+                  <span class="font-instrument text-[18px] font-medium text-[#B4A0FF] leading-snug">${v.en}</span>
+                </div>
+                <div class="relative mt-1 flex overflow-hidden items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[4px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] kube-glass-bg">
+                   <div class="absolute inset-0 z-0 flex items-center justify-center mix-blend-screen opacity-70">${tagGradients[v.type]}</div>
+                   <span class="relative z-10 font-instrument text-[10px] font-normal text-[#F8FAFC] capitalize">${v.type}</span>
+                </div>
+              </div>
+              
+              <div class="my-[16px] h-[1px] w-full bg-[#F8FAFC]/10"></div>
+              
+              <div class="flex justify-between items-center px-1">
+                <span class="font-instrument text-[14px] italic text-[#F8FAFC]/50">${v.left}</span>
+                <span class="font-instrument text-[14px] text-[#F8FAFC]/50">${v.right}</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      `}).join('');
+    }
+
+    function renderApp() {
+      const contentDiv = document.getElementById('main-content');
+      const headerDiv = document.getElementById('top-header');
+      
+      contentDiv.classList.remove('animate-fade-in');
+      void contentDiv.offsetWidth; 
+
+      if (activeId === 'add_page' || activeId === 'api_config') {
+        headerDiv.className = 'absolute top-4 left-6 flex items-center gap-[12px] z-50';
+        headerDiv.innerHTML = `
+          <button onclick="changePage('folder')" class="relative flex h-[42px] w-[42px] items-center justify-center rounded-full bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95">
+            <div class="absolute inset-[1px] z-0 rounded-full bg-[#1a1a1a]/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3)] kube-glass-bg"></div>
+            <span class="relative z-10 material-symbols-rounded text-[24px] text-[#F8FAFC]">arrow_back</span>
+          </button>
+        `;
+        
+        if (activeId === 'add_page') {
+          contentDiv.innerHTML = `
+            <div class="animate-fade-in flex flex-col gap-6 w-full pt-[24px]">
+              <!-- Google Sheets Card -->
+              <div class="relative w-full rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                  <div class="relative flex w-full flex-col rounded-[35px]">
+                    <div class="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-[35px] kube-glass-bg"></div>
+                    <div class="relative z-10 flex flex-col p-[20px]">
+                      <h2 class="font-instrument text-[#F8FAFC] font-semibold text-[18px] mb-4">Google Sheets Import</h2>
+                      
+                      <div class="relative w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] mb-4 group">
+                        <div class="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 group-focus-within:bg-[#F8FAFC]/15 transition-colors kube-glass-bg"></div>
+                        <div class="relative z-10 flex items-center gap-[12px] px-[18px] py-[12px]">
+                          <span class="material-symbols-rounded text-[#F8FAFC]/50 text-[18px]">link</span>
+                          <input class="bg-transparent w-full outline-none font-instrument text-[#F8FAFC] placeholder-[#F8FAFC]/40 text-[16px]" placeholder="Paste link...">
+                        </div>
+                      </div>
+
+                      <button class="relative w-full h-[50px] flex overflow-hidden items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] group hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        <div class="absolute inset-0 z-0 bg-[#F8FAFC]/5 rounded-full group-hover:bg-[#F8FAFC]/10 transition-colors kube-glass-bg"></div>
+                        <div class="absolute inset-0 z-10 flex items-center justify-center mix-blend-screen opacity-90">
+                          <svg class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 376 64" fill="none" preserveAspectRatio="none">
+                            <rect x="21.8" y="21.8" width="332" height="26" rx="13" fill="#5D05A5" filter="blur(10.9px)"/>
+                            <rect x="30.5883" y="29.5449" width="314.424" height="18.2553" rx="9.12766" fill="#AB32C9" filter="blur(10.9px)"/>
+                            <rect x="73.553" y="31.7576" width="264.624" height="13.8298" rx="6.91489" fill="#925BDF" filter="blur(10.9px)"/>
+                          </svg>
+                        </div>
+                        <span class="relative z-20 font-instrument text-[#F8FAFC] text-[16px] font-semibold">Fetch Data</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Manual Add Card -->
+                <div class="relative w-full rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                  <div class="relative flex w-full flex-col rounded-[35px]">
+                    <div class="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-[35px] kube-glass-bg"></div>
+                    <div class="relative z-10 flex flex-col p-[20px]">
+                      <h2 class="font-instrument text-[#F8FAFC] font-semibold text-[18px] mb-4">Add Manually</h2>
+                      
+                      <div class="grid grid-cols-2 gap-[12px] mb-4">
+                        <div class="relative w-full rounded-[32px] border border-[#F8FAFC]/20 group">
+                          <div class="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 group-focus-within:bg-[#F8FAFC]/15 transition-colors kube-glass-bg"></div>
+                          <input class="relative z-10 w-full bg-transparent px-[18px] py-[12px] outline-none font-instrument text-[#F8FAFC] placeholder-[#F8FAFC]/40 text-[16px]" placeholder="PL">
+                        </div>
+                        <div class="relative w-full rounded-[32px] border border-[#F8FAFC]/20 group">
+                          <div class="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 group-focus-within:bg-[#F8FAFC]/15 transition-colors kube-glass-bg"></div>
+                          <input class="relative z-10 w-full bg-transparent px-[18px] py-[12px] outline-none font-instrument text-[#F8FAFC] placeholder-[#F8FAFC]/40 text-[16px]" placeholder="EN">
+                        </div>
+                      </div>
+
+                      <button class="relative w-full h-[50px] flex overflow-hidden items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] group hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        <div class="absolute inset-0 z-0 bg-[#F8FAFC]/5 rounded-full group-hover:bg-[#F8FAFC]/10 transition-colors kube-glass-bg"></div>
+                        <div class="absolute inset-0 z-10 flex items-center justify-center mix-blend-screen opacity-90">
+                          <svg class="w-full h-full object-cover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 376 64" fill="none" preserveAspectRatio="none">
+                            <rect x="21.8" y="21.8" width="332" height="26" rx="13" fill="#B00303" filter="blur(10.9px)"/>
+                            <rect x="30.5883" y="29.5449" width="314.424" height="18.2553" rx="9.12766" fill="#C9A132" filter="blur(10.9px)"/>
+                            <rect x="73.553" y="31.7576" width="264.624" height="13.8298" rx="6.91489" fill="#DFAA5B" filter="blur(10.9px)"/>
+                          </svg>
+                        </div>
+                        <span class="relative z-20 font-instrument text-[#F8FAFC] text-[16px] font-semibold">Add Word</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (activeId === 'api_config') {
+          contentDiv.innerHTML = `
+            <div class="animate-fade-in flex flex-col gap-6 w-full pt-[24px]">
+              <div class="relative w-full rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                <div class="relative flex w-full flex-col rounded-[35px]">
+                  <div class="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-[35px] kube-glass-bg"></div>
+                  <div class="relative z-10 flex flex-col p-[24px]">
+                    <h2 class="font-instrument text-[#F8FAFC] font-semibold text-[18px] mb-4">LLM Provider</h2>
+                    
+                    <div class="relative w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] mb-6 group">
+                      <div class="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 group-focus-within:bg-[#F8FAFC]/15 transition-colors kube-glass-bg"></div>
+                      <select class="relative z-10 w-full bg-transparent px-[18px] py-[12px] outline-none font-instrument text-[#F8FAFC] text-[16px] appearance-none cursor-pointer">
+                        <option value="gemini" class="bg-[#1a1a1a] text-[#F8FAFC]">Google Gemini</option>
+                        <option value="claude" class="bg-[#1a1a1a] text-[#F8FAFC]">Anthropic Claude</option>
+                      </select>
+                      <span class="material-symbols-rounded absolute right-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none z-10">expand_more</span>
+                    </div>
+
+                    <h2 class="font-instrument text-[#F8FAFC] font-semibold text-[18px] mb-4">API Key</h2>
+                    <div class="relative w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] mb-8 group">
+                      <div class="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 group-focus-within:bg-[#F8FAFC]/15 transition-colors kube-glass-bg"></div>
+                      <input type="password" class="relative z-10 w-full bg-transparent px-[18px] py-[12px] outline-none font-instrument text-[#F8FAFC] placeholder-[#F8FAFC]/40 text-[16px]" placeholder="Paste API Key...">
+                    </div>
+
+                    <button onclick="changePage('folder')" class="relative w-full h-[50px] flex overflow-hidden items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] group hover:scale-[1.02] active:scale-[0.98] transition-all">
+                      <div class="absolute inset-0 z-0 bg-[#F8FAFC]/5 rounded-full group-hover:bg-[#F8FAFC]/10 transition-colors kube-glass-bg"></div>
+                      <span class="relative z-20 font-instrument text-[#F8FAFC] text-[16px] font-semibold">Save Configuration</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      } else {
+        // HOME PAGE & OTHERS
+        headerDiv.className = 'absolute top-4 right-6 flex items-center gap-[12px] z-50';
+        if (activeId === 'folder') {
+          headerDiv.innerHTML = `
+            <button onclick="changePage('add_page')" class="relative flex h-[42px] w-[42px] items-center justify-center rounded-full bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95">
+              <div class="absolute inset-[1px] z-0 rounded-full bg-[#1a1a1a]/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3)] kube-glass-bg"></div>
+              <span class="relative z-10 material-symbols-rounded text-[24px] text-[#F8FAFC]">add</span>
+            </button>
+            <div class="relative">
+              <button onclick="toggleSettings()" class="relative flex h-[42px] w-[42px] items-center justify-center rounded-full bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all hover:scale-105 active:scale-95">
+                <div class="absolute inset-[1px] z-0 rounded-full bg-[#1a1a1a]/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3)] kube-glass-bg"></div>
+                <span class="relative z-10 material-symbols-rounded text-[24px] text-[#F8FAFC]">settings</span>
+              </button>
+              <div id="settings-dropdown" class="hidden absolute right-0 top-[50px] w-[200px] rounded-[24px] bg-[#1a1a1a]/95 backdrop-blur-3xl border border-white/10 shadow-2xl flex-col overflow-hidden z-[100] transition-all">
+                <button onclick="importJson()" class="w-full px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors border-b border-white/5 flex items-center gap-3"><span class="material-symbols-rounded text-[18px]">download</span> Import JSON</button>
+                <button onclick="exportJson()" class="w-full px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors border-b border-white/5 flex items-center gap-3"><span class="material-symbols-rounded text-[18px]">upload</span> Export JSON</button>
+                <button onclick="changePage('api_config'); toggleSettings();" class="w-full px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#B4A0FF] hover:bg-[#B4A0FF]/10 hover:text-[#c4b5fd] transition-colors flex items-center gap-3"><span class="material-symbols-rounded text-[18px]">api</span> API config</button>
+              </div>
+            </div>
+          `;
+
+          contentDiv.innerHTML = `
+            <div class="animate-fade-in flex w-full flex-col gap-[24px]">
+              
+              <!-- Nested Glass Card Container -->
+              <div class="w-full rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
+                <div class="relative flex w-full flex-col gap-[16px] rounded-[35px] p-[16px]">
+                  
+                  <div class="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-[35px] kube-glass-bg"></div>
+                  
+                  <div class="relative z-10">
+                    <!-- Top Search Card -->
+                    <div class="relative w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] mb-4 group">
+                      <div class="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 group-focus-within:bg-[#F8FAFC]/15 transition-colors kube-glass-bg"></div>
+                      <div class="relative z-10 flex items-center gap-[12px] px-[18px] py-[12px]">
+                        <input type="text" placeholder="Search..." value="${searchQuery}" oninput="handleSearch(this.value)" class="w-full bg-transparent font-instrument text-[#F8FAFC] placeholder-[#F8FAFC]/40 outline-none text-[16px]" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" class="shrink-0">
+                          <path d="M14.7 15.75L9.975 11.025C9.6 11.325 9.16875 11.5625 8.68125 11.7375C8.19375 11.9125 7.675 12 7.125 12C5.7625 12 4.60938 11.5281 3.66563 10.5844C2.72188 9.64062 2.25 8.4875 2.25 7.125C2.25 5.7625 2.72188 4.60938 3.66563 3.66563C4.60938 2.72188 5.7625 2.25 7.125 2.25C8.4875 2.25 9.64062 2.72188 10.5844 3.66563C11.5281 4.60938 12 5.7625 12 7.125C12 7.675 11.9125 8.19375 11.7375 8.68125C11.5625 9.16875 11.325 9.6 11.025 9.975L15.75 14.7L14.7 15.75ZM7.125 10.5C8.0625 10.5 8.85938 10.1719 9.51562 9.51562C10.1719 8.85938 10.5 8.0625 10.5 7.125C10.5 6.1875 10.1719 5.39062 9.51562 4.73438C8.85938 4.07812 8.0625 3.75 7.125 3.75C6.1875 3.75 5.39062 4.07812 4.73438 4.73438C4.07812 5.39062 3.75 6.1875 3.75 7.125C3.75 8.0625 4.07812 8.85938 4.73438 9.51562C5.39062 10.1719 6.1875 10.5 7.125 10.5Z" fill="#F8FAFC" fill-opacity="0.4"/>
+                        </svg>
+                      </div>
+                    </div>
+
+                    <!-- Filter Tags Bar -->
+                    <div class="flex flex-wrap items-center gap-[8px]">
+                      ${generateFilterTag('noun', 'Noun')}
+                      ${generateFilterTag('verb', 'Verb')}
+                      ${generateFilterTag('adjective', 'Adjective')}
+                      ${generateFilterTag('unknown', 'Unknown')}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- Scrollable Vocab List Container -->
+              <div id="vocab-list-container" class="flex flex-col gap-[16px]"></div>
+
+            </div>
+          `;
+          
+          setTimeout(renderVocabList, 0); 
+
+        } else {
+          headerDiv.innerHTML = '';
+          contentDiv.innerHTML = `
+            <div class="animate-fade-in flex h-full flex-col items-center justify-center gap-4 text-center mt-auto mb-auto">
+              <span class="material-symbols-rounded text-6xl text-[#F8FAFC]/70">${pages[activeId].icon}</span>
+              <h1 class="font-instrument text-[24px] font-semibold text-[#F8FAFC]/70">${pages[activeId].title}</h1>
+              <p class="text-[#F8FAFC]/40 px-8">${pages[activeId].desc}</p>
+            </div>
+          `;
+        }
+      }
+      contentDiv.classList.add('animate-fade-in');
+      document.getElementById('page-gradient-container').innerHTML = pages[activeId].gradient;
+
+      let navHtml = '';
+      let currentPill = [];
+      pageOrder.forEach((id) => {
+        if (id === activeId) {
+          if (currentPill.length > 0) { navHtml += generatePillHtml(currentPill); currentPill = []; }
+          navHtml += generateActiveHtml(id);
+        } else {
+          currentPill.push(id);
+        }
+      });
+      if (currentPill.length > 0) { navHtml += generatePillHtml(currentPill); }
+      document.getElementById('nav-container').innerHTML = navHtml;
+
+      const navWrapper = document.getElementById('bottom-nav-wrapper');
+      
+      if (activeId === 'add_page' || activeId === 'api_config') {
+        if(navWrapper) { navWrapper.classList.add('hidden'); navWrapper.classList.remove('flex'); }
+      } else {
+        if(navWrapper) { navWrapper.classList.remove('hidden'); navWrapper.classList.add('flex'); }
+      }
+    }
+
+    function generatePillHtml(ids) {
+      const buttonsHtml = ids.map(id => `
+        <button onclick="changePage('${id}')" style="view-transition-name: icon-${id};" class="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3)] transition-colors group">
+          <div class="absolute inset-0 z-0 bg-white/[0.01] rounded-full group-hover:bg-white/[0.06] kube-glass-bg"></div>
+          <span class="material-symbols-rounded relative z-10 text-[24px] text-[#F8FAFC]/70">${pages[id].icon}</span>
+        </button>
+      `).join('');
+      
+      return `
+        <div class="flex items-center justify-center rounded-[42px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all">
+          <div class="relative flex h-[64px] items-center justify-center gap-[24px] rounded-[41px] px-[24px] py-[11px]">
+            <div class="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-[41px] kube-glass-bg"></div>
+            <div class="relative z-10 flex items-center gap-[24px]">
+               ${buttonsHtml}
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function generateActiveHtml(id) {
+      return `
+        <div class="flex h-[66px] w-[66px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all">
+          <div class="relative flex h-full w-full items-center justify-center rounded-full">
+            <div class="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-full kube-glass-bg"></div>
+            <button style="view-transition-name: icon-${id};" class="relative z-10 flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.4)]">
+              <div class="absolute inset-0 z-0 flex items-center justify-center opacity-90 mix-blend-screen blur-[2px]">${activeSvgMask}</div>
+              <span class="material-symbols-rounded relative z-10 text-[24px] text-[#F8FAFC]">${pages[id].icon}</span>
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function triggerRender() {
+      if (!document.startViewTransition) { renderApp(); } 
+      else { document.startViewTransition(() => renderApp()); }
+    }
+
+    function changePage(newId) {
+      if (activeId === newId) return;
+      activeId = newId;
+      triggerRender();
+    }
+
+    renderApp();
+  </script>
+</body>
+</html>
