@@ -61,7 +61,13 @@ export default function App() {
   // ─── Page routing ────────────────────────────────────────────────────────
   function changePage(id: PageId) {
     if (id === activeId) return
-    setActiveId(id)
+    if ('startViewTransition' in document) {
+      document.startViewTransition(() => {
+        flushSync(() => setActiveId(id))
+      })
+    } else {
+      setActiveId(id)
+    }
   }
 
   const showNav = activeId !== 'add_page' && activeId !== 'api_config'
