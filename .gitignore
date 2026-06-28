@@ -13,5 +13,9 @@
 *.swo
 *~
 
-# Node (in case this grows)
+# Node
 node_modules/
+
+# Build output
+dist/
+*.tsbuildinfo
