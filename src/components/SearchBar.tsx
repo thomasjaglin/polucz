@@ -1,3 +1,5 @@
+import GlassPane from './GlassPane'
+
 interface Props {
   value: string
   onChange: (value: string) => void
@@ -6,7 +8,7 @@ interface Props {
 export default function SearchBar({ value, onChange }: Props) {
   return (
     <div className="relative mb-4 w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-      <div className="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15 kube-glass-bg" />
+      <GlassPane borderRadius={32} className="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
       <div className="relative z-10 flex items-center gap-[12px] px-[18px] py-[12px]">
         <input
           type="text"

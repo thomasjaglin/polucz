@@ -1,5 +1,6 @@
 import type { WordType } from '../data/types'
 import { tagGradients } from '../data/gradients'
+import GlassPane from './GlassPane'
 
 interface Props {
   id: WordType
@@ -13,10 +14,9 @@ export default function FilterTag({ id, label, active, onToggle }: Props) {
     // Outer: gradient border ring, same structure as IconButton
     <button
       onClick={onToggle}
-      className="flex rounded-[124px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_4px_16px_rgba(0,0,0,0.3)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+      className="flex rounded-[124px] shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
     >
-      {/* Inner: dark glass surface, same bg/shadow as IconButton glass div */}
-      <div className="relative flex items-center justify-center rounded-[123px] bg-[#1a1a1a]/40 px-[12px] py-[4px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),inset_0_-1px_1px_rgba(0,0,0,0.3)] kube-glass-bg">
+      <GlassPane borderRadius={62} className="relative flex items-center justify-center rounded-[124px] bg-white/[0.02] px-[12px] py-[4px]">
         {active && (
           <div
             className="absolute inset-0 z-0 flex items-center justify-center mix-blend-screen opacity-80"
@@ -30,7 +30,7 @@ export default function FilterTag({ id, label, active, onToggle }: Props) {
         >
           {label}
         </span>
-      </div>
+      </GlassPane>
     </button>
   )
 }

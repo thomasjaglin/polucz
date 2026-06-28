@@ -39,14 +39,14 @@ body {
 }
 
 /* ─── 3D flip — modal wrapper ─────────────────────────────── */
-#modal-content-wrapper {
+.modal-content-wrapper {
   transform: rotateX(-90deg) scale(0.85);
   opacity: 0;
   transition: transform 0.3s ease-in, opacity 0.3s ease-in;
   transform-style: preserve-3d;
   transform-origin: center center;
 }
-#modal-content-wrapper.flip-in {
+.modal-content-wrapper.flip-in {
   transform: rotateX(0deg) scale(1);
   opacity: 1;
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out;
@@ -56,20 +56,15 @@ body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ─── Liquid glass — pseudo-element approach ──────────────────────────────
-   Why: backdrop-filter: url(#svg-filter) only works in Firefox. Chrome and
-   Android WebView support backdrop-filter: blur() and filter: url() separately
-   but not combined as a backdrop reference. The ::before pseudo-element holds
-   both so the blurred + displaced background renders on all platforms.
+/* ─── Liquid glass ────────────────────────────────────────────────────────
+   The ::before pseudo-element holds both the backdrop blur and the SVG
+   displacement filter. Blur amount is kept low (8px) so the computed
+   edge-refraction displacement from --glass-filter stays visible.
+   The displacement map is a surface-normal-based lens warp (strong at edges,
+   zero at center) generated per-element by useGlassFilter/generateGlassMap.
 
-   Why no isolation: isolate: transform: translateZ(0) already creates a
-   stacking context, so mix-blend-screen children behave exactly as before.
-
-   overflow: hidden clips the ::before's -20px expansion back to the element
-   shape so displacement edge artifacts are never visible.
-
-   No position: relative here — callers set their own position (relative or
-   absolute) via Tailwind so that class doesn't conflict with absolute fill-divs.
+   No position: relative — callers set position via Tailwind so this class
+   doesn't conflict with absolute fill-divs.
    ───────────────────────────────────────────────────────────────────────── */
 .kube-glass-bg {
   overflow: hidden;
@@ -80,8 +75,8 @@ body {
   content: '';
   position: absolute;
   inset: -20px;
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  filter: url(#kube-displace-only);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  filter: var(--glass-filter, none);
   pointer-events: none;
 }

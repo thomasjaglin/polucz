@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import GlassPane from './GlassPane'
 
 interface Props {
   children: ReactNode
@@ -8,9 +9,9 @@ interface Props {
 
 export default function GlassCard({ children, className = '', contentClassName = '' }: Props) {
   return (
-    <div className={`relative w-full rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] ${className}`}>
-      <div className="relative flex w-full flex-col rounded-[35px]">
-        <div className="absolute inset-0 z-0 bg-[#1a1a1a]/40 rounded-[35px] kube-glass-bg" />
+    <div className={`relative w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] ${className}`}>
+      <div className="relative flex w-full flex-col rounded-[36px]">
+        <GlassPane borderRadius={36} className="absolute inset-0 z-0 bg-white/[0.02] rounded-[36px]" />
         <div className={`relative z-10 ${contentClassName}`}>
           {children}
         </div>

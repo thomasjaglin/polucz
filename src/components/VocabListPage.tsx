@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import SearchBar from './SearchBar'
 import FilterTag from './FilterTag'
 import VocabCard from './VocabCard'
+import GlassPane from './GlassPane'
 import { vocabularyData } from '../data/vocabulary'
 import type { WordType, VocabEntry } from '../data/types'
 
@@ -36,9 +37,9 @@ export default function VocabListPage({ onOpenModal }: Props) {
   return (
     <div className="animate-fade-in flex w-full flex-col gap-[24px]">
       {/* Search + filter glass card */}
-      <div className="w-full rounded-[36px] bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.3)]">
-        <div className="relative flex w-full flex-col gap-[16px] rounded-[35px] p-[16px]">
-          <div className="absolute inset-0 z-0 rounded-[35px] bg-[#1a1a1a]/40 kube-glass-bg" />
+      <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <div className="relative flex w-full flex-col gap-[16px] rounded-[36px] p-[16px]">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
           <div className="relative z-10">
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
             <div className="flex flex-wrap items-center gap-[8px]">

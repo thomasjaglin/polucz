@@ -1,6 +1,7 @@
 import { pages } from '../../data/pages'
 import { activeSvgMask } from '../../data/gradients'
 import type { PageId } from '../../data/types'
+import GlassPane from '../GlassPane'
 
 interface Props {
   id: PageId
@@ -8,9 +9,9 @@ interface Props {
 
 export default function ActiveNavItem({ id }: Props) {
   return (
-    <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-white/30 via-white/5 to-transparent p-[1px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] transition-all">
+    <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-all">
       <div className="relative flex h-full w-full items-center justify-center rounded-full">
-        <div className="absolute inset-0 z-0 rounded-full bg-[#1a1a1a]/40 kube-glass-bg" />
+        <GlassPane borderRadius={33} className="absolute inset-0 z-0 rounded-full bg-white/[0.02]" />
         <button
           style={{ viewTransitionName: `icon-${id}` }}
           className="relative z-10 flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.4)]"
