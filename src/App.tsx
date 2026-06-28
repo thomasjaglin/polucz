@@ -5,6 +5,8 @@ import PageGradient from './components/PageGradient'
 import TopHeader from './components/TopHeader'
 import BottomNav from './components/nav/BottomNav'
 import VocabListPage from './components/VocabListPage'
+import AddVocabPage from './components/AddVocabPage'
+import ApiConfigPage from './components/ApiConfigPage'
 import WordDetailModal from './components/WordDetailModal'
 import { pages } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
@@ -66,7 +68,9 @@ export default function App() {
   const page = pages[activeId]
 
   function renderContent() {
-    if (activeId === 'folder') return <VocabListPage onOpenModal={handleOpenModal} />
+    if (activeId === 'folder')     return <VocabListPage onOpenModal={handleOpenModal} />
+    if (activeId === 'add_page')   return <AddVocabPage />
+    if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />
     return (
       <div className="animate-fade-in flex h-full flex-col items-center justify-center gap-4 text-center">
         <span className="material-symbols-rounded text-6xl text-[#F8FAFC]/70">{page.icon}</span>
