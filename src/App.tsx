@@ -8,6 +8,7 @@ import VocabListPage from './components/VocabListPage'
 import AddVocabPage from './components/AddVocabPage'
 import ApiConfigPage from './components/ApiConfigPage'
 import TranslatePage from './components/TranslatePage'
+import FlashcardPage from './components/FlashcardPage'
 import WordDetailModal from './components/WordDetailModal'
 import { pages } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
@@ -98,7 +99,8 @@ export default function App() {
 
   function renderContent() {
     if (activeId === 'folder')     return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
-    if (activeId === 'translate')  return <TranslatePage onAddCard={handleAddCard} />
+    if (activeId === 'translate')   return <TranslatePage onAddCard={handleAddCard} />
+    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />
     return (

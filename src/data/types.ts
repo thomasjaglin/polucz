@@ -75,3 +75,13 @@ export interface VocabUnknown extends VocabBase {
 }
 
 export type VocabEntry = VocabVerb | VocabNoun | VocabAdjective | VocabUnknown
+
+// ─── Spaced-repetition review state (stored separately from VocabEntry) ───────
+
+export interface ReviewState {
+  interval: number          // days until next review
+  easeFactor: number        // SM-2 ease factor, starts at 2.5
+  dueDate: string           // ISO date 'YYYY-MM-DD'
+  lastReviewed: string | null
+  reviewCount: number
+}

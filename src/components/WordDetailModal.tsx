@@ -58,12 +58,13 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-white/20">past</span>
+            <span className="mb-3 font-instrument text-[14px] text-white/20">past m.</span>
             {entry.conjugations.past.map((c, i) => (
               <span key={`past-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
             ))}
           </div>
-          <div className="flex flex-col pt-[34px]">
+          <div className="flex flex-col">
+            <span className="mb-3 font-instrument text-[14px] text-white/20">past f.</span>
             {entry.conjugations.past2.map((c, i) => (
               <span key={`past2-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
             ))}
