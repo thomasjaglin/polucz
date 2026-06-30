@@ -2,6 +2,8 @@ import type { VocabEntry } from './types'
 
 export const vocabularyData: VocabEntry[] = [
   {
+    id: 'mówić',
+    enriched: true,
     pl: 'mówić',
     en: 'to speak',
     type: 'verb',
@@ -16,6 +18,8 @@ export const vocabularyData: VocabEntry[] = [
     otherForm: { label: 'pf form', word: 'powiedzieć' },
   },
   {
+    id: 'książka',
+    enriched: true,
     pl: 'książka',
     en: 'book',
     type: 'noun',
@@ -31,6 +35,8 @@ export const vocabularyData: VocabEntry[] = [
     },
   },
   {
+    id: 'dom',
+    enriched: true,
     pl: 'dom',
     en: 'house',
     type: 'noun',
@@ -46,12 +52,21 @@ export const vocabularyData: VocabEntry[] = [
     },
   },
   {
+    id: 'piękny',
+    enriched: true,
     pl: 'piękny',
     en: 'beautiful',
     type: 'adjective',
     left: 'nom',
     right: 'm',
     tags: ['adjective'],
-    info: 'Used for describing appearances.',
+    declensions: {
+      cases:        ['mianownik', 'dopełniacz', 'celownik', 'biernik', 'narzędnik', 'miejscownik', 'wołacz'],
+      masculine:    ['piękny', 'pięknego', 'pięknemu', 'pięknego/piękny', 'pięknym', 'pięknym', 'piękny'],
+      feminine:     ['piękna', 'pięknej', 'pięknej', 'piękną', 'piękną', 'pięknej', 'piękna'],
+      neuter:       ['piękne', 'pięknego', 'pięknemu', 'piękne', 'pięknym', 'pięknym', 'piękne'],
+      pluralMasc:   ['piękni', 'pięknych', 'pięknym', 'pięknych', 'pięknymi', 'pięknych', 'piękni'],
+      pluralNonMasc:['piękne', 'pięknych', 'pięknym', 'piękne', 'pięknymi', 'pięknych', 'piękne'],
+    },
   },
 ]

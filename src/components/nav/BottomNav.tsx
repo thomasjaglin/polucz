@@ -16,7 +16,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
     <div className="fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center justify-center transition-all duration-300">
       {/* Background glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
-        <svg xmlns="http://www.w3.org/2000/svg" width="367" height="82" viewBox="0 0 367 82" fill="none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="412" height="82" viewBox="0 0 367 82" fill="none">
           <g opacity="0.42" filter="url(#filter0_fn_36_4379)">
             <rect x="14" y="14" width="339" height="54" rx="24" fill="#080144"/>
             <rect x="23.6033" y="21.8389" width="326.516" height="43.5484" rx="21.7742" fill="#170B6E"/>
@@ -34,7 +34,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
 
       {/* Nav items */}
       <nav
-        className="flex w-[332px] items-center justify-between"
+        className="flex w-[374px] items-center justify-between"
         style={{ viewTransitionName: 'nav-bar' }}
       >
         {groups.map((group, i) =>

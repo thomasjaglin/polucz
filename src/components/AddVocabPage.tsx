@@ -1,20 +1,25 @@
 import { useState } from 'react'
 import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
+import { findByLemma } from '../lib/storage'
+import type { VocabEntry } from '../data/types'
 
 function GlassButton({
   label,
   gradient,
   onClick,
+  disabled,
 }: {
   label: string
   gradient?: React.ReactNode
   onClick?: () => void
+  disabled?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+      disabled={disabled}
+      className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group disabled:pointer-events-none disabled:opacity-40"
     >
       <div className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
       {gradient && (
@@ -43,10 +48,93 @@ const orangeGradient = (
   </svg>
 )
 
-export default function AddVocabPage() {
+type Phase = 'idle' | 'loading' | 'success' | 'duplicate' | 'error'
+
+interface Props {
+  onAddCard: (entry: VocabEntry) => void
+  onSuccess: () => void
+}
+
+export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
   const [sheetUrl, setSheetUrl] = useState('')
   const [pl, setPl] = useState('')
   const [en, setEn] = useState('')
+  const [phase, setPhase] = useState<Phase>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+
+  async function handleAddWord() {
+    const plTrimmed = pl.trim()
+    if (!plTrimmed) return
+    setPhase('loading')
+    setErrorMsg('')
+
+    try {
+      // Run translate (if EN empty) and lemmatize in parallel
+      const [lemmaRes, translateRes] = await Promise.all([
+        fetch('/api/lemmatize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: plTrimmed }),
+        }),
+        !en.trim()
+          ? fetch('/api/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: plTrimmed }),
+            })
+          : Promise.resolve(null),
+      ])
+
+      if (!lemmaRes.ok) {
+        const err = await lemmaRes.json().catch(() => ({}))
+        throw new Error(err.error ?? 'Lemmatization failed')
+      }
+      const { lemma, type, gender } = await lemmaRes.json()
+
+      let resolvedEn = en.trim()
+      if (translateRes) {
+        if (!translateRes.ok) {
+          const err = await translateRes.json().catch(() => ({}))
+          throw new Error(err.error ?? 'Translation failed')
+        }
+        const { translation } = await translateRes.json()
+        resolvedEn = translation
+      }
+
+      // Deduplicate by lemma
+      if (findByLemma(lemma)) {
+        setPhase('duplicate')
+        return
+      }
+
+      // Build entry — grammar tables filled by deferred enrichment on first modal open
+      let entry: VocabEntry
+      if (type === 'verb') {
+        entry = { id: lemma, enriched: false, pl: lemma, en: resolvedEn, left: '', right: '', tags: ['verb'], type: 'verb', conjugations: null, otherForm: null }
+      } else if (type === 'noun') {
+        const g = (gender as string) || ''
+        entry = { id: lemma, enriched: false, pl: lemma, en: resolvedEn, left: g, right: '', tags: ['noun'], type: 'noun', gender: g, plAlt: '', declensions: null }
+      } else if (type === 'adjective') {
+        entry = { id: lemma, enriched: false, pl: lemma, en: resolvedEn, left: 'adj', right: '', tags: ['adjective'], type: 'adjective', declensions: null }
+      } else {
+        entry = { id: lemma, enriched: false, pl: lemma, en: resolvedEn, left: '', right: '', tags: ['unknown'], type: 'unknown' }
+      }
+
+      onAddCard(entry)
+      setPl('')
+      setEn('')
+      setPhase('success')
+      setTimeout(() => { setPhase('idle'); onSuccess() }, 1200)
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong')
+      setPhase('error')
+    }
+  }
+
+  function resetError() {
+    setPhase('idle')
+    setErrorMsg('')
+  }
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
@@ -67,10 +155,27 @@ export default function AddVocabPage() {
       <GlassCard contentClassName="flex flex-col p-[20px]">
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">Add Manually</h2>
         <div className="mb-4 grid grid-cols-2 gap-[12px]">
-          <GlassInput placeholder="PL" value={pl} onChange={setPl} />
-          <GlassInput placeholder="EN" value={en} onChange={setEn} />
+          <GlassInput placeholder="PL" value={pl} onChange={v => { setPl(v); if (phase !== 'idle') resetError() }} />
+          <GlassInput placeholder="EN (optional)" value={en} onChange={setEn} />
         </div>
-        <GlassButton label="Add Word" gradient={orangeGradient} onClick={() => { if (pl && en) { setPl(''); setEn('') } }} />
+
+        {/* Feedback messages */}
+        {phase === 'error' && (
+          <p className="mb-3 font-instrument text-[13px] text-red-400/80">{errorMsg}</p>
+        )}
+        {phase === 'duplicate' && (
+          <p className="mb-3 font-instrument text-[13px] text-amber-400/80">Already in your vocabulary.</p>
+        )}
+        {phase === 'success' && (
+          <p className="mb-3 font-instrument text-[13px] text-emerald-400/80">Added! Taking you to your vocab…</p>
+        )}
+
+        <GlassButton
+          label={phase === 'loading' ? 'Adding…' : 'Add Word'}
+          gradient={orangeGradient}
+          onClick={handleAddWord}
+          disabled={!pl.trim() || phase === 'loading' || phase === 'success'}
+        />
       </GlassCard>
     </div>
   )

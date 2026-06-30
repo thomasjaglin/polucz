@@ -3,7 +3,6 @@ import SearchBar from './SearchBar'
 import FilterTag from './FilterTag'
 import VocabCard from './VocabCard'
 import GlassPane from './GlassPane'
-import { vocabularyData } from '../data/vocabulary'
 import type { WordType, VocabEntry } from '../data/types'
 
 const FILTER_TAGS: { id: WordType; label: string }[] = [
@@ -14,10 +13,11 @@ const FILTER_TAGS: { id: WordType; label: string }[] = [
 ]
 
 interface Props {
+  cards: VocabEntry[]
   onOpenModal: (entry: VocabEntry, cardEl: HTMLDivElement | null) => void
 }
 
-export default function VocabListPage({ onOpenModal }: Props) {
+export default function VocabListPage({ cards, onOpenModal }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<WordType, boolean>>({
     noun: true, verb: true, adjective: true, unknown: true,
@@ -29,7 +29,7 @@ export default function VocabListPage({ onOpenModal }: Props) {
   }
 
   const q = searchQuery.toLowerCase()
-  const filtered = vocabularyData.filter(v =>
+  const filtered = cards.filter(v =>
     activeFilters[v.type] &&
     (v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q))
   )
@@ -66,10 +66,10 @@ export default function VocabListPage({ onOpenModal }: Props) {
         ) : (
           filtered.map(entry => (
             <VocabCard
-              key={entry.pl}
-              ref={el => { cardRefs.current.set(entry.pl, el) }}
+              key={entry.id}
+              ref={el => { cardRefs.current.set(entry.id, el) }}
               entry={entry}
-              onClick={() => onOpenModal(entry, cardRefs.current.get(entry.pl) ?? null)}
+              onClick={() => onOpenModal(entry, cardRefs.current.get(entry.id) ?? null)}
             />
           ))
         )}

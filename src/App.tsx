@@ -7,12 +7,35 @@ import BottomNav from './components/nav/BottomNav'
 import VocabListPage from './components/VocabListPage'
 import AddVocabPage from './components/AddVocabPage'
 import ApiConfigPage from './components/ApiConfigPage'
+import TranslatePage from './components/TranslatePage'
 import WordDetailModal from './components/WordDetailModal'
 import { pages } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
+import { getCards, saveCard, updateCard } from './lib/storage'
+import { vocabularyData } from './data/vocabulary'
 
 export default function App() {
   const [activeId, setActiveId] = useState<PageId>('folder')
+
+  const [cards, setCards] = useState<VocabEntry[]>(() => {
+    const stored = getCards()
+    if (stored.length === 0) {
+      vocabularyData.forEach(c => saveCard(c))
+      return vocabularyData
+    }
+    return stored
+  })
+
+  function handleAddCard(entry: VocabEntry) {
+    saveCard(entry)
+    setCards(getCards())
+  }
+
+  function handleEnriched(updated: VocabEntry) {
+    updateCard(updated.id, updated)
+    setCards(getCards())
+    setModalEntry(updated)
+  }
 
   // ─── Modal animation state ───────────────────────────────────────────────
   const [modalEntry,    setModalEntry]    = useState<VocabEntry | null>(null)
@@ -74,8 +97,9 @@ export default function App() {
   const page = pages[activeId]
 
   function renderContent() {
-    if (activeId === 'folder')     return <VocabListPage onOpenModal={handleOpenModal} />
-    if (activeId === 'add_page')   return <AddVocabPage />
+    if (activeId === 'folder')     return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
+    if (activeId === 'translate')  return <TranslatePage onAddCard={handleAddCard} />
+    if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />
     return (
       <div className="animate-fade-in flex h-full flex-col items-center justify-center gap-4 text-center">
@@ -111,6 +135,7 @@ export default function App() {
           flipIn={contentFlipIn}
           overlayVisible={overlayVisible}
           onClose={handleCloseModal}
+          onEnriched={handleEnriched}
         />
       )}
     </div>
