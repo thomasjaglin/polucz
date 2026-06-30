@@ -45,7 +45,11 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [result, setResult] = useState<Result | null>(null)
   const [added, setAdded] = useState(false)
 
-  const isSingleWord = (text: string) => text.trim().split(/\s+/).length === 1
+  const isSingleWord = (text: string) => {
+    const words = text.trim().split(/\s+/)
+    // Reflexive verbs ("stać się", "cieszyć się", …) are a single lexical unit
+    return words.length === 1 || (words.length === 2 && words[1].toLowerCase() === 'się')
+  }
 
   async function handleTranslate() {
     const text = input.trim()
