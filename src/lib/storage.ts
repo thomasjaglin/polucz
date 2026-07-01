@@ -36,3 +36,7 @@ export function deleteCard(id: string): void {
   const cards = getCards().filter(c => c.id !== id)
   localStorage.setItem(KEY, JSON.stringify(cards))
 }
+
+export function replaceAllCards(cards: VocabEntry[]): void {
+  localStorage.setItem(KEY, JSON.stringify(cards))
+}

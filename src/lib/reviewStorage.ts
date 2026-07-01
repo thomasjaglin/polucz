@@ -47,6 +47,10 @@ export function initReview(id: string): ReviewState {
 
 // Sets all existing review dueDates to today so every card becomes due again.
 // Preserves SM-2 history (interval, easeFactor).
+export function replaceAllReviews(reviews: Record<string, ReviewState>): void {
+  save(reviews)
+}
+
 export function resetAllReviews(): void {
   const reviews = load()
   const t = today()

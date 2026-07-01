@@ -119,7 +119,7 @@ export default function App() {
       <AppBackground />
       <PageGradient activeId={activeId} />
 
-      <TopHeader activeId={activeId} onChangePage={changePage} />
+      <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} />
 
       <div className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[120px] pt-[82px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         <div
