@@ -4,6 +4,7 @@ import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
+import { useTTS, type AudioState } from '../lib/useTTS'
 import GlassPane from './GlassPane'
 
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
@@ -21,9 +22,11 @@ interface CardProps {
   isConquering: boolean
   revealed: boolean
   onReveal: () => void
+  ttsState: AudioState
+  onReplay: () => void
 }
 
-function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal }: CardProps) {
+function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay }: CardProps) {
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
   const easyOpacity  = useTransform(x, [0, 80], [0, 1])
@@ -124,7 +127,17 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
                 className="flex w-full flex-col items-center gap-3"
               >
                 <div className="h-[1px] w-full bg-white/10" />
-                <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.en}</p>
+                <div className="flex w-full items-center justify-between gap-3">
+                  <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.en}</p>
+                  <button
+                    onClick={e => { e.stopPropagation(); onReplay() }}
+                    className={`flex h-[32px] w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
+                  >
+                    <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
+                      {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
+                    </span>
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -221,6 +234,7 @@ export default function FlashcardPage({ cards }: Props) {
   const [totalCount, setTotalCount] = useState(0)
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const tts = useTTS()
 
   useEffect(() => {
     const reviews = getAllReviews()
@@ -232,22 +246,24 @@ export default function FlashcardPage({ cards }: Props) {
 
   const current = queue[0] ?? null
 
+  // Pre-fetch both audio clips while the question side is visible so playback starts instantly on reveal
+  useEffect(() => {
+    if (current) tts.prefetch(current.pl, current.en)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current?.id])
+
   const advance = useCallback(() => {
+    tts.stop()
     setQueue(q => q.slice(1))
     setDoneCount(n => n + 1)
     setRevealed(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function handleReveal() {
     if (!current) return
     setRevealed(true)
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
-      const utterance = new SpeechSynthesisUtterance(current.pl)
-      utterance.lang = 'pl-PL'
-      utterance.rate = 0.85
-      window.speechSynthesis.speak(utterance)
-    }
+    tts.playSequence(current.pl, current.en)
   }
 
   function handleReset() {
@@ -309,6 +325,8 @@ export default function FlashcardPage({ cards }: Props) {
             isConquering={isConquering}
             revealed={revealed}
             onReveal={handleReveal}
+            ttsState={tts.state}
+            onReplay={() => tts.playSequence(current.pl, current.en)}
           />
           <AnimatePresence>
             {revealed && (

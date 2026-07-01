@@ -5,6 +5,7 @@ import type {
   VerbConjugations, NounDeclensions, AdjectiveDeclensions,
 } from '../data/types'
 import GlassPane from './GlassPane'
+import { useTTS } from '../lib/useTTS'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const base = { ...entry, enriched: true }
@@ -255,6 +256,15 @@ interface Props {
 export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose, onEnriched }: Props) {
   const [enriching, setEnriching] = useState(false)
   const [enrichError, setEnrichError] = useState(false)
+  const tts = useTTS()
+
+  function handleSpeaker() {
+    if (tts.state === 'loading' || tts.state === 'playing') {
+      tts.stop()
+    } else {
+      tts.playSequence(entry.pl, entry.en)
+    }
+  }
 
   async function doEnrich() {
     setEnriching(true)
@@ -360,12 +370,23 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
             {/* Word + translation */}
             <div className="mb-8 flex flex-col gap-1">
-              <h1 className="flex items-baseline gap-3 font-instrument text-[42px] font-bold leading-none tracking-tight text-[#F8FAFC]">
-                {entry.pl}
-                {entry.type === 'noun' && (
-                  <span className="text-[24px] font-medium italic text-[#e879f9]">{entry.gender}</span>
-                )}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="font-instrument text-[42px] font-bold leading-none tracking-tight text-[#F8FAFC]">
+                  {entry.pl}
+                  {entry.type === 'noun' && (
+                    <span className="ml-3 text-[24px] font-medium italic text-[#e879f9]">{entry.gender}</span>
+                  )}
+                </h1>
+                <button
+                  onClick={handleSpeaker}
+                  disabled={false}
+                  className={`flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 ${tts.state === 'error' ? 'text-red-400/70' : 'text-white/50 hover:text-white'}`}
+                >
+                  <span className={`material-symbols-rounded text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>
+                    {tts.state === 'loading' ? 'progress_activity' : tts.state === 'error' ? 'error' : 'volume_up'}
+                  </span>
+                </button>
+              </div>
               {entry.type === 'noun' && (
                 <h3 className="mb-1 mt-1 font-instrument text-[20px] leading-none text-white/40">{entry.plAlt}</h3>
               )}
