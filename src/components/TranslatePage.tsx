@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
@@ -45,6 +46,12 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<Result | null>(null)
   const [added, setAdded] = useState(false)
+
+  const x = useMotionValue(0)
+  const addOpacity = useTransform(x, [0, 80], [0, 1])
+
+  // Reset card position whenever a new result arrives
+  useEffect(() => { x.set(0) }, [result, x])
 
   const isSingleWord = (text: string) => {
     const words = text.trim().split(/\s+/)
@@ -105,6 +112,20 @@ export default function TranslatePage({ onAddCard }: Props) {
   }
 
   const alreadySaved = result?.isSingleWord ? !!findByLemma(result.lemma) : false
+  const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
+
+  function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
+    const committed = info.offset.x > window.innerWidth * 0.30 || info.velocity.x > 400
+    if (committed && canSwipe) {
+      animate(x, 700, { duration: 0.25 })
+      setTimeout(() => {
+        x.set(0)
+        handleAdd()
+      }, 270)
+    } else {
+      animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 })
+    }
+  }
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
@@ -139,10 +160,27 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassCard>
 
       {phase === 'done' && result && (
-        <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <>
+        <motion.div
+          style={{ x }}
+          drag={canSwipe ? 'x' : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={{ left: 0.08, right: 0.8 }}
+          onDragEnd={canSwipe ? handleDragEnd : undefined}
+          className={`w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] select-none ${canSwipe ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        >
           <div className="relative flex w-full flex-col rounded-[36px] p-[24px]">
             <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
-            <div className="relative z-10 flex flex-col gap-4">
+
+            {/* Swipe-to-add overlay */}
+            {canSwipe && (
+              <motion.div style={{ opacity: addOpacity }}
+                className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end rounded-[36px] pr-8">
+                <span className="font-instrument text-[20px] font-semibold text-emerald-400/90">Add →</span>
+              </motion.div>
+            )}
+
+            <div className="relative z-20 flex flex-col gap-4">
 
               {/* Translation */}
               <p className="font-instrument text-[30px] italic leading-tight text-[#B4A0FF]">
@@ -197,7 +235,12 @@ export default function TranslatePage({ onAddCard }: Props) {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
+
+        {canSwipe && (
+          <p className="text-center font-instrument text-[12px] text-white/20">swipe right to save</p>
+        )}
+        </>
       )}
     </div>
   )
