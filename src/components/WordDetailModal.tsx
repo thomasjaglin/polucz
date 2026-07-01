@@ -50,23 +50,23 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
   return (
     <>
       <div className="mb-8 flex w-full flex-col">
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-2 [&>*]:min-w-0">
           <div className="flex flex-col">
             <span className="mb-3 font-instrument text-[14px] text-white/20">present</span>
             {entry.conjugations.present.map((c, i) => (
-              <span key={`pres-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
+              <span key={`pres-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-3 font-instrument text-[14px] text-white/20">past m.</span>
             {entry.conjugations.past.map((c, i) => (
-              <span key={`past-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
+              <span key={`past-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-3 font-instrument text-[14px] text-white/20">past f.</span>
             {entry.conjugations.past2.map((c, i) => (
-              <span key={`past2-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
+              <span key={`past2-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
         </div>
@@ -88,23 +88,23 @@ function NounSection({ entry }: { entry: VocabNoun }) {
   if (!entry.declensions) return <EnrichingSkeleton />
   return (
     <div className="mb-8 flex w-full flex-col">
-      <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-2">
+      <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-2 [&>*]:min-w-0">
         <div className="flex flex-col">
           <span className="mb-3 font-instrument text-[14px] text-white/20">przyp.</span>
           {entry.declensions.cases.map((c, i) => (
-            <span key={`case-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/40">{abbrev(c)}</span>
+            <span key={`case-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-tight text-white/40">{abbrev(c)}</span>
           ))}
         </div>
         <div className="flex flex-col">
           <span className="mb-3 font-instrument text-[14px] text-white/20">li. pojedyncza</span>
           {entry.declensions.singular.map((c, i) => (
-            <span key={`sg-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
+            <span key={`sg-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
           ))}
         </div>
         <div className="flex flex-col">
           <span className="mb-3 font-instrument text-[14px] text-white/20">li. mnoga</span>
           {entry.declensions.plural.map((c, i) => (
-            <span key={`pl-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-none text-white/80">{c}</span>
+            <span key={`pl-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
           ))}
         </div>
       </div>
@@ -120,29 +120,29 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
       {/* Singular: 4 columns — cases, m., f., n. */}
       <div className="flex flex-col">
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-white/20">li. pojedyncza</span>
-        <div className="grid grid-cols-[0.5fr_1fr_1fr_1fr] gap-1.5">
+        <div className="grid grid-cols-[0.5fr_1fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">przyp.</span>
             {cases.map((c, i) => (
-              <span key={`adj-case-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/40">{abbrev(c)}</span>
+              <span key={`adj-case-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-white/40">{abbrev(c)}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">m.</span>
             {masculine.map((c, i) => (
-              <span key={`adj-m-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/80">{c}</span>
+              <span key={`adj-m-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">f.</span>
             {feminine.map((c, i) => (
-              <span key={`adj-f-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/80">{c}</span>
+              <span key={`adj-f-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">n.</span>
             {neuter.map((c, i) => (
-              <span key={`adj-n-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/80">{c}</span>
+              <span key={`adj-n-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
         </div>
@@ -153,23 +153,23 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
       {/* Plural: 3 columns — cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-white/20">li. mnoga</span>
-        <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-1.5">
+        <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">przyp.</span>
             {cases.map((c, i) => (
-              <span key={`adj-case2-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/40">{abbrev(c)}</span>
+              <span key={`adj-case2-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-white/40">{abbrev(c)}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">m.os.</span>
             {pluralMasc.map((c, i) => (
-              <span key={`adj-pm-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/80">{c}</span>
+              <span key={`adj-pm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
             <span className="mb-2.5 font-instrument text-[11px] text-white/20">nm.os.</span>
             {pluralNonMasc.map((c, i) => (
-              <span key={`adj-pnm-${i}`} className="mb-1 font-instrument text-[12px] italic leading-none text-white/80">{c}</span>
+              <span key={`adj-pnm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
             ))}
           </div>
         </div>
