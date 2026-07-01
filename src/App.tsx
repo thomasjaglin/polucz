@@ -119,7 +119,7 @@ export default function App() {
 
       <TopHeader activeId={activeId} onChangePage={changePage} />
 
-      <div className="relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col overflow-y-auto px-6 pb-[120px] pt-[82px] no-scrollbar">
+      <div className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[120px] pt-[82px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         <div
           className="relative z-30 flex h-full w-full flex-col"
           style={{ viewTransitionName: 'page-content' }}
