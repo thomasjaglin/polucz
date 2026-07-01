@@ -90,7 +90,7 @@ function NounSection({ entry }: { entry: VocabNoun }) {
     <div className="mb-8 flex w-full flex-col">
       <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-2 [&>*]:min-w-0">
         <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-white/20">przyp.</span>
+          <span className="mb-3 font-instrument text-[14px] text-white/20">p.</span>
           {entry.declensions.cases.map((c, i) => (
             <span key={`case-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-tight text-white/40">{abbrev(c)}</span>
           ))}
@@ -122,7 +122,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-white/20">li. pojedyncza</span>
         <div className="grid grid-cols-[0.5fr_1fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">przyp.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-white/20">p.</span>
             {cases.map((c, i) => (
               <span key={`adj-case-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-white/40">{abbrev(c)}</span>
             ))}
@@ -155,7 +155,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-white/20">li. mnoga</span>
         <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">przyp.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-white/20">p.</span>
             {cases.map((c, i) => (
               <span key={`adj-case2-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-white/40">{abbrev(c)}</span>
             ))}
