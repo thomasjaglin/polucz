@@ -15,9 +15,6 @@ async function fetchBlob(text: string, language: 'pl' | 'en'): Promise<Blob> {
   return new Blob([bytes], { type: mimeType ?? 'audio/wav' })
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms))
-}
 
 export function useTTS() {
   const [state, setState] = useState<AudioState>('idle')
@@ -100,11 +97,19 @@ export function useTTS() {
       setState('playing')
 
       // PL → 1 s → EN → 1 s → PL → 1 s → EN
+      // The gap uses cancelRef so stop() can unblock it immediately (same as playOne)
       const clips = [plBlob, enBlob, plBlob, enBlob]
       for (let i = 0; i < clips.length; i++) {
         if (abortRef.current) return
         await playOne(clips[i])
-        if (i < clips.length - 1 && !abortRef.current) await sleep(1000)
+        if (i < clips.length - 1 && !abortRef.current) {
+          await new Promise<void>(resolve => {
+            const t = setTimeout(resolve, 1000)
+            cancelRef.current = () => { clearTimeout(t); resolve() }
+          })
+          cancelRef.current = null
+        }
+        if (abortRef.current) return
       }
 
       if (!abortRef.current) setState('idle')
