@@ -3,18 +3,20 @@ const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interaction
 const SCHEMA = {
   type: 'object',
   properties: {
-    lemma:  { type: 'string' },
-    type:   { type: 'string', enum: ['noun', 'verb', 'adjective', 'unknown'] },
-    gender: { type: 'string' },
+    lemma:       { type: 'string' },
+    type:        { type: 'string', enum: ['noun', 'verb', 'adjective', 'unknown'] },
+    gender:      { type: 'string' },
+    canonicalEn: { type: 'string' },
   },
-  required: ['lemma', 'type', 'gender'],
+  required: ['lemma', 'type', 'gender', 'canonicalEn'],
 }
 
-const SYSTEM = `You are a Polish morphological analyzer. Given a single Polish word (possibly inflected), return its canonical dictionary form and grammatical class.
+const SYSTEM = `You are a Polish morphological analyzer. Given a single Polish word (possibly inflected), return its canonical dictionary form, grammatical class, and canonical English translation.
 
 lemma: the dictionary form. Verbs → infinitive. Nouns → nominative singular. Adjectives → masculine nominative singular. Unknown → return the word as-is.
 type: "verb", "noun", "adjective", or "unknown".
-gender: for nouns, one of "m.", "f.", or "n." (with the period). For all other types, return an empty string "".`
+gender: for nouns, one of "m.", "f.", or "n." (with the period). For all other types, return an empty string "".
+canonicalEn: the canonical English translation of the lemma (not the inflected input). Verbs → "to [verb]" form (e.g. "to think", "to run"). Nouns → bare singular (e.g. "friend", "house"). Adjectives → base form (e.g. "happy", "big"). Unknown → best-effort short translation.`
 
 // Exponential backoff on 429 — 3 attempts: immediate, 1s, 2s
 async function fetchWithBackoff(apiKey, body) {
@@ -83,7 +85,7 @@ export default async function handler(req, res) {
   }
 
   // Safety-net validation — structured output makes this rare but guards against truncation
-  const { lemma, type, gender } = parsed
+  const { lemma, type, gender, canonicalEn } = parsed
   if (
     typeof lemma !== 'string' || !lemma.trim() ||
     !['noun', 'verb', 'adjective', 'unknown'].includes(type)
@@ -92,5 +94,5 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: 'Invalid response shape from model' })
   }
 
-  return res.status(200).json({ lemma: lemma.trim(), type, gender: gender ?? null })
+  return res.status(200).json({ lemma: lemma.trim(), type, gender: gender ?? null, canonicalEn: canonicalEn ?? '' })
 }

@@ -14,17 +14,17 @@ const translateGradient = (
   </svg>
 )
 
-function buildEntry(lemma: string, translation: string, type: WordType, gender: string): VocabEntry {
+function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
-    return { id: lemma, enriched: false, pl: lemma, en: translation, left: '', right: '', tags: ['verb'], type: 'verb', conjugations: null, otherForm: null }
+    return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: '', right: '', tags: ['verb'], type: 'verb', conjugations: null, otherForm: null }
   }
   if (type === 'noun') {
-    return { id: lemma, enriched: false, pl: lemma, en: translation, left: gender, right: '', tags: ['noun'], type: 'noun', gender, plAlt: '', declensions: null }
+    return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: gender, right: '', tags: ['noun'], type: 'noun', gender, plAlt: '', declensions: null }
   }
   if (type === 'adjective') {
-    return { id: lemma, enriched: false, pl: lemma, en: translation, left: 'adj', right: '', tags: ['adjective'], type: 'adjective', declensions: null }
+    return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: 'adj', right: '', tags: ['adjective'], type: 'adjective', declensions: null }
   }
-  return { id: lemma, enriched: false, pl: lemma, en: translation, left: '', right: '', tags: ['unknown'], type: 'unknown' }
+  return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: '', right: '', tags: ['unknown'], type: 'unknown' }
 }
 
 interface Result {
@@ -33,6 +33,7 @@ interface Result {
   type: WordType
   gender: string
   isSingleWord: boolean
+  canonicalEn: string
 }
 
 interface Props {
@@ -81,14 +82,16 @@ export default function TranslatePage({ onAddCard }: Props) {
       let lemma = text
       let type: WordType = 'unknown'
       let gender = ''
+      let canonicalEn = translation
       if (lemmaRes?.ok) {
         const data = await lemmaRes.json()
         lemma = data.lemma
         type = data.type
         gender = data.gender ?? ''
+        canonicalEn = data.canonicalEn || translation
       }
 
-      setResult({ translation, lemma, type, gender, isSingleWord: single })
+      setResult({ translation, lemma, type, gender, isSingleWord: single, canonicalEn })
       setPhase('done')
     } catch {
       setPhase('error')
@@ -97,7 +100,7 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   function handleAdd() {
     if (!result) return
-    onAddCard(buildEntry(result.lemma, result.translation, result.type, result.gender))
+    onAddCard(buildEntry(result.lemma, result.canonicalEn, result.type, result.gender))
     setAdded(true)
   }
 
@@ -151,24 +154,29 @@ export default function TranslatePage({ onAddCard }: Props) {
                   <div className="h-[1px] w-full bg-white/10" />
 
                   {/* Lemma + type */}
-                  <div className="flex items-center gap-3">
-                    <span className="font-instrument text-[20px] font-medium text-white/80">
-                      {result.lemma}
-                    </span>
-                    {result.gender && (
-                      <span className="font-instrument text-[16px] italic text-[#e879f9]">
-                        {result.gender}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-3">
+                      <span className="font-instrument text-[20px] font-medium text-white/80">
+                        {result.lemma}
                       </span>
-                    )}
-                    <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
-                      <div
-                        className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
-                        dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
-                      />
-                      <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-[#F8FAFC]">
-                        {result.type}
-                      </span>
+                      {result.gender && (
+                        <span className="font-instrument text-[16px] italic text-[#e879f9]">
+                          {result.gender}
+                        </span>
+                      )}
+                      <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                        <div
+                          className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                          dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
+                        />
+                        <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-[#F8FAFC]">
+                          {result.type}
+                        </span>
+                      </div>
                     </div>
+                    {result.canonicalEn && result.canonicalEn !== result.translation && (
+                      <span className="font-instrument text-[14px] text-white/40">{result.canonicalEn}</span>
+                    )}
                   </div>
 
                   {/* Add to vocab */}

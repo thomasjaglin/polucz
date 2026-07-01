@@ -69,37 +69,20 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
     setErrorMsg('')
 
     try {
-      // Run translate (if EN empty) and lemmatize in parallel
-      const [lemmaRes, translateRes] = await Promise.all([
-        fetch('/api/lemmatize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: plTrimmed }),
-        }),
-        !en.trim()
-          ? fetch('/api/translate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: plTrimmed }),
-            })
-          : Promise.resolve(null),
-      ])
+      const lemmaRes = await fetch('/api/lemmatize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: plTrimmed }),
+      })
 
       if (!lemmaRes.ok) {
         const err = await lemmaRes.json().catch(() => ({}))
         throw new Error(err.error ?? 'Lemmatization failed')
       }
-      const { lemma, type, gender } = await lemmaRes.json()
+      const { lemma, type, gender, canonicalEn } = await lemmaRes.json()
 
-      let resolvedEn = en.trim()
-      if (translateRes) {
-        if (!translateRes.ok) {
-          const err = await translateRes.json().catch(() => ({}))
-          throw new Error(err.error ?? 'Translation failed')
-        }
-        const { translation } = await translateRes.json()
-        resolvedEn = translation
-      }
+      // Prefer the user-provided EN; fall back to canonical form from Gemini
+      const resolvedEn = en.trim() || canonicalEn || lemma
 
       // Deduplicate by lemma
       if (findByLemma(lemma)) {
