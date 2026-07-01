@@ -5,6 +5,7 @@ import GlassPane from './GlassPane'
 
 interface Props {
   entry: VocabEntry
+  mastered?: boolean
   onClick: () => void
 }
 
@@ -14,7 +15,7 @@ function cardMeta(entry: VocabEntry): string | null {
   return null
 }
 
-const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, onClick }, ref) {
+const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, mastered = false, onClick }, ref) {
   const meta = cardMeta(entry)
   return (
     <div className="perspective w-full cursor-pointer" onClick={onClick}>
@@ -25,9 +26,14 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
         <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-white/[0.02] p-[20px]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
-              <span className="font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
-                {entry.pl}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                  {entry.pl}
+                </span>
+                {mastered && (
+                  <span className="text-[14px] leading-none text-[#B4A0FF]">★</span>
+                )}
+              </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
                   {entry.en}

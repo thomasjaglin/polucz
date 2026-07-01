@@ -4,6 +4,10 @@ import type { VocabEntry } from '../data/types'
 const EASE_MIN = 1.3
 const CONQUERED_INTERVAL = 180
 
+export function isConquered(state: ReviewState): boolean {
+  return state.interval >= CONQUERED_INTERVAL
+}
+
 function today(): string {
   return new Date().toISOString().slice(0, 10)
 }

@@ -4,12 +4,16 @@ import FilterTag from './FilterTag'
 import VocabCard from './VocabCard'
 import GlassPane from './GlassPane'
 import type { WordType, VocabEntry } from '../data/types'
+import { getAllReviews } from '../lib/reviewStorage'
+import { isConquered } from '../lib/scheduler'
 
-const FILTER_TAGS: { id: WordType; label: string }[] = [
-  { id: 'noun',      label: 'Noun'      },
-  { id: 'verb',      label: 'Verb'      },
-  { id: 'adjective', label: 'Adjective' },
-  { id: 'unknown',   label: 'Unknown'   },
+type FilterKey = 'noun' | 'verb' | 'adjective' | 'mastered'
+
+const FILTER_TAGS: { id: FilterKey; label: string }[] = [
+  { id: 'noun',      label: 'Noun'     },
+  { id: 'verb',      label: 'Verb'     },
+  { id: 'adjective', label: 'Adjective'},
+  { id: 'mastered',  label: 'Mastered' },
 ]
 
 interface Props {
@@ -19,20 +23,26 @@ interface Props {
 
 export default function VocabListPage({ cards, onOpenModal }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeFilters, setActiveFilters] = useState<Record<WordType, boolean>>({
-    noun: true, verb: true, adjective: true, unknown: true,
+  const [activeFilters, setActiveFilters] = useState<Record<FilterKey, boolean>>({
+    noun: true, verb: true, adjective: true, mastered: true,
   })
   const cardRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
 
-  function toggleFilter(id: WordType) {
+  function toggleFilter(id: FilterKey) {
     setActiveFilters(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  const q = searchQuery.toLowerCase()
-  const filtered = cards.filter(v =>
-    activeFilters[v.type] &&
-    (v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q))
+  const reviews = getAllReviews()
+  const masteredIds = new Set(
+    cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).map(c => c.id)
   )
+
+  const q = searchQuery.toLowerCase()
+  const filtered = cards.filter(v => {
+    if ((v.type === 'noun' || v.type === 'verb' || v.type === 'adjective') && !activeFilters[v.type as WordType & FilterKey]) return false
+    if (masteredIds.has(v.id) && !activeFilters.mastered) return false
+    return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
+  })
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-[24px]">
@@ -69,6 +79,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
               key={entry.id}
               ref={el => { cardRefs.current.set(entry.id, el) }}
               entry={entry}
+              mastered={masteredIds.has(entry.id)}
               onClick={() => onOpenModal(entry, cardRefs.current.get(entry.id) ?? null)}
             />
           ))

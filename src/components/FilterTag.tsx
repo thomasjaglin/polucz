@@ -3,7 +3,7 @@ import { tagGradients } from '../data/gradients'
 import GlassPane from './GlassPane'
 
 interface Props {
-  id: WordType
+  id: WordType | 'mastered'
   label: string
   active: boolean
   onToggle: () => void

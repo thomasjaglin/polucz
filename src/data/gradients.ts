@@ -1,10 +1,11 @@
 import type { WordType } from './types'
 
-export const tagGradients: Record<WordType, string> = {
+export const tagGradients: Record<WordType | 'mastered', string> = {
   noun: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19.114" cy="11.3499" rx="19.114" ry="11.3499" transform="matrix(0.891202 -0.453606 0.39995 0.916537 -11.1111 -5.65967)" fill="#FFE79E"/><ellipse cx="25.0001" cy="20" rx="24.0741" ry="14" fill="#FF5D00" fill-opacity="0.74"/><ellipse cx="47.2221" cy="7.99805" rx="9.25926" ry="11" fill="#FDCF2D" fill-opacity="0.49"/></svg>`,
   verb: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 47 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19.0426" cy="11.3414" rx="19.0426" ry="11.3414" transform="matrix(0.890334 -0.455307 0.398367 0.917226 -11.0588 -5.65967)" fill="#CB9EFF"/><ellipse cx="23.9608" cy="20" rx="23.9608" ry="14" fill="#0099FF" fill-opacity="0.74"/><ellipse cx="47.0001" cy="7.99805" rx="9.21569" ry="11" fill="#2DFD8E" fill-opacity="0.49"/></svg>`,
   adjective: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19.2056" cy="12.795" rx="19.2056" ry="12.795" transform="matrix(0.8923 -0.451444 0.401972 0.915652 -11.178 -5.65967)" fill="#9BBD21"/><ellipse cx="32.1369" cy="20" rx="29.3425" ry="14" fill="#6AFF00" fill-opacity="0.74"/><ellipse cx="62.411" cy="7" rx="9.31507" ry="11" fill="#055015" fill-opacity="0.97"/></svg>`,
   unknown: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="11.9186" cy="-2.61409" rx="20.3379" ry="12.9517" transform="rotate(-25.2336 11.9186 -2.61409)" fill="#4821BD"/><ellipse cx="33" cy="20" rx="30" ry="14" fill="#BF00FF" fill-opacity="0.74"/><ellipse cx="67" cy="7" rx="10" ry="11" fill="#50052B" fill-opacity="0.97"/></svg>`,
+  mastered: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 20" class="absolute inset-0 h-full w-full opacity-90 blur-[4px]" preserveAspectRatio="none"><ellipse cx="19" cy="11" rx="19" ry="11" transform="matrix(0.891 -0.454 0.4 0.917 -11 -5.66)" fill="#FFD700"/><ellipse cx="30" cy="20" rx="28" ry="14" fill="#9B6FFF" fill-opacity="0.80"/><ellipse cx="56" cy="7" rx="10" ry="11" fill="#FFB800" fill-opacity="0.55"/></svg>`,
 }
 
 export const activeSvgMask = `
