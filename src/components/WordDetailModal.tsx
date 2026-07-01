@@ -260,14 +260,26 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
     setEnriching(true)
     setEnrichError(false)
     try {
-      const r = await fetch('/api/enrich-card', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lemma: entry.id, type: entry.type }),
-      })
-      if (!r.ok) throw new Error()
-      const data = await r.json()
-      onEnriched(mergeEnrichment(entry, data))
+      const [enrichRes, lemmaRes] = await Promise.all([
+        fetch('/api/enrich-card', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lemma: entry.id, type: entry.type }),
+        }),
+        fetch('/api/lemmatize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: entry.pl }),
+        }),
+      ])
+      if (!enrichRes.ok) throw new Error()
+      const data = await enrichRes.json()
+      let merged = mergeEnrichment(entry, data)
+      if (lemmaRes.ok) {
+        const lemmaData = await lemmaRes.json()
+        if (lemmaData.canonicalEn) merged = { ...merged, en: lemmaData.canonicalEn }
+      }
+      onEnriched(merged)
     } catch {
       setEnrichError(true)
     } finally {
