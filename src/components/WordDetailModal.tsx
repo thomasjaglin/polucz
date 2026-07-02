@@ -251,11 +251,13 @@ interface Props {
   overlayVisible: boolean
   onClose: () => void
   onEnriched: (updated: VocabEntry) => void
+  onDelete: () => void
 }
 
-export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose, onEnriched }: Props) {
+export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose, onEnriched, onDelete }: Props) {
   const [enriching, setEnriching] = useState(false)
   const [enrichError, setEnrichError] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const tts = useTTS()
 
   function handleSpeaker() {
@@ -346,7 +348,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
             <GlassPane borderRadius={40} className="absolute inset-0 z-0 rounded-[40px] bg-white/[0.02]" />
             <div className="relative z-10 flex flex-col p-[32px]">
 
-            {/* Top row: type tag + refresh */}
+            {/* Top row: type tag + actions */}
             <div className="mb-8 flex w-full items-center justify-between">
               <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[16px] py-[6px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
@@ -357,15 +359,42 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   {entry.type}
                 </span>
               </div>
-              <button
-                onClick={doEnrich}
-                disabled={enriching}
-                className={`flex h-[38px] w-[38px] items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:bg-white/10 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-white/50 hover:text-white'}`}
-              >
-                <span className={`material-symbols-rounded text-[20px]${enriching ? ' animate-spin' : ''}`}>
-                  {enrichError ? 'error' : 'refresh'}
-                </span>
-              </button>
+
+              {confirmDelete ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="flex h-[38px] items-center rounded-full border border-white/10 bg-white/5 px-4 font-instrument text-[13px] text-white/50 transition-all hover:bg-white/10 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={onDelete}
+                    className="flex h-[38px] items-center gap-1.5 rounded-full border border-red-400/30 bg-red-400/10 px-4 font-instrument text-[13px] text-red-400 transition-all hover:bg-red-400/20"
+                  >
+                    <span className="material-symbols-rounded text-[16px]">delete_forever</span>
+                    Delete
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={doEnrich}
+                    disabled={enriching}
+                    className={`flex h-[38px] w-[38px] items-center justify-center rounded-full border border-white/10 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:bg-white/10 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-white/50 hover:text-white'}`}
+                  >
+                    <span className={`material-symbols-rounded text-[20px]${enriching ? ' animate-spin' : ''}`}>
+                      {enrichError ? 'error' : 'refresh'}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(true)}
+                    className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-red-400/20 bg-red-400/5 text-red-400/50 transition-all hover:bg-red-400/15 hover:text-red-400"
+                  >
+                    <span className="material-symbols-rounded text-[20px]">delete</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Word + translation */}

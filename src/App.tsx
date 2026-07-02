@@ -13,7 +13,7 @@ import AudioPlaybackPage from './components/AudioPlaybackPage'
 import WordDetailModal from './components/WordDetailModal'
 import { pages } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
-import { getCards, saveCard, updateCard } from './lib/storage'
+import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
 import { vocabularyData } from './data/vocabulary'
 
 export default function App() {
@@ -41,6 +41,13 @@ export default function App() {
     updateCard(updated.id, updated)
     setCards(getCards())
     setModalEntry(updated)
+  }
+
+  function handleDeleteCard() {
+    if (!modalEntry) return
+    deleteCard(modalEntry.id)
+    setCards(getCards())
+    handleCloseModal()
   }
 
   // ─── Modal animation state ───────────────────────────────────────────────
@@ -155,6 +162,7 @@ export default function App() {
           overlayVisible={overlayVisible}
           onClose={handleCloseModal}
           onEnriched={handleEnriched}
+          onDelete={handleDeleteCard}
         />
       )}
     </div>
