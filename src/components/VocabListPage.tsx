@@ -85,6 +85,9 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
           ))
         )}
       </div>
+
+      {/* Clearance so the last card sits above the bottom nav */}
+      <div aria-hidden="true" className="h-[120px] shrink-0" />
     </div>
   )
 }

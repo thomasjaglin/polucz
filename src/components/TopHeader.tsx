@@ -31,15 +31,32 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
     return () => document.removeEventListener('click', handleOutsideClick)
   }, [settingsOpen])
 
+  function buildPayload() {
+    return { version: 1, cards: getCards(), reviews: getAllReviews() }
+  }
+
   function handleExport() {
-    const payload = { version: 1, cards: getCards(), reviews: getAllReviews() }
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify(buildPayload(), null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `polucz-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
+    setSettingsOpen(false)
+  }
+
+  const [copyLabel, setCopyLabel] = useState<'idle' | 'copied' | 'error'>('idle')
+
+  async function handleCopyToClipboard() {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(buildPayload(), null, 2))
+      setCopyLabel('copied')
+      setTimeout(() => setCopyLabel('idle'), 2000)
+    } catch {
+      setCopyLabel('error')
+      setTimeout(() => setCopyLabel('idle'), 2000)
+    }
     setSettingsOpen(false)
   }
 
@@ -114,6 +131,16 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
                 >
                   <span className="material-symbols-rounded text-[18px]">upload</span>
                   Export JSON
+                </button>
+                <button
+                  onClick={handleCopyToClipboard}
+                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-white/10"
+                  style={{ color: copyLabel === 'copied' ? '#86efac' : copyLabel === 'error' ? '#f87171' : 'rgba(248,250,252,0.5)' }}
+                >
+                  <span className="material-symbols-rounded text-[18px]">
+                    {copyLabel === 'copied' ? 'check_circle' : copyLabel === 'error' ? 'error' : 'content_copy'}
+                  </span>
+                  {copyLabel === 'copied' ? 'Copied!' : copyLabel === 'error' ? 'Copy failed' : 'Copy backup to clipboard'}
                 </button>
                 <button
                   onClick={() => { onChangePage('api_config'); setSettingsOpen(false) }}
