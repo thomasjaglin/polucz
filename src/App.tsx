@@ -19,6 +19,10 @@ import { vocabularyData } from './data/vocabulary'
 export default function App() {
   const [activeId, setActiveId] = useState<PageId>('folder')
 
+  // Hide header on scroll down, reveal on scroll up
+  const [headerHidden, setHeaderHidden] = useState(false)
+  const lastScrollY = useRef(0)
+
   const [cards, setCards] = useState<VocabEntry[]>(() => {
     const stored = getCards()
     if (stored.length === 0) {
@@ -83,9 +87,20 @@ export default function App() {
     }, 300)
   }
 
+  function handleScroll(e: React.UIEvent<HTMLDivElement>) {
+    const y = e.currentTarget.scrollTop
+    if (y <= 50) { setHeaderHidden(false); lastScrollY.current = y; return }
+    const delta = y - lastScrollY.current
+    if (delta > 4) setHeaderHidden(true)
+    else if (delta < -4) setHeaderHidden(false)
+    lastScrollY.current = y
+  }
+
   // ─── Page routing ────────────────────────────────────────────────────────
   function changePage(id: PageId) {
     if (id === activeId) return
+    setHeaderHidden(false)
+    lastScrollY.current = 0
     if ('startViewTransition' in document) {
       document.startViewTransition(() => {
         flushSync(() => setActiveId(id))
@@ -119,9 +134,9 @@ export default function App() {
       <AppBackground />
       <PageGradient activeId={activeId} />
 
-      <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} />
+      <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} hidden={headerHidden} />
 
-      <div className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[120px] pt-[82px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <div onScroll={handleScroll} className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[152px] pt-[82px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}>
         <div
           className="relative z-30 flex h-full w-full flex-col"
           style={{ viewTransitionName: 'page-content' }}

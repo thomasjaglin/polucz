@@ -9,9 +9,10 @@ interface Props {
   activeId: PageId
   onChangePage: (id: PageId) => void
   onImport: () => void
+  hidden?: boolean
 }
 
-export default function TopHeader({ activeId, onChangePage, onImport }: Props) {
+export default function TopHeader({ activeId, onChangePage, onImport, hidden = false }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const settingsBtnRef = useRef<HTMLButtonElement>(null)
@@ -80,7 +81,8 @@ export default function TopHeader({ activeId, onChangePage, onImport }: Props) {
 
   // Main nav pages: logo centered + optional right-side actions
   return (
-    <div className="absolute inset-x-0 top-4 z-50 mx-auto flex max-w-[426px] items-center justify-center px-6">
+    <div className={`absolute inset-x-0 top-0 z-50 transition-transform duration-300 ease-in-out ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
+    <div className="relative mx-auto flex max-w-[426px] items-center justify-center px-6 pt-4">
       {/* Logo — centered */}
       <AppLogo />
 
@@ -133,6 +135,7 @@ export default function TopHeader({ activeId, onChangePage, onImport }: Props) {
           />
         </div>
       )}
+    </div>
     </div>
   )
 }
