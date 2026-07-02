@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polucz — Sentence Review</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+  body {
+    background: #0a0a12;
+    color: #f8fafc;
+    font-family: 'Georgia', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: rgba(248,250,252,0.4);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  /* ── Load screen ─────────────────────────────────────────── */
+  #load-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding-top: 60px;
+  }
+
+  #load-screen p {
+    font-size: 16px;
+    color: rgba(248,250,252,0.5);
+    text-align: center;
+    max-width: 380px;
+    line-height: 1.6;
+  }
+
+  label.file-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border-radius: 32px;
+    border: 1px solid rgba(180,160,255,0.3);
+    background: rgba(180,160,255,0.08);
+    color: #b4a0ff;
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  label.file-btn:hover { background: rgba(180,160,255,0.16); border-color: rgba(180,160,255,0.5) }
+  #file-input { display: none }
+
+  /* ── Progress bar ────────────────────────────────────────── */
+  #progress-wrap {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 32px;
+  }
+  #progress-bar-bg {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  #progress-bar-fill {
+    height: 100%;
+    background: #b4a0ff;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+  #progress-label {
+    text-align: right;
+    font-size: 13px;
+    color: rgba(248,250,252,0.3);
+    font-family: 'Courier New', monospace;
+  }
+
+  /* ── Card ────────────────────────────────────────────────── */
+  #card {
+    width: 100%;
+    max-width: 560px;
+    border-radius: 28px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(16px);
+    padding: 36px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+
+  /* type badge */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 32px;
+    border: 1px solid rgba(248,250,252,0.15);
+    background: rgba(248,250,252,0.07);
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(248,250,252,0.6);
+    align-self: flex-start;
+  }
+  .badge.verb      { border-color: rgba(140,63,160,0.4);  background: rgba(140,63,160,0.1);  color: #d4a0ff }
+  .badge.noun      { border-color: rgba(192,104,32,0.4);  background: rgba(192,104,32,0.1);  color: #f0c080 }
+  .badge.adjective { border-color: rgba(26,138,48,0.4);   background: rgba(26,138,48,0.1);   color: #80e0a0 }
+
+  /* grammatical label */
+  .gram-label {
+    font-size: 13px;
+    color: rgba(248,250,252,0.35);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.03em;
+  }
+
+  /* Polish sentence with highlight */
+  .polish-sentence {
+    font-size: 26px;
+    line-height: 1.45;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+  }
+  .polish-sentence mark {
+    background: rgba(180,160,255,0.25);
+    color: #c8b4ff;
+    border-radius: 4px;
+    padding: 1px 3px;
+  }
+
+  /* divider */
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* English translation */
+  .english {
+    font-size: 17px;
+    color: rgba(248,250,252,0.5);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* ── Action buttons ──────────────────────────────────────── */
+  #actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 560px;
+    margin-top: 20px;
+  }
+
+  button.action {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 24px;
+    border: 1px solid;
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.1s;
+  }
+  button.action:active { transform: scale(0.97) }
+
+  #btn-reject {
+    border-color: rgba(248,113,113,0.25);
+    background: rgba(248,113,113,0.07);
+    color: rgba(248,113,113,0.7);
+  }
+  #btn-reject:hover { background: rgba(248,113,113,0.15) }
+
+  #btn-approve {
+    border-color: rgba(134,239,172,0.25);
+    background: rgba(134,239,172,0.07);
+    color: rgba(134,239,172,0.8);
+  }
+  #btn-approve:hover { background: rgba(134,239,172,0.15) }
+
+  /* keyboard hint */
+  .key-hint {
+    font-size: 11px;
+    opacity: 0.5;
+    font-family: 'Courier New', monospace;
+    background: rgba(255,255,255,0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ── Done screen ─────────────────────────────────────────── */
+  #done-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding-top: 40px;
+    text-align: center;
+  }
+  #done-screen h2 { font-size: 28px; color: #b4a0ff }
+  #done-screen p  { font-size: 16px; color: rgba(248,250,252,0.5); line-height: 1.6 }
+
+  button.export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    border-radius: 32px;
+    border: 1px solid rgba(134,239,172,0.3);
+    background: rgba(134,239,172,0.08);
+    color: rgba(134,239,172,0.9);
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  button.export-btn:hover { background: rgba(134,239,172,0.16) }
+
+  #review-area { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0 }
+</style>
+</head>
+<body>
+
+<h1>Sentence Review</h1>
+
+<!-- Load screen -->
+<div id="load-screen">
+  <p>Load a <code>sentences.json</code> file generated by the script to begin reviewing.</p>
+  <label class="file-btn" for="file-input">
+    &#128196; Load sentences.json
+  </label>
+  <input type="file" id="file-input" accept=".json,application/json">
+  <p style="font-size:13px; color: rgba(248,250,252,0.25)">
+    Keyboard: &larr; Reject &nbsp;|&nbsp; &rarr; Approve
+  </p>
+</div>
+
+<!-- Review area -->
+<div id="review-area" style="display:none">
+  <div id="progress-wrap">
+    <div id="progress-bar-bg"><div id="progress-bar-fill" style="width:0%"></div></div>
+    <div id="progress-label">0 / 0</div>
+  </div>
+
+  <div id="card">
+    <div class="badge" id="badge"></div>
+    <div class="gram-label" id="gram-label"></div>
+    <div class="polish-sentence" id="polish"></div>
+    <div class="divider"></div>
+    <div class="english" id="english"></div>
+  </div>
+
+  <div id="actions">
+    <button class="action" id="btn-reject">
+      <span class="key-hint">&#8592;</span> Reject
+    </button>
+    <button class="action" id="btn-approve">
+      Approve <span class="key-hint">&#8594;</span>
+    </button>
+  </div>
+</div>
+
+<!-- Done screen -->
+<div id="done-screen">
+  <h2>Review complete</h2>
+  <p id="done-summary"></p>
+  <button class="export-btn" id="btn-export">&#8659; Export approved sentences</button>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────────────────
+  let sentences   = []   // full list (only unapproved need reviewing)
+  let queue       = []   // sentences still to review
+  let cursor      = 0
+  let approvedIds = new Set()
+  let sourceFile  = ''
+
+  // ── File load ──────────────────────────────────────────────────────────────
+  document.getElementById('file-input').addEventListener('change', e => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result)
+        if (!Array.isArray(data.sentences)) throw new Error('No sentences array')
+        sentences  = data.sentences
+        sourceFile = data.sourceFile ?? file.name
+        queue      = sentences.filter(s => !s.approved)
+        cursor     = 0
+        approvedIds = new Set(sentences.filter(s => s.approved).map(s => s.id))
+
+        if (queue.length === 0) {
+          showDone()
+        } else {
+          document.getElementById('load-screen').style.display  = 'none'
+          document.getElementById('review-area').style.display  = 'flex'
+          renderCard()
+        }
+      } catch (err) {
+        alert('Could not read file: ' + err.message)
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  })
+
+  // ── Card rendering ─────────────────────────────────────────────────────────
+  function renderCard() {
+    const total    = queue.length
+    const reviewed = cursor
+    const pct      = total === 0 ? 100 : Math.round((reviewed / total) * 100)
+
+    document.getElementById('progress-bar-fill').style.width = pct + '%'
+    document.getElementById('progress-label').textContent    = `${reviewed} / ${total}`
+
+    if (cursor >= queue.length) { showDone(); return }
+
+    const s = queue[cursor]
+
+    // Badge
+    const badge = document.getElementById('badge')
+    badge.textContent  = s.cardType
+    badge.className    = 'badge ' + s.cardType
+
+    // Grammatical label
+    document.getElementById('gram-label').textContent = gramLabel(s)
+
+    // Polish sentence with target form highlighted
+    document.getElementById('polish').innerHTML = highlight(s.polish, s.targetForm)
+
+    // English
+    document.getElementById('english').textContent = s.english
+  }
+
+  function gramLabel(s) {
+    if (s.cardType === 'noun') {
+      return `${s.targetCase} ${s.targetNumber} of "${s.cardLemma}"`
+    }
+    if (s.cardType === 'verb') {
+      return `${s.targetPronoun} (${s.targetTense}) of "${s.cardLemma}"`
+    }
+    if (s.cardType === 'adjective') {
+      return `nominative singular ${s.targetGender} of "${s.cardLemma}"`
+    }
+    return s.cardLemma
+  }
+
+  function highlight(sentence, form) {
+    if (!form || !sentence) return escHtml(sentence ?? '')
+    // Use the primary form (before any slash-alternate)
+    const target = form.split('/')[0].trim()
+    // Build a regex that matches the exact target string, case-sensitive
+    const escaped = target.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const re = new RegExp(`(${escaped})`, 'g')
+    return escHtml(sentence).replace(re, '<mark>$1</mark>')
+  }
+
+  function escHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+  }
+
+  // ── Decisions ──────────────────────────────────────────────────────────────
+  function approve() {
+    if (cursor >= queue.length) return
+    approvedIds.add(queue[cursor].id)
+    cursor++
+    renderCard()
+  }
+
+  function reject() {
+    if (cursor >= queue.length) return
+    cursor++
+    renderCard()
+  }
+
+  document.getElementById('btn-approve').addEventListener('click', approve)
+  document.getElementById('btn-reject').addEventListener('click', reject)
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return
+    if (e.key === 'ArrowRight') approve()
+    if (e.key === 'ArrowLeft')  reject()
+  })
+
+  // ── Done screen ────────────────────────────────────────────────────────────
+  function showDone() {
+    document.getElementById('review-area').style.display = 'none'
+    document.getElementById('load-screen').style.display = 'none'
+    document.getElementById('done-screen').style.display = 'flex'
+
+    const approvedCount = approvedIds.size
+    const totalReviewed = cursor
+    document.getElementById('done-summary').innerHTML =
+      `Approved <strong>${approvedCount}</strong> of ${totalReviewed} reviewed sentences.<br>` +
+      `Click below to download the approved set.`
+  }
+
+  // ── Export ─────────────────────────────────────────────────────────────────
+  document.getElementById('btn-export').addEventListener('click', () => {
+    // Mark approved sentences and include them; drop rejected ones
+    const approved = sentences
+      .filter(s => s.approved || approvedIds.has(s.id))
+      .map(s => ({ ...s, approved: true }))
+
+    const out = {
+      generated:  new Date().toISOString(),
+      sourceFile,
+      sentences:  approved,
+    }
+
+    const blob = URL.createObjectURL(
+      new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' })
+    )
+    const a = document.createElement('a')
+    a.href     = blob
+    a.download = 'sentences-approved.json'
+    a.click()
+    URL.revokeObjectURL(blob)
+  })
+</script>
+</body>
+</html>
