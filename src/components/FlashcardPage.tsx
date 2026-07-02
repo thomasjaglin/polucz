@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
-import { getAllReviews, getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
+import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import GlassPane from './GlassPane'
@@ -230,7 +230,6 @@ interface Props {
 
 export default function FlashcardPage({ cards }: Props) {
   const [queue, setQueue] = useState<VocabEntry[]>([])
-  const [doneCount, setDoneCount] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -241,8 +240,10 @@ export default function FlashcardPage({ cards }: Props) {
     const due = getDueCards(cards, reviews)
     setQueue(due)
     setTotalCount(due.length)
-    setDoneCount(0)
   }, [cards])
+
+  // Derived: cards permanently removed from the queue (re-queued "Again" cards don't count)
+  const doneCount = totalCount - queue.length
 
   const current = queue[0] ?? null
 
@@ -255,7 +256,19 @@ export default function FlashcardPage({ cards }: Props) {
   const advance = useCallback(() => {
     tts.stop()
     setQueue(q => q.slice(1))
-    setDoneCount(n => n + 1)
+    setRevealed(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Move current card to position ~3 in queue so it comes back soon in this session
+  const requeueCurrent = useCallback(() => {
+    tts.stop()
+    setQueue(q => {
+      if (q.length <= 1) return q  // only card left — stays at front, re-revealed
+      const [head, ...tail] = q
+      const pos = Math.min(3, tail.length)
+      return [...tail.slice(0, pos), head, ...tail.slice(pos)]
+    })
     setRevealed(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -267,11 +280,10 @@ export default function FlashcardPage({ cards }: Props) {
   }
 
   function handleReset() {
-    resetAllReviews()
+    resetDueReviews()  // leaves conquered cards (interval >= 180) untouched
     const due = getDueCards(cards, getAllReviews())
     setQueue(due)
     setTotalCount(due.length)
-    setDoneCount(0)
     setRevealed(false)
   }
 
@@ -304,7 +316,7 @@ export default function FlashcardPage({ cards }: Props) {
   function handleLapse() {
     if (!current) return
     saveReview(current.id, applyLapse(getOrInit(current.id)))
-    advance()
+    requeueCurrent()
   }
 
   return (

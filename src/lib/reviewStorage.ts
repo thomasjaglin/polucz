@@ -1,4 +1,5 @@
 import type { ReviewState } from '../data/types'
+import { CONQUERED_INTERVAL } from './scheduler'
 
 const KEY = 'polucz_reviews'
 
@@ -45,12 +46,24 @@ export function initReview(id: string): ReviewState {
   return state
 }
 
-// Sets all existing review dueDates to today so every card becomes due again.
-// Preserves SM-2 history (interval, easeFactor).
 export function replaceAllReviews(reviews: Record<string, ReviewState>): void {
   save(reviews)
 }
 
+// Makes non-conquered cards due today so they re-enter the queue.
+// Leaves conquered cards (interval >= CONQUERED_INTERVAL) untouched.
+export function resetDueReviews(): void {
+  const reviews = load()
+  const t = today()
+  for (const id of Object.keys(reviews)) {
+    if (reviews[id].interval < CONQUERED_INTERVAL) {
+      reviews[id] = { ...reviews[id], dueDate: t }
+    }
+  }
+  save(reviews)
+}
+
+// Hard reset: every card due today including conquered ones.
 export function resetAllReviews(): void {
   const reviews = load()
   const t = today()
