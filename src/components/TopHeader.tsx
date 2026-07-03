@@ -4,6 +4,7 @@ import AppLogo from './AppLogo'
 import type { PageId } from '../data/types'
 import { getCards, replaceAllCards } from '../lib/storage'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
+import { saveSentences } from '../lib/sentenceStorage'
 
 interface Props {
   activeId: PageId
@@ -78,6 +79,9 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
         }
         replaceAllCards(data.cards)
         replaceAllReviews(data.reviews)
+        if (Array.isArray(data.sentences) && data.sentences.length > 0) {
+          saveSentences(data.sentences)
+        }
         onImport()
       } catch {
         alert('Could not read the file. Make sure it is a valid Polucz backup.')
