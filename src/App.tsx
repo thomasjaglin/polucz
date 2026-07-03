@@ -10,6 +10,7 @@ import ApiConfigPage from './components/ApiConfigPage'
 import TranslatePage from './components/TranslatePage'
 import FlashcardPage from './components/FlashcardPage'
 import AudioPlaybackPage from './components/AudioPlaybackPage'
+import QuizPage from './components/QuizPage'
 import WordDetailModal from './components/WordDetailModal'
 import { pages } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
@@ -121,9 +122,10 @@ export default function App() {
   const page = pages[activeId]
 
   function renderContent() {
-    if (activeId === 'folder')     return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
-    if (activeId === 'translate')   return <TranslatePage onAddCard={handleAddCard} />
-    if (activeId === 'dynamic_feed')  return <FlashcardPage cards={cards} />
+    if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
+    if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} />
+    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} />
+    if (activeId === 'question_mark') return <QuizPage />
     if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />

@@ -1,5 +1,19 @@
 import type { SentenceEntry, SentenceNoun, SentenceAdjective, ReviewState } from '../data/types'
 
+// ─── Display helpers ──────────────────────────────────────────────────────────
+
+export function blankSentence(polish: string, targetForm: string): string {
+  const escaped = targetForm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return polish.replace(new RegExp(escaped, 'gi'), '___')
+}
+
+export function grammarPrompt(s: SentenceEntry): string {
+  const cap = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
+  if (s.cardType === 'noun') return `${cap(s.targetCase)} ${s.targetNumber} of "${s.cardLemma}"`
+  if (s.cardType === 'verb') return `${cap(s.targetTense)} tense (${s.targetPronoun}) of "${s.cardLemma}"`
+  return `${cap(s.targetCase)} ${s.targetNumber} ${s.targetGender} of "${s.cardLemma}"`
+}
+
 // ─── checkAnswer ──────────────────────────────────────────────────────────────
 
 /**
