@@ -5,17 +5,17 @@ import { getGlassMode } from '../lib/glassMode'
 import { registerMaskPane } from '../webgl/glassStore'
 
 // Scale from original SVG viewBox (142.128 × 58.397) to rendered size (118 × 49)
-const LOGO_W = 118
-const LOGO_H = 49
-const SX = LOGO_W / 142.128
-const SY = LOGO_H / 58.397
+export const LOGO_W = 118
+export const LOGO_H = 49
+export const SX = LOGO_W / 142.128
+export const SY = LOGO_H / 58.397
 
 const LOGO_FILTER_ID = 'kube-glass-logo'
 
 // Bar rect from the SVG: x, y, width, height, rx + rotate(90) pivot
-const BAR = { x: 36.3776, y: 50.6733, w: 6.76496, h: 36.3776, rx: 3.38248 }
+export const BAR = { x: 36.3776, y: 50.6733, w: 6.76496, h: 36.3776, rx: 3.38248 }
 
-function drawLogoMask(ctx: CanvasRenderingContext2D) {
+export function drawLogoMask(ctx: CanvasRenderingContext2D) {
   ctx.scale(SX, SY)
   ctx.fillStyle = '#fff'
   for (const d of LETTER_PATHS) ctx.fill(new Path2D(d))
@@ -30,7 +30,7 @@ function drawLogoMask(ctx: CanvasRenderingContext2D) {
   ctx.restore()
 }
 
-const LETTER_PATHS = [
+export const LETTER_PATHS = [
   // U
   'M73.4096 25.1371C73.4096 23.3087 74.8918 21.8265 76.7201 21.8265C78.5485 21.8265 80.0307 23.3087 80.0307 25.1371L80.0307 35.0081C80.0307 39.5136 78.4684 42.8276 75.939 45.1363C73.7444 47.147 70.7686 48.3758 67.4581 48.3758C63.8127 48.3758 60.5022 46.8119 58.196 44.3171C56.1501 42.0829 54.8854 39.0668 54.8854 35.0081L54.8854 25.1557C54.8854 23.317 56.3759 21.8265 58.2146 21.8265C60.0532 21.8265 61.5437 23.3171 61.5437 25.1557L61.5437 35.0081C61.5437 37.2795 62.1761 38.6944 63.1804 39.7743C64.2591 40.9286 65.8214 41.6361 67.4952 41.6361C69.0203 41.6361 70.4338 41.0403 71.4753 40.0722C72.6656 38.9923 73.4096 37.3912 73.4096 35.0081L73.4096 25.1371Z',
   // P
@@ -50,23 +50,25 @@ export default function AppLogo() {
   // Refraction map built from the letterforms themselves. In svg mode it
   // feeds the shared filter defs; in webgl mode the raw map canvas is
   // registered for the GlassCanvas renderer to sample as a texture.
+  // Conservative baseline parameters — the relief experiments for thin glass
+  // live in the glass lab (?lab) until a combination is proven there.
+  const MASK_OPTS = { scale: 30, blurRadius: 3, highlight: 0.5, shade: 0 }
+
   useEffect(() => {
     // Lower displacement scale than the panes: the letter strokes are thin,
-    // so a large offset would tear the backdrop apart. blurRadius must stay
-    // under half the stroke width (~5-6px): wider bands overlap from both
-    // stroke edges, cancelling the refraction and flattening the specular
-    // into an outline.
+    // so a large offset would tear the backdrop apart.
     if (glassMode === 'svg') {
-      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 34, blurRadius: 2 })
+      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, MASK_OPTS)
       upsertFilter(LOGO_FILTER_ID, maps, LOGO_W, LOGO_H)
       return () => {
         document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
       }
     }
     if (glassMode === 'webgl' && containerRef.current) {
-      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, { scale: 34, blurRadius: 2 })
+      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, MASK_OPTS)
       return registerMaskPane({ el: containerRef.current, map: canvas, scale, overscan: GLASS_OVERSCAN })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [glassMode])
 
   return (
@@ -100,46 +102,22 @@ export default function AppLogo() {
           Extends GLASS_OVERSCAN beyond the logo (like .kube-glass-bg::before)
           so edge displacement never samples outside the painted backdrop;
           filter applies before clip-path, so the refraction survives the clip. */}
-      {/* Layer 0 — drop shadow from the filled glyphs, painted beneath the
-          glass layer: separates the letters from the backdrop (thin glass
-          needs the offset dark copy to look physical), and since the glass
-          layer's backdrop-filter samples it, the glass darkens over its own
-          shadow like a real slab would. */}
-      <svg
-        width={118}
-        height={49}
-        viewBox="0 0 142.128 58.397"
-        xmlns="http://www.w3.org/2000/svg"
-        className="absolute inset-0"
-        style={{ filter: 'blur(2.5px)', transform: 'translateY(2.5px)', opacity: 0.4 }}
-      >
-        <g fill="black">
-          {LETTER_PATHS.map((d, i) => <path key={i} d={d} />)}
-          <rect x={BAR.x} y={BAR.y} width={BAR.w} height={BAR.h} rx={BAR.rx} transform={`rotate(90 ${BAR.x} ${BAR.y})`} />
-        </g>
-      </svg>
-
-      {/* Light blur only: at 10px the backdrop flattens to a uniform field and
-          the refraction becomes invisible — 3px keeps the dot grid readable
-          through the letterforms so the displacement actually shows. */}
       <div
         className="absolute"
         style={{
           inset: -GLASS_OVERSCAN,
-          backdropFilter: 'blur(3px) saturate(180%) brightness(110%)',
-          WebkitBackdropFilter: 'blur(3px) saturate(180%) brightness(110%)',
+          backdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
+          WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
           filter: glassMode === 'svg' ? `url(#${LOGO_FILTER_ID})` : undefined,
           clipPath: 'url(#polucz-clip-pad)',
         }}
       />
 
-      {/* Layer 2 — reflection gradient (top-light, like the cards), clipped to
-          letters. Stronger than the cards': thin strokes need the sheen to
-          carry the glass fill that refraction can't show at this scale. */}
+      {/* Layer 2 — reflection gradient (top-light, like the cards), clipped to letters */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(150deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.06) 55%, rgba(255,255,255,0.16) 100%)',
+          background: 'linear-gradient(150deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 55%, rgba(255,255,255,0.10) 100%)',
           clipPath: 'url(#polucz-clip)',
         }}
       />
