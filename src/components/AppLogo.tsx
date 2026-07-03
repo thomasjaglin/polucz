@@ -52,17 +52,19 @@ export default function AppLogo() {
   // registered for the GlassCanvas renderer to sample as a texture.
   useEffect(() => {
     // Lower displacement scale than the panes: the letter strokes are thin,
-    // so a large offset would tear the backdrop apart. blurRadius widens the
-    // refraction band beyond the stroke edges so it reads at logo size.
+    // so a large offset would tear the backdrop apart. blurRadius must stay
+    // under half the stroke width (~5-6px): wider bands overlap from both
+    // stroke edges, cancelling the refraction and flattening the specular
+    // into an outline.
     if (glassMode === 'svg') {
-      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 44, blurRadius: 5 })
+      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 34, blurRadius: 2 })
       upsertFilter(LOGO_FILTER_ID, maps, LOGO_W, LOGO_H)
       return () => {
         document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
       }
     }
     if (glassMode === 'webgl' && containerRef.current) {
-      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, { scale: 44, blurRadius: 5 })
+      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, { scale: 34, blurRadius: 2 })
       return registerMaskPane({ el: containerRef.current, map: canvas, scale, overscan: GLASS_OVERSCAN })
     }
   }, [glassMode])
