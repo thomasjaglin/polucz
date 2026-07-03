@@ -52,16 +52,17 @@ export default function AppLogo() {
   // registered for the GlassCanvas renderer to sample as a texture.
   useEffect(() => {
     // Lower displacement scale than the panes: the letter strokes are thin,
-    // so a large offset would tear the backdrop apart.
+    // so a large offset would tear the backdrop apart. blurRadius widens the
+    // refraction band beyond the stroke edges so it reads at logo size.
     if (glassMode === 'svg') {
-      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
+      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 44, blurRadius: 5 })
       upsertFilter(LOGO_FILTER_ID, maps, LOGO_W, LOGO_H)
       return () => {
         document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
       }
     }
     if (glassMode === 'webgl' && containerRef.current) {
-      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
+      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, { scale: 44, blurRadius: 5 })
       return registerMaskPane({ el: containerRef.current, map: canvas, scale, overscan: GLASS_OVERSCAN })
     }
   }, [glassMode])
@@ -97,12 +98,15 @@ export default function AppLogo() {
           Extends GLASS_OVERSCAN beyond the logo (like .kube-glass-bg::before)
           so edge displacement never samples outside the painted backdrop;
           filter applies before clip-path, so the refraction survives the clip. */}
+      {/* Light blur only: at 10px the backdrop flattens to a uniform field and
+          the refraction becomes invisible — 3px keeps the dot grid readable
+          through the letterforms so the displacement actually shows. */}
       <div
         className="absolute"
         style={{
           inset: -GLASS_OVERSCAN,
-          backdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
-          WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
+          backdropFilter: 'blur(3px) saturate(180%) brightness(110%)',
+          WebkitBackdropFilter: 'blur(3px) saturate(180%) brightness(110%)',
           filter: glassMode === 'svg' ? `url(#${LOGO_FILTER_ID})` : undefined,
           clipPath: 'url(#polucz-clip-pad)',
         }}
