@@ -46,14 +46,17 @@ export function upsertFilter(id: string, maps: GlassMaps, w: number, h: number) 
     feDisplace.setAttribute('result', 'displaced')
     filter.appendChild(feDisplace)
 
-    // Specular rim light: the map's blue channel carries the intensity.
-    // RGB' = A' = B gives premultiplied white-at-intensity-B; Chromium
-    // composites feColorMatrix output as premultiplied, so the textbook
-    // "RGB=1, alpha=B" matrix bleeds additive white across the whole map.
+    // Rim lighting from the map's blue relief channel (128 neutral, above =
+    // highlight, below = shade). Both matrices emit premultiplied-consistent
+    // output (RGB' tracks A'): Chromium composites feColorMatrix output as
+    // premultiplied, so the textbook "RGB=1, alpha=B" matrix bleeds additive
+    // white across the whole map.
+
+    // Highlight: white at intensity max(2B−1, 0), screen-blended
     const feSpec = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix')
     feSpec.setAttribute('in', 'map')
     feSpec.setAttribute('type', 'matrix')
-    feSpec.setAttribute('values', '0 0 1 0 0  0 0 1 0 0  0 0 1 0 0  0 0 1 0 0')
+    feSpec.setAttribute('values', '0 0 2 0 -1  0 0 2 0 -1  0 0 2 0 -1  0 0 2 0 -1')
     feSpec.setAttribute('result', 'spec')
     filter.appendChild(feSpec)
 
@@ -61,7 +64,23 @@ export function upsertFilter(id: string, maps: GlassMaps, w: number, h: number) 
     feBlend.setAttribute('in', 'spec')
     feBlend.setAttribute('in2', 'displaced')
     feBlend.setAttribute('mode', 'screen')
+    feBlend.setAttribute('result', 'lit')
     filter.appendChild(feBlend)
+
+    // Shade: black at alpha max(1−2B, 0), composited over — darkens the
+    // away-facing rim so thin shapes read as relief, not outline
+    const feShade = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix')
+    feShade.setAttribute('in', 'map')
+    feShade.setAttribute('type', 'matrix')
+    feShade.setAttribute('values', '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 -2 0 1')
+    feShade.setAttribute('result', 'shade')
+    filter.appendChild(feShade)
+
+    const feShadeBlend = document.createElementNS('http://www.w3.org/2000/svg', 'feBlend')
+    feShadeBlend.setAttribute('in', 'shade')
+    feShadeBlend.setAttribute('in2', 'lit')
+    feShadeBlend.setAttribute('mode', 'normal')
+    filter.appendChild(feShadeBlend)
 
     defs.appendChild(filter)
   }

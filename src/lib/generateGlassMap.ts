@@ -9,19 +9,25 @@ import {
   BEZEL_WIDTH,
   THICKNESS,
   REFRACTIVE_INDEX,
+  LIGHT_X,
+  LIGHT_Y,
   specularIntensity,
   refractionProfile,
   sdfRoundRect,
 } from './glassParams'
 
 // One map carries everything: R/G encode the X/Y displacement (128 = neutral)
-// and B encodes the specular rim intensity (0–255). The filter splits B back
-// out with feColorMatrix — a single feImage avoids Chromium's unreliable
-// handling of multiple data-URL feImages in one filter.
+// and B is a signed relief channel — 128 neutral, above = rim highlight,
+// below = rim shade. The filter splits B back out with feColorMatrix — a
+// single feImage avoids Chromium's unreliable handling of multiple data-URL
+// feImages in one filter. The highlight/shade pair is what makes thin glass
+// (logo strokes) read as 3D relief where refraction alone is invisible.
 export interface GlassMaps {
   url: string
   scale: number // max displacement in px — use as feDisplacementMap scale
 }
+
+export const RELIEF_NEUTRAL = 128
 
 // Re-exported for the filter plumbing in useGlassFilter.
 export { GLASS_OVERSCAN }
@@ -32,8 +38,9 @@ interface GlassMapOptions {
   refractiveIndex?: number // n₂ of the glass; air n₁ = 1 is implied
 }
 
-function specularAlpha(ox: number, oy: number, rim: number): number {
-  return Math.round(255 * specularIntensity(ox, oy, rim))
+// Rect panes keep their highlight-only look: B in [128, 255]
+function reliefHighlight(ox: number, oy: number, rim: number): number {
+  return RELIEF_NEUTRAL + Math.round(127 * specularIntensity(ox, oy, rim))
 }
 
 export function generateGlassMap(
@@ -72,9 +79,9 @@ export function generateGlassMap(
       const u = edgeDist / bezel
 
       // Outside the element, or on the flat slab beyond the bezel:
-      // neutral displacement, no highlight.
+      // neutral displacement, neutral relief.
       if (edgeDist <= 0 || u >= 1) {
-        d[i] = 128; d[i + 1] = 128; d[i + 2] = 0; d[i + 3] = 255
+        d[i] = 128; d[i + 1] = 128; d[i + 2] = RELIEF_NEUTRAL; d[i + 3] = 255
         continue
       }
 
@@ -91,7 +98,7 @@ export function generateGlassMap(
       // Inward displacement (toward center) — bends the backdrop in at edges
       d[i]     = Math.round(128 - ox * strength * 127)
       d[i + 1] = Math.round(128 - oy * strength * 127)
-      d[i + 2] = specularAlpha(ox, oy, strength)
+      d[i + 2] = reliefHighlight(ox, oy, strength)
       d[i + 3] = 255
     }
   }
@@ -139,11 +146,18 @@ export interface MaskGlassCanvas {
 // maps — provides both the displacement direction and the rim normals.
 // Returns the raw canvas so the WebGL renderer can upload it as a texture;
 // generateMaskGlassMap below wraps it as a data URL for the SVG filter path.
+export interface MaskGlassOptions {
+  blurRadius?: number
+  scale?: number
+  highlight?: number // rim-light strength on light-facing edges (0..1)
+  shade?: number     // rim-shadow strength on away-facing edges (0..1)
+}
+
 export function generateMaskGlassCanvas(
   width: number,
   height: number,
   drawMask: (ctx: CanvasRenderingContext2D) => void,
-  { blurRadius = 3, scale = 30 }: { blurRadius?: number; scale?: number } = {}
+  { blurRadius = 3, scale = 30, highlight = 0.9, shade = 0.6 }: MaskGlassOptions = {}
 ): MaskGlassCanvas {
   const mapW = width + GLASS_OVERSCAN * 2
   const mapH = height + GLASS_OVERSCAN * 2
@@ -181,8 +195,18 @@ export function generateMaskGlassCanvas(
       d[i + 1] = Math.round(128 + ny * 127)
       d[i + 3] = 255
 
+      // Signed relief: light-facing edges brighten, away-facing edges darken.
+      // Thin strokes can't show much refraction, so this highlight/shadow
+      // pair is what makes them read as dimensional glass.
       const mag = Math.hypot(nx, ny)
-      d[i + 2] = mag > 0.05 ? specularAlpha(-nx / mag, -ny / mag, mag) : 0
+      if (mag > 0.05) {
+        const lit = (-nx / mag) * LIGHT_X + (-ny / mag) * LIGHT_Y
+        const hl = lit > 0 ? lit * lit * mag * highlight : 0
+        const sh = lit < 0 ? lit * lit * mag * shade : 0
+        d[i + 2] = RELIEF_NEUTRAL + Math.round(clampUnit(hl - sh) * 127)
+      } else {
+        d[i + 2] = RELIEF_NEUTRAL
+      }
     }
   }
 
@@ -194,7 +218,7 @@ export function generateMaskGlassMap(
   width: number,
   height: number,
   drawMask: (ctx: CanvasRenderingContext2D) => void,
-  opts: { blurRadius?: number; scale?: number } = {}
+  opts: MaskGlassOptions = {}
 ): GlassMaps {
   const { canvas, scale } = generateMaskGlassCanvas(width, height, drawMask, opts)
   return { url: canvas.toDataURL(), scale }

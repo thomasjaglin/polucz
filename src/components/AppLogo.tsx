@@ -100,6 +100,25 @@ export default function AppLogo() {
           Extends GLASS_OVERSCAN beyond the logo (like .kube-glass-bg::before)
           so edge displacement never samples outside the painted backdrop;
           filter applies before clip-path, so the refraction survives the clip. */}
+      {/* Layer 0 — drop shadow from the filled glyphs, painted beneath the
+          glass layer: separates the letters from the backdrop (thin glass
+          needs the offset dark copy to look physical), and since the glass
+          layer's backdrop-filter samples it, the glass darkens over its own
+          shadow like a real slab would. */}
+      <svg
+        width={118}
+        height={49}
+        viewBox="0 0 142.128 58.397"
+        xmlns="http://www.w3.org/2000/svg"
+        className="absolute inset-0"
+        style={{ filter: 'blur(2.5px)', transform: 'translateY(2.5px)', opacity: 0.4 }}
+      >
+        <g fill="black">
+          {LETTER_PATHS.map((d, i) => <path key={i} d={d} />)}
+          <rect x={BAR.x} y={BAR.y} width={BAR.w} height={BAR.h} rx={BAR.rx} transform={`rotate(90 ${BAR.x} ${BAR.y})`} />
+        </g>
+      </svg>
+
       {/* Light blur only: at 10px the backdrop flattens to a uniform field and
           the refraction becomes invisible — 3px keeps the dot grid readable
           through the letterforms so the displacement actually shows. */}
@@ -114,11 +133,13 @@ export default function AppLogo() {
         }}
       />
 
-      {/* Layer 2 — reflection gradient (top-light, like the cards), clipped to letters */}
+      {/* Layer 2 — reflection gradient (top-light, like the cards), clipped to
+          letters. Stronger than the cards': thin strokes need the sheen to
+          carry the glass fill that refraction can't show at this scale. */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(150deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 55%, rgba(255,255,255,0.10) 100%)',
+          background: 'linear-gradient(150deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.06) 55%, rgba(255,255,255,0.16) 100%)',
           clipPath: 'url(#polucz-clip)',
         }}
       />

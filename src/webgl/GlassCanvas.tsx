@@ -160,8 +160,9 @@ void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
 
-  // Logo letterforms: displacement/specular from the prebaked map, exactly
-  // like feDisplacementMap (offset = scale · (C − 0.5), B = rim intensity).
+  // Logo letterforms: displacement + relief from the prebaked map, exactly
+  // like feDisplacementMap (offset = scale · (C − 0.5); B is signed relief:
+  // above 0.5 = white highlight, below = black shade).
   // No blur here — the DOM layer's clipped backdrop-filter blurs on top.
   if (uMaskEnabled == 1 &&
       css.x >= uMaskRect.x && css.y >= uMaskRect.y &&
@@ -171,7 +172,10 @@ void main() {
     vec2 mcss = css + uMaskScale * (m.rg - vec2(128.0 / 255.0));
     vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
     vec3 mc = textureLod(uBg, muv2, 0.0).rgb;
-    mc = 1.0 - (1.0 - mc) * (1.0 - m.b);
+    float hl = max(2.0 * m.b - 1.0, 0.0);
+    float sh = max(1.0 - 2.0 * m.b, 0.0);
+    mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
+    mc *= 1.0 - sh;                     // darken
     outColor = vec4(mc, 1.0);
     return;
   }
