@@ -48,6 +48,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
   }
 
   const [copyLabel, setCopyLabel] = useState<'idle' | 'copied' | 'error'>('idle')
+  const [syncState, setSyncState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
 
   async function handleCopyToClipboard() {
     try {
@@ -59,6 +60,22 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
       setTimeout(() => setCopyLabel('idle'), 2000)
     }
     setSettingsOpen(false)
+  }
+
+  async function handleSyncSentences() {
+    setSyncState('loading')
+    try {
+      const res = await fetch('/approved-sentences.json')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      if (!Array.isArray(data.sentences)) throw new Error('Invalid format')
+      saveSentences(data.sentences)
+      setSyncState('done')
+      setTimeout(() => { setSyncState('idle'); setSettingsOpen(false) }, 1500)
+    } catch {
+      setSyncState('error')
+      setTimeout(() => { setSyncState('idle'); setSettingsOpen(false) }, 2000)
+    }
   }
 
   function handleImportClick() {
@@ -145,6 +162,17 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
                     {copyLabel === 'copied' ? 'check_circle' : copyLabel === 'error' ? 'error' : 'content_copy'}
                   </span>
                   {copyLabel === 'copied' ? 'Copied!' : copyLabel === 'error' ? 'Copy failed' : 'Copy backup to clipboard'}
+                </button>
+                <button
+                  onClick={handleSyncSentences}
+                  disabled={syncState === 'loading'}
+                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-white/10 disabled:pointer-events-none"
+                  style={{ color: syncState === 'done' ? '#86efac' : syncState === 'error' ? '#f87171' : 'rgba(248,250,252,0.8)' }}
+                >
+                  <span className={`material-symbols-rounded text-[18px]${syncState === 'loading' ? ' animate-spin' : ''}`}>
+                    {syncState === 'done' ? 'check_circle' : syncState === 'error' ? 'error' : syncState === 'loading' ? 'progress_activity' : 'sync'}
+                  </span>
+                  {syncState === 'done' ? 'Synced!' : syncState === 'error' ? 'Sync failed' : syncState === 'loading' ? 'Syncing…' : 'Sync sentences'}
                 </button>
                 <button
                   onClick={() => { onChangePage('api_config'); setSettingsOpen(false) }}
