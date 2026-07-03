@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
-import { generateMaskGlassMap, GLASS_OVERSCAN } from '../lib/generateGlassMap'
+import { useEffect, useRef } from 'react'
+import { generateMaskGlassMap, generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { upsertFilter } from '../hooks/useGlassFilter'
 import { getGlassMode } from '../lib/glassMode'
+import { registerMaskPane } from '../webgl/glassStore'
 
 // Scale from original SVG viewBox (142.128 × 58.397) to rendered size (118 × 49)
 const LOGO_W = 118
@@ -41,25 +42,32 @@ const LETTER_PATHS = [
 ]
 
 export default function AppLogo() {
-  // Letterform refraction is SVG-only for now (WebGL logo glass is plan
-  // phase 6); other modes keep the blur-only fallback below.
+  // 'css' mode keeps the blur-only fallback below; svg and webgl both get
+  // letterform refraction from the same mask-derived map.
   const glassMode = getGlassMode()
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
-  // Refraction map built from the letterforms themselves — registered in the
-  // shared filter defs like the pane maps.
+  // Refraction map built from the letterforms themselves. In svg mode it
+  // feeds the shared filter defs; in webgl mode the raw map canvas is
+  // registered for the GlassCanvas renderer to sample as a texture.
   useEffect(() => {
-    if (glassMode !== 'svg') return
     // Lower displacement scale than the panes: the letter strokes are thin,
     // so a large offset would tear the backdrop apart.
-    const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
-    upsertFilter(LOGO_FILTER_ID, maps, LOGO_W, LOGO_H)
-    return () => {
-      document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
+    if (glassMode === 'svg') {
+      const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
+      upsertFilter(LOGO_FILTER_ID, maps, LOGO_W, LOGO_H)
+      return () => {
+        document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
+      }
+    }
+    if (glassMode === 'webgl' && containerRef.current) {
+      const { canvas, scale } = generateMaskGlassCanvas(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
+      return registerMaskPane({ el: containerRef.current, map: canvas, scale, overscan: GLASS_OVERSCAN })
     }
   }, [glassMode])
 
   return (
-    <div className="relative" style={{ width: LOGO_W, height: LOGO_H }}>
+    <div ref={containerRef} className="relative" style={{ width: LOGO_W, height: LOGO_H }}>
 
       {/* Hidden SVG — defines the clip paths scaled to rendered pixel space.
           The -pad variant is shifted by GLASS_OVERSCAN for the oversized

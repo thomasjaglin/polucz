@@ -127,17 +127,24 @@ function boxBlur(a: Float32Array, w: number, h: number, r: number): Float32Array
   return out
 }
 
+export interface MaskGlassCanvas {
+  canvas: HTMLCanvasElement
+  scale: number
+}
+
 // Builds displacement + specular maps from an arbitrary alpha mask (e.g. the
 // logo letterforms) instead of a rounded rect. The mask is drawn into a canvas
 // padded by GLASS_OVERSCAN, its alpha is blurred, and the alpha gradient —
 // which points into the shape, matching the inward displacement of the rect
 // maps — provides both the displacement direction and the rim normals.
-export function generateMaskGlassMap(
+// Returns the raw canvas so the WebGL renderer can upload it as a texture;
+// generateMaskGlassMap below wraps it as a data URL for the SVG filter path.
+export function generateMaskGlassCanvas(
   width: number,
   height: number,
   drawMask: (ctx: CanvasRenderingContext2D) => void,
   { blurRadius = 3, scale = 30 }: { blurRadius?: number; scale?: number } = {}
-): GlassMaps {
+): MaskGlassCanvas {
   const mapW = width + GLASS_OVERSCAN * 2
   const mapH = height + GLASS_OVERSCAN * 2
   const canvas = document.createElement('canvas')
@@ -180,5 +187,15 @@ export function generateMaskGlassMap(
   }
 
   ctx.putImageData(img, 0, 0)
+  return { canvas, scale }
+}
+
+export function generateMaskGlassMap(
+  width: number,
+  height: number,
+  drawMask: (ctx: CanvasRenderingContext2D) => void,
+  opts: { blurRadius?: number; scale?: number } = {}
+): GlassMaps {
+  const { canvas, scale } = generateMaskGlassCanvas(width, height, drawMask, opts)
   return { url: canvas.toDataURL(), scale }
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
-import { getPanes, onPanesChanged } from './glassStore'
+import { getPanes, onPanesChanged, getMaskPane } from './glassStore'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
   BEZEL_WIDTH,
@@ -126,6 +126,11 @@ uniform vec2 uLight;
 uniform float uSpecOpacity;
 uniform float uCounterLight;
 uniform float uSpecExponent;
+// Free-form mask glass (logo letterforms): prebaked displacement/specular map
+uniform sampler2D uMask;
+uniform vec4 uMaskRect;   // overscanned rect, css px
+uniform float uMaskScale;
+uniform int uMaskEnabled;
 out vec4 outColor;
 
 float sdRoundRect(vec2 p, vec2 halfSize, float r) {
@@ -154,6 +159,22 @@ float dispMag(float u) {
 void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
+
+  // Logo letterforms: displacement/specular from the prebaked map, exactly
+  // like feDisplacementMap (offset = scale · (C − 0.5), B = rim intensity).
+  // No blur here — the DOM layer's clipped backdrop-filter blurs on top.
+  if (uMaskEnabled == 1 &&
+      css.x >= uMaskRect.x && css.y >= uMaskRect.y &&
+      css.x < uMaskRect.x + uMaskRect.z && css.y < uMaskRect.y + uMaskRect.w) {
+    vec2 muv = (css - uMaskRect.xy) / uMaskRect.zw;
+    vec4 m = texture(uMask, muv);
+    vec2 mcss = css + uMaskScale * (m.rg - vec2(128.0 / 255.0));
+    vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
+    vec3 mc = textureLod(uBg, muv2, 0.0).rgb;
+    mc = 1.0 - (1.0 - mc) * (1.0 - m.b);
+    outColor = vec4(mc, 1.0);
+    return;
+  }
 
   // Smallest pane containing this pixel wins (inner pane over outer pane —
   // e.g. tag pill sitting on a card).
@@ -277,6 +298,18 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
 
     const { max: maxDisp } = refractionProfile(BEZEL_WIDTH, THICKNESS, REFRACTIVE_INDEX)
 
+    // Mask glass (logo) texture — uploaded when the registered map changes
+    const maskTex = gl.createTexture()!
+    gl.bindTexture(gl.TEXTURE_2D, maskTex)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    let maskUploaded: HTMLCanvasElement | null = null
+    const maskRect = new Float32Array(4)
+    let maskScale = 0
+    let maskEnabled = 0
+
     let page: PageId = activeId
     let bgDirty = true
     let sceneDirty = true
@@ -348,6 +381,26 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         sig += `${r.left.toFixed(1)},${r.top.toFixed(1)},${r.width.toFixed(1)},${r.height.toFixed(1)};`
         i++
       }
+
+      const mp = getMaskPane()
+      if (mp) {
+        const r = mp.el.getBoundingClientRect()
+        maskRect[0] = r.left - mp.overscan
+        maskRect[1] = r.top - mp.overscan
+        maskRect[2] = r.width + mp.overscan * 2
+        maskRect[3] = r.height + mp.overscan * 2
+        maskScale = mp.scale
+        maskEnabled = 1
+        sig += `M${maskRect[0].toFixed(1)},${maskRect[1].toFixed(1)};`
+        if (maskUploaded !== mp.map) {
+          gl.bindTexture(gl.TEXTURE_2D, maskTex)
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, mp.map)
+          maskUploaded = mp.map
+        }
+      } else {
+        maskEnabled = 0
+      }
+
       return { count: i, sig }
     }
 
@@ -373,6 +426,12 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1f(compU('uSpecOpacity'), SPECULAR_OPACITY)
       gl.uniform1f(compU('uCounterLight'), COUNTER_LIGHT)
       gl.uniform1f(compU('uSpecExponent'), SPECULAR_EXPONENT)
+      gl.activeTexture(gl.TEXTURE1)
+      gl.bindTexture(gl.TEXTURE_2D, maskTex)
+      gl.uniform1i(compU('uMask'), 1)
+      gl.uniform4fv(compU('uMaskRect'), maskRect)
+      gl.uniform1f(compU('uMaskScale'), maskScale)
+      gl.uniform1i(compU('uMaskEnabled'), maskEnabled)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 
@@ -429,6 +488,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       window.removeEventListener('resize', onResize)
       canvas.removeEventListener('webglcontextlost', onLost)
       gl.deleteTexture(bgTex)
+      gl.deleteTexture(maskTex)
       gl.deleteFramebuffer(fbo)
       gl.deleteProgram(bgProg)
       gl.deleteProgram(compProg)
