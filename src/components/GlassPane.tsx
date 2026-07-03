@@ -12,13 +12,13 @@ interface Props {
 // The .kube-glass-bg::before picks it up with filter: var(--glass-filter).
 // Blur is handled separately by backdrop-filter: blur() on the same ::before.
 export default function GlassPane({ borderRadius, className = '', style, children }: Props) {
-  const { elRef, filterId } = useGlassFilter(borderRadius)
+  const { elRef, filterCss } = useGlassFilter(borderRadius)
 
   return (
     <div
       ref={elRef as React.RefObject<HTMLDivElement>}
       className={`kube-glass-bg ${className}`}
-      style={{ '--glass-filter': `url(#${filterId})`, ...style } as CSSProperties}
+      style={{ '--glass-filter': filterCss, ...style } as CSSProperties}
     >
       {children}
     </div>

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { generateGlassMap, GLASS_OVERSCAN, type GlassMaps } from '../lib/generateGlassMap'
+import { getGlassMode } from '../lib/glassMode'
+import { registerPane } from '../webgl/glassStore'
 
 let counter = 0
 
@@ -83,10 +85,16 @@ export function useGlassFilter(borderRadius: number) {
   const elRef = useRef<HTMLElement | null>(null)
   const [filterId] = useState(() => `kube-glass-${++counter}`)
   const prevSize = useRef({ w: 0, h: 0 })
+  const mode = getGlassMode()
 
   useEffect(() => {
     const el = elRef.current
     if (!el) return
+
+    // webgl mode: the canvas paints the glass; just expose the element.
+    // css mode: plain backdrop blur from the stylesheet, nothing to do.
+    if (mode === 'webgl') return registerPane({ el, borderRadius })
+    if (mode !== 'svg') return
 
     function update(w: number, h: number) {
       if (w === prevSize.current.w && h === prevSize.current.h) return
@@ -114,11 +122,15 @@ export function useGlassFilter(borderRadius: number) {
 
     return () => {
       ro.disconnect()
-      // Clean up filter from DOM on unmount
+      // Clean up filter from DOM on unmount. Reset the size cache too, so a
+      // StrictMode remount (same ref, same size) regenerates the filter.
+      prevSize.current = { w: 0, h: 0 }
       const defs = document.querySelector('#kube-glass-filters defs')
       defs?.querySelector(`#${filterId}`)?.remove()
     }
-  }, [filterId, borderRadius])
+  }, [filterId, borderRadius, mode])
 
-  return { elRef, filterId }
+  // In non-svg modes the ::before must not reference a filter that never gets
+  // created — GlassPane feeds this straight into --glass-filter.
+  return { elRef, filterId, filterCss: mode === 'svg' ? `url(#${filterId})` : 'none' }
 }

@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import AppBackground from './components/AppBackground'
 import PageGradient from './components/PageGradient'
+import GlassCanvas from './webgl/GlassCanvas'
+import { getGlassMode, setGlassMode } from './lib/glassMode'
 import TopHeader from './components/TopHeader'
 import BottomNav from './components/nav/BottomNav'
 import VocabListPage from './components/VocabListPage'
@@ -19,6 +21,14 @@ import { vocabularyData } from './data/vocabulary'
 
 export default function App() {
   const [activeId, setActiveId] = useState<PageId>('folder')
+
+  // Glass renderer: 'svg' (Chromium), 'webgl' (Safari/Firefox) or 'css'
+  // fallback. Downgrades to 'css' if the WebGL context fails or is lost.
+  const [glassMode, setGlassModeState] = useState(getGlassMode)
+  function handleGlassFallback() {
+    setGlassMode('css')
+    setGlassModeState('css')
+  }
 
   // Hide header on scroll down, reveal on scroll up
   const [headerHidden, setHeaderHidden] = useState(false)
@@ -140,6 +150,7 @@ export default function App() {
 
   return (
     <div className="relative h-screen w-full">
+      {glassMode === 'webgl' && <GlassCanvas activeId={activeId} onFallback={handleGlassFallback} />}
       <AppBackground />
       <PageGradient activeId={activeId} />
 

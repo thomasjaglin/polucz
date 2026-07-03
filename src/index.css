@@ -108,6 +108,15 @@ body {
   transform: translateZ(0);
 }
 
+/* WebGL glass mode: GlassCanvas paints the background, blur and refraction —
+   the DOM background layers and the ::before glass layer must not
+   double-paint. ('css' mode keeps ::before for its plain backdrop blur;
+   --glass-filter resolves to none there.) */
+.glass-webgl .kube-glass-bg::before,
+.glass-webgl .app-bg-layer {
+  display: none;
+}
+
 .kube-glass-bg::before {
   content: '';
   position: absolute;

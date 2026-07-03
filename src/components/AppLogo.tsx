@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { generateMaskGlassMap, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { upsertFilter } from '../hooks/useGlassFilter'
+import { getGlassMode } from '../lib/glassMode'
 
 // Scale from original SVG viewBox (142.128 × 58.397) to rendered size (118 × 49)
 const LOGO_W = 118
@@ -40,9 +41,14 @@ const LETTER_PATHS = [
 ]
 
 export default function AppLogo() {
+  // Letterform refraction is SVG-only for now (WebGL logo glass is plan
+  // phase 6); other modes keep the blur-only fallback below.
+  const glassMode = getGlassMode()
+
   // Refraction map built from the letterforms themselves — registered in the
   // shared filter defs like the pane maps.
   useEffect(() => {
+    if (glassMode !== 'svg') return
     // Lower displacement scale than the panes: the letter strokes are thin,
     // so a large offset would tear the backdrop apart.
     const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
@@ -50,7 +56,7 @@ export default function AppLogo() {
     return () => {
       document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
     }
-  }, [])
+  }, [glassMode])
 
   return (
     <div className="relative" style={{ width: LOGO_W, height: LOGO_H }}>
@@ -89,7 +95,7 @@ export default function AppLogo() {
           inset: -GLASS_OVERSCAN,
           backdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
           WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
-          filter: `url(#${LOGO_FILTER_ID})`,
+          filter: glassMode === 'svg' ? `url(#${LOGO_FILTER_ID})` : undefined,
           clipPath: 'url(#polucz-clip-pad)',
         }}
       />

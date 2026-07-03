@@ -4,6 +4,16 @@
 // displacement doubles as the filter's scale; a specular rim-light layer is
 // blended over the refracted result.
 
+import {
+  GLASS_OVERSCAN,
+  BEZEL_WIDTH,
+  THICKNESS,
+  REFRACTIVE_INDEX,
+  specularIntensity,
+  refractionProfile,
+  sdfRoundRect,
+} from './glassParams'
+
 // One map carries everything: R/G encode the X/Y displacement (128 = neutral)
 // and B encodes the specular rim intensity (0–255). The filter splits B back
 // out with feColorMatrix — a single feImage avoids Chromium's unreliable
@@ -13,11 +23,8 @@ export interface GlassMaps {
   scale: number // max displacement in px — use as feDisplacementMap scale
 }
 
-// The filter is applied to the .kube-glass-bg::before pseudo-element, which
-// extends this many px beyond the element on every side (inset: -20px in
-// index.css). The map must cover that whole area — any uncovered region reads
-// as transparent black in feDisplacementMap, i.e. a uniform -scale/2 shift.
-export const GLASS_OVERSCAN = 20
+// Re-exported for the filter plumbing in useGlassFilter.
+export { GLASS_OVERSCAN }
 
 interface GlassMapOptions {
   bezelWidth?: number      // px of rim that refracts (flat glass beyond it)
@@ -25,68 +32,15 @@ interface GlassMapOptions {
   refractiveIndex?: number // n₂ of the glass; air n₁ = 1 is implied
 }
 
-// Fixed light direction for the specular rim: from above, slightly left
-// (screen coords, y down). Unit-normalized below.
-const LIGHT_LEN = Math.hypot(0.45, 0.89)
-const LIGHT_X = -0.45 / LIGHT_LEN
-const LIGHT_Y = -0.89 / LIGHT_LEN
-const SPECULAR_OPACITY = 0.5
-const COUNTER_LIGHT = 0.4 // relative strength of the opposite-rim highlight
-
 function specularAlpha(ox: number, oy: number, rim: number): number {
-  // Rim light: intensity from the outward normal's alignment with the light,
-  // plus a weaker counter-highlight on the opposite rim.
-  const dot = ox * LIGHT_X + oy * LIGHT_Y
-  const lit = dot > 0 ? dot ** 3 : COUNTER_LIGHT * (-dot) ** 3
-  return Math.round(255 * Math.min(1, rim * lit) * SPECULAR_OPACITY)
-}
-
-// Displacement magnitude for each distance into the bezel, precomputed on a
-// single radius (the map is radially symmetric around the shape's edge).
-// Height profile: convex squircle y = ⁴√(1 − (1−u)⁴). A vertical ray hits the
-// tilted surface (θᵢ from the slope), refracts per Snell's law, then travels
-// down through the glass under that point — the lateral offset is the
-// displacement. Peaks in a thin band at the edge, zero where the slab is flat.
-function refractionProfile(
-  bezel: number,
-  thickness: number,
-  n2: number,
-  samples = 256
-): { mags: Float32Array; max: number } {
-  const mags = new Float32Array(samples)
-  let max = 0
-  for (let i = 0; i < samples; i++) {
-    const u = i / (samples - 1)
-    const om = 1 - u
-    const y = Math.pow(1 - om ** 4, 0.25)
-    if (y === 0) continue
-    const dydu = om ** 3 * Math.pow(1 - om ** 4, -0.75)
-    const thetaI = Math.atan((thickness / bezel) * dydu)
-    const thetaT = Math.asin(Math.sin(thetaI) / n2)
-    const s = thickness * y * Math.tan(thetaI - thetaT)
-    mags[i] = s
-    if (s > max) max = s
-  }
-  return { mags, max }
-}
-
-// Signed distance field for a rounded rectangle.
-// Returns negative inside, 0 at edge, positive outside.
-function sdfRoundRect(
-  px: number, py: number,
-  hw: number, hh: number,  // half-width, half-height
-  r: number                // border radius
-): number {
-  const qx = Math.abs(px) - hw + r
-  const qy = Math.abs(py) - hh + r
-  return Math.sqrt(Math.max(qx, 0) ** 2 + Math.max(qy, 0) ** 2) + Math.min(Math.max(qx, qy), 0) - r
+  return Math.round(255 * specularIntensity(ox, oy, rim))
 }
 
 export function generateGlassMap(
   width: number,
   height: number,
   borderRadius: number,
-  { bezelWidth = 20, thickness = 30, refractiveIndex = 1.5 }: GlassMapOptions = {}
+  { bezelWidth = BEZEL_WIDTH, thickness = THICKNESS, refractiveIndex = REFRACTIVE_INDEX }: GlassMapOptions = {}
 ): GlassMaps {
   // Canvas covers the overscanned ::before area; the element's rounded rect
   // sits centered with GLASS_OVERSCAN px of neutral (no-displacement) padding.
