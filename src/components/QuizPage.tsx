@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { getSentences } from '../lib/sentenceStorage'
 import { getAllReviews } from '../lib/reviewStorage'
+import { getCards } from '../lib/storage'
 import { getSessionQuestions } from '../lib/quizLogic'
 import QuizTypeSelector from './quiz/QuizTypeSelector'
 import QuizSession, { type AnswerRecord } from './quiz/QuizSession'
 import SessionEndScreen from './quiz/SessionEndScreen'
-import type { SentenceEntry } from '../data/types'
+import type { SentenceEntry, VocabEntry } from '../data/types'
 
 type Screen = 'selector' | 'session' | 'end'
 
 export default function QuizPage() {
   const [sentences] = useState<SentenceEntry[]>(getSentences)
+  const [cards] = useState<VocabEntry[]>(getCards)
   const [reviews] = useState(getAllReviews)
 
   const [screen, setScreen] = useState<Screen>('selector')
@@ -50,7 +52,7 @@ export default function QuizPage() {
         key={sessionKey}
         questions={questions}
         type={quizType}
-        allSentences={sentences}
+        cards={cards}
         onComplete={handleComplete}
       />
     )

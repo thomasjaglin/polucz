@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import type { SentenceEntry } from '../../data/types'
+import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { checkAnswer } from '../../lib/quizLogic'
 import DeclensionQuestion from './DeclensionQuestion'
 import ConjugationQuestion from './ConjugationQuestion'
@@ -14,11 +14,11 @@ export interface AnswerRecord {
 interface Props {
   questions: SentenceEntry[]
   type: 'declension' | 'conjugation'
-  allSentences: SentenceEntry[]
+  cards: VocabEntry[]
   onComplete: (answers: AnswerRecord[]) => void
 }
 
-export default function QuizSession({ questions, type, allSentences, onComplete }: Props) {
+export default function QuizSession({ questions, type, cards, onComplete }: Props) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
 
@@ -63,7 +63,7 @@ export default function QuizSession({ questions, type, allSentences, onComplete 
         <DeclensionQuestion
           key={current.id}
           sentence={current}
-          allSentences={allSentences}
+          cards={cards}
           onAnswered={handleAnswered}
         />
       ) : (

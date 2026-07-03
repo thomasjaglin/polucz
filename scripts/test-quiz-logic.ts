@@ -4,7 +4,7 @@
  */
 
 import { checkAnswer, getSessionQuestions, getDistractors } from '../src/lib/quizLogic'
-import type { SentenceEntry, ReviewState } from '../src/data/types'
+import type { SentenceEntry, ReviewState, VocabNoun } from '../src/data/types'
 
 // ─── Minimal test harness ─────────────────────────────────────────────────────
 
@@ -130,46 +130,80 @@ expectTrue(`weighting: hard card selected ${hardCount}/400 times (expect >240)`,
 
 console.log('\ngetDistractors')
 
-const pool: SentenceEntry[] = [
-  noun('n1', 'kot',     'kota',    'genitive', 'singular'),  // same case+number — priority 1
-  noun('n2', 'dom',     'domu',    'genitive', 'singular'),  // same case+number — priority 1
-  noun('n3', 'ptak',    'ptaka',   'genitive', 'singular'),  // same case+number — priority 1
-  noun('n4', 'lek',     'leku',    'genitive', 'singular'),  // same case+number — priority 1
-  noun('n5', 'ryż',     'ryżu',    'nominative', 'singular'),// different case — priority 2
-  noun('n6', 'książka', 'książkę', 'accusative', 'singular'),// different case — priority 2
-  verb('v1', 'mówić',   'mówię',   'ja'),                   // wrong type — excluded
-]
+// NounDeclensions cases array always follows this order (from enrich-card)
+// [mianownik, dopełniacz, celownik, biernik, narzędnik, miejscownik, wołacz]
+// [nom[0],    gen[1],     dat[2],   acc[3],  inst[4],   loc[5],      voc[6] ]
 
-const correctSentence = noun('cx', 'złość', 'złości', 'genitive', 'singular')
-const distractors = getDistractors(correctSentence, 'genitive', pool, 3)
+function makeNounCard(id: string, sg: string[], pl: string[]): VocabNoun {
+  return {
+    id, type: 'noun', enriched: true, pl: id, en: id, left: '', right: '', tags: ['noun'],
+    gender: 'm', plAlt: '',
+    declensions: {
+      cases: ['mianownik','dopełniacz','celownik','biernik','narzędnik','miejscownik','wołacz'],
+      singular: sg,
+      plural: pl,
+    },
+  }
+}
 
-expectTrue ('returns 3 distractors',              distractors.length === 3)
-expectFalse('never includes correct form',        distractors.includes('złości'))
-expectFalse('never includes verb form',           distractors.includes('mówię'))
-expectTrue ('all distractors are strings',        distractors.every(d => typeof d === 'string'))
-expectTrue ('no duplicate forms',                 new Set(distractors).size === distractors.length)
-expectTrue ('priority-1 forms preferred',         distractors.some(d => ['kota','domu','ptaka','leku'].includes(d)))
+// książka — classic feminine noun with syncretism:
+//   gen.sg = nom.pl = acc.pl = voc.pl = 'książki'
+//   dat.sg = loc.sg = 'książce'
+const ksiazkaSg = ['książka', 'książki',  'książce', 'książkę',  'książką',   'książce',   'książko']
+const ksiazkaPl = ['książki', 'książek',  'książkom','książki',  'książkami', 'książkach', 'książki']
+const ksiazkaCard = makeNounCard('książka', ksiazkaSg, ksiazkaPl)
 
-// Same lemma exclusion: only 1 other noun exists in pool, should still return it
-const tinyPool: SentenceEntry[] = [
-  noun('x1', 'dom', 'domu', 'genitive', 'singular'),
-]
-const tinyResult = getDistractors(correctSentence, 'genitive', tinyPool, 3)
-expectTrue ('returns fewer when pool exhausted', tinyResult.length === 1)
-expectTrue ('still excludes correct form',       !tinyResult.includes('złości'))
+// dom — masculine noun
+const domSg = ['dom', 'domu', 'domowi', 'dom',  'domem', 'domu',  'domu']
+const domPl = ['domy','domów','domom',  'domy', 'domami','domach','domy']
+const domCard = makeNounCard('dom', domSg, domPl)
 
-// Adjective distractors use gender matching
-const adjPool: SentenceEntry[] = [
-  adj('a1', 'piękny',    'piękny',    'masculine'),  // same gender — p1
-  adj('a2', 'prosty',    'prosty',    'masculine'),  // same gender — p1
-  adj('a3', 'szalony',   'szalona',   'feminine'),   // wrong gender — p2
-  adj('a4', 'podły',     'podła',     'feminine'),   // wrong gender — p2
-]
+const cards = [ksiazkaCard, domCard]
+
+// ── genitive singular of 'książka' ──────────────────────────────────────────
+// Correct: 'książki' (singular[1])
+// Confusion map: [nom.pl, dat.sg, acc.sg]
+//   nom.pl  → plural[0]   = 'książki'  ← syncretic! must be skipped
+//   dat.sg  → singular[2] = 'książce'  ← unique, included
+//   acc.sg  → singular[3] = 'książkę'  ← unique, included
+// Fallback continues until count=3: next unique slot is loc.sg = 'książce' ← syncretic with dat.sg
+//   inst.sg → singular[4] = 'książką'  ← unique, included  (fills count)
+
+const correctGenSg = noun('s1', 'książka', 'książki', 'genitive', 'singular')
+const genSgDistractors = getDistractors(correctGenSg, 'genitive', cards, 3)
+
+expectTrue ('gen.sg: returns 3',                genSgDistractors.length === 3)
+expectFalse('gen.sg: never includes correct',   genSgDistractors.includes('książki'))
+expectTrue ('gen.sg: dat.sg included',          genSgDistractors.includes('książce'))
+expectTrue ('gen.sg: acc.sg included',          genSgDistractors.includes('książkę'))
+expectTrue ('gen.sg: no duplicates',            new Set(genSgDistractors).size === 3)
+
+// ── nominative singular of 'dom' ─────────────────────────────────────────────
+// Correct: 'dom' (singular[0])
+// Confusion map: [gen.sg, acc.sg, nom.pl]
+//   gen.sg  → singular[1] = 'domu' ← unique
+//   acc.sg  → singular[3] = 'dom'  ← syncretic with correct! skipped
+//   nom.pl  → plural[0]   = 'domy' ← unique
+// Fallback: dat.sg → singular[2] = 'domowi' ← unique, fills count=3
+
+const correctNomSg = noun('s2', 'dom', 'dom', 'nominative', 'singular')
+const nomSgDistractors = getDistractors(correctNomSg, 'nominative', cards, 3)
+
+expectTrue ('nom.sg: returns 3',                nomSgDistractors.length === 3)
+expectFalse('nom.sg: never includes correct',   nomSgDistractors.includes('dom'))
+expectTrue ('nom.sg: gen.sg included',          nomSgDistractors.includes('domu'))
+expectTrue ('nom.sg: nom.pl included',          nomSgDistractors.includes('domy'))
+expectTrue ('nom.sg: no duplicates',            new Set(nomSgDistractors).size === 3)
+
+// ── card not found → empty result ────────────────────────────────────────────
+const unknownWord = noun('sx', 'nieznane', 'nieznanego', 'genitive', 'singular')
+const emptyResult = getDistractors(unknownWord, 'genitive', cards, 3)
+expectTrue ('missing card → []',                emptyResult.length === 0)
+
+// ── adjective → empty (v2 stub) ──────────────────────────────────────────────
 const correctAdj = adj('ca', 'uroczy', 'uroczy', 'masculine')
-const adjDistractors = getDistractors(correctAdj, 'nominative', adjPool, 3)
-expectTrue ('adj: no correct form',              !adjDistractors.includes('uroczy'))
-expectTrue ('adj: priority prefers same gender', adjDistractors.some(d => d === 'piękny' || d === 'prosty'))
-expectTrue ('adj: fills from other gender if needed', adjDistractors.length === 3)
+const adjDistractors = getDistractors(correctAdj, 'nominative', cards, 3)
+expectTrue ('adj: returns [] (v2 stub)',         adjDistractors.length === 0)
 
 // ─── Summary ──────────────────────────────────────────────────────────────────
 

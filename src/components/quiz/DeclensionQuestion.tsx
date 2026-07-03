@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import type { SentenceEntry } from '../../data/types'
+import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { getDistractors, checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
 
 interface Props {
   sentence: SentenceEntry
-  allSentences: SentenceEntry[]
+  cards: VocabEntry[]
   onAnswered: (given: string) => void
 }
 
@@ -17,14 +17,14 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-export default function DeclensionQuestion({ sentence, allSentences, onAnswered }: Props) {
+export default function DeclensionQuestion({ sentence, cards, onAnswered }: Props) {
   const options = useMemo(() => {
     const targetCase =
       sentence.cardType === 'noun' ? sentence.targetCase :
       sentence.cardType === 'adjective' ? sentence.targetCase : ''
-    const distractors = getDistractors(sentence, targetCase, allSentences, 3)
+    const distractors = getDistractors(sentence, targetCase, cards, 3)
     return shuffle([sentence.targetForm, ...distractors])
-  }, [sentence, allSentences])
+  }, [sentence, cards])
 
   const [chosen, setChosen] = useState<string | null>(null)
   const isCorrect = chosen !== null ? checkAnswer(chosen, sentence.targetForm) : null

@@ -1,4 +1,4 @@
-import type { SentenceEntry, SentenceNoun, SentenceAdjective, ReviewState } from '../data/types'
+import type { SentenceEntry, SentenceNoun, SentenceAdjective, ReviewState, VocabEntry, VocabNoun, NounDeclensions } from '../data/types'
 
 // ─── Display helpers ──────────────────────────────────────────────────────────
 
@@ -67,70 +67,110 @@ export function getSessionQuestions(
 
 // ─── getDistractors ───────────────────────────────────────────────────────────
 
+// Polish case names as stored in NounDeclensions.cases by enrich-card
+// cases array order: [mianownik, dopełniacz, celownik, biernik, narzędnik, miejscownik, wołacz]
+//                        nom[0]     gen[1]     dat[2]   acc[3]   inst[4]      loc[5]     voc[6]
+const EN_TO_PL_CASE: Record<string, string> = {
+  nominative:   'mianownik',
+  genitive:     'dopełniacz',
+  dative:       'celownik',
+  accusative:   'biernik',
+  instrumental: 'narzędnik',
+  locative:     'miejscownik',
+  vocative:     'wołacz',
+}
+
+type CaseSlot = { case: string; number: 'singular' | 'plural' }
+
+// Most pedagogically confusable forms per target slot, in priority order
+const NOUN_CONFUSION: Record<string, CaseSlot[]> = {
+  'nominative singular':   [{ case: 'genitive',     number: 'singular' },
+                            { case: 'accusative',   number: 'singular' },
+                            { case: 'nominative',   number: 'plural'   }],
+  'genitive singular':     [{ case: 'nominative',   number: 'plural'   },
+                            { case: 'dative',       number: 'singular' },
+                            { case: 'accusative',   number: 'singular' }],
+  'dative singular':       [{ case: 'locative',     number: 'singular' },
+                            { case: 'genitive',     number: 'singular' },
+                            { case: 'instrumental', number: 'singular' }],
+  'accusative singular':   [{ case: 'nominative',   number: 'singular' },
+                            { case: 'genitive',     number: 'singular' },
+                            { case: 'nominative',   number: 'plural'   }],
+  'instrumental singular': [{ case: 'locative',     number: 'singular' },
+                            { case: 'accusative',   number: 'singular' },
+                            { case: 'dative',       number: 'singular' }],
+  'locative singular':     [{ case: 'dative',       number: 'singular' },
+                            { case: 'instrumental', number: 'singular' },
+                            { case: 'genitive',     number: 'singular' }],
+  'nominative plural':     [{ case: 'genitive',     number: 'singular' },
+                            { case: 'accusative',   number: 'plural'   },
+                            { case: 'genitive',     number: 'plural'   }],
+  'genitive plural':       [{ case: 'nominative',   number: 'plural'   },
+                            { case: 'accusative',   number: 'plural'   },
+                            { case: 'dative',       number: 'plural'   }],
+}
+
+// Remaining slots used when priority forms are syncretic with the correct answer
+const ALL_NOUN_CASES = ['nominative', 'genitive', 'dative', 'accusative', 'instrumental', 'locative']
+
+function getNounForm(d: NounDeclensions, caseName: string, number: 'singular' | 'plural'): string | null {
+  const plName = EN_TO_PL_CASE[caseName]
+  if (!plName) return null
+  const idx = d.cases.indexOf(plName)
+  if (idx === -1) return null
+  return (number === 'singular' ? d.singular : d.plural)[idx] ?? null
+}
+
 /**
- * Returns `count` distractor form strings for a multiple-choice declension question.
+ * Returns `count` distractor form strings for a multiple-choice noun question.
  *
- * Priority 1 (ideal): same cardType + same case + same number/gender slot
- * Priority 2 (fallback): same cardType, any case
+ * Strategy: pull other case/number forms of the same word using a pedagogical
+ * confusion-priority map, so distractors are plausible inflections rather than
+ * forms from unrelated words. Deduplicates via normalised string comparison to
+ * handle Polish syncretism (e.g. książki = gen.sg = nom.pl = acc.pl).
+ * Falls back to remaining table slots if priorities are all syncretic.
  *
- * Guarantees:
- * - Never includes correct.targetForm
- * - Never includes any form from correct.cardLemma
- * - No duplicate form strings in the output
- * - Returns fewer than `count` only if the entire pool is exhausted
+ * Adjective distractors are v2 — returns [] until a confusion map is added.
  */
 export function getDistractors(
   correct: SentenceEntry,
   targetCase: string,
-  sentences: SentenceEntry[],
+  cards: VocabEntry[],
   count: number,
 ): string[] {
-  // Pool: approved, same type, different lemma, different form string
-  const seen = new Set<string>([correct.targetForm])
-  const pool: SentenceEntry[] = []
+  if (correct.cardType !== 'noun') return []
 
-  for (const s of sentences) {
-    if (!s.approved) continue
-    if (s.cardLemma === correct.cardLemma) continue
-    if (s.cardType !== correct.cardType) continue
-    if (seen.has(s.targetForm)) continue
-    seen.add(s.targetForm)
-    pool.push(s)
+  const card = cards.find(c => c.id === correct.cardLemma) as VocabNoun | undefined
+  const decl = card?.declensions
+  if (!decl) return []
+
+  const targetNumber = correct.targetNumber as 'singular' | 'plural'
+  const priorities = NOUN_CONFUSION[`${targetCase} ${targetNumber}`] ?? []
+
+  // Remaining slots in the table (for fallback when priorities are all syncretic)
+  const priorityKeys = new Set(priorities.map(s => `${s.case} ${s.number}`))
+  const fallback: CaseSlot[] = []
+  for (const c of ALL_NOUN_CASES) {
+    for (const n of ['singular', 'plural'] as const) {
+      if (c === targetCase && n === targetNumber) continue
+      if (!priorityKeys.has(`${c} ${n}`)) fallback.push({ case: c, number: n })
+    }
   }
 
-  // Split into priority tiers
-  const p1: SentenceEntry[] = []
-  const p2: SentenceEntry[] = []
+  const seen = new Set<string>([correct.targetForm.trim().toLowerCase()])
+  const result: string[] = []
 
-  for (const s of pool) {
-    if (sameSlot(correct, s, targetCase)) p1.push(s)
-    else p2.push(s)
+  for (const slot of [...priorities, ...fallback]) {
+    if (result.length >= count) break
+    const form = getNounForm(decl, slot.case, slot.number)
+    if (!form) continue
+    const norm = form.trim().toLowerCase()
+    if (seen.has(norm)) continue
+    seen.add(norm)
+    result.push(form)
   }
 
-  // Fill from p1 first, pad with p2 if needed
-  const ordered = [...shuffle(p1), ...shuffle(p2)]
-  return ordered.slice(0, count).map(s => s.targetForm)
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Returns true if `candidate` is in the same grammatical slot as `correct`:
- * same case, and same number (nouns) or same gender (adjectives).
- * TypeScript discriminated-union narrowing handles each branch separately.
- */
-function sameSlot(correct: SentenceEntry, candidate: SentenceEntry, targetCase: string): boolean {
-  if (correct.cardType === 'noun' && candidate.cardType === 'noun') {
-    return candidate.targetCase === targetCase &&
-           candidate.targetNumber === correct.targetNumber
-  }
-  if (correct.cardType === 'adjective' && candidate.cardType === 'adjective') {
-    return candidate.targetCase === targetCase &&
-           candidate.targetGender === correct.targetGender
-  }
-  // Verbs: getDistractors is not expected to be called for conjugation
-  // (fill-in-the-blank needs no distractors), but handle gracefully
-  return false
+  return result
 }
 
 function shuffle<T>(arr: T[]): T[] {
