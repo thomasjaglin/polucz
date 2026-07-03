@@ -1,6 +1,32 @@
+import { useEffect } from 'react'
+import { generateMaskGlassMap, GLASS_OVERSCAN } from '../lib/generateGlassMap'
+import { upsertFilter } from '../hooks/useGlassFilter'
+
 // Scale from original SVG viewBox (142.128 × 58.397) to rendered size (118 × 49)
-const SX = 118 / 142.128
-const SY = 49 / 58.397
+const LOGO_W = 118
+const LOGO_H = 49
+const SX = LOGO_W / 142.128
+const SY = LOGO_H / 58.397
+
+const LOGO_FILTER_ID = 'kube-glass-logo'
+
+// Bar rect from the SVG: x, y, width, height, rx + rotate(90) pivot
+const BAR = { x: 36.3776, y: 50.6733, w: 6.76496, h: 36.3776, rx: 3.38248 }
+
+function drawLogoMask(ctx: CanvasRenderingContext2D) {
+  ctx.scale(SX, SY)
+  ctx.fillStyle = '#fff'
+  for (const d of LETTER_PATHS) ctx.fill(new Path2D(d))
+  // Same transform as the SVG rect's rotate(90 cx cy)
+  ctx.save()
+  ctx.translate(BAR.x, BAR.y)
+  ctx.rotate(Math.PI / 2)
+  ctx.translate(-BAR.x, -BAR.y)
+  ctx.beginPath()
+  ctx.roundRect(BAR.x, BAR.y, BAR.w, BAR.h, BAR.rx)
+  ctx.fill()
+  ctx.restore()
+}
 
 const LETTER_PATHS = [
   // U
@@ -14,10 +40,24 @@ const LETTER_PATHS = [
 ]
 
 export default function AppLogo() {
-  return (
-    <div className="relative" style={{ width: 118, height: 49 }}>
+  // Refraction map built from the letterforms themselves — registered in the
+  // shared filter defs like the pane maps.
+  useEffect(() => {
+    // Lower displacement scale than the panes: the letter strokes are thin,
+    // so a large offset would tear the backdrop apart.
+    const maps = generateMaskGlassMap(LOGO_W, LOGO_H, drawLogoMask, { scale: 30 })
+    upsertFilter(LOGO_FILTER_ID, maps, LOGO_W, LOGO_H)
+    return () => {
+      document.querySelector(`#kube-glass-filters #${LOGO_FILTER_ID}`)?.remove()
+    }
+  }, [])
 
-      {/* Hidden SVG — defines the clip path scaled to rendered pixel space */}
+  return (
+    <div className="relative" style={{ width: LOGO_W, height: LOGO_H }}>
+
+      {/* Hidden SVG — defines the clip paths scaled to rendered pixel space.
+          The -pad variant is shifted by GLASS_OVERSCAN for the oversized
+          backdrop layer, whose own origin sits that far up-left. */}
       <svg
         aria-hidden
         style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
@@ -27,19 +67,30 @@ export default function AppLogo() {
             <g transform={`scale(${SX} ${SY})`}>
               {LETTER_PATHS.map((d, i) => <path key={i} d={d} />)}
               {/* horizontal bar connecting L to rest */}
-              <rect x="36.3776" y="50.6733" width="6.76496" height="36.3776" rx="3.38248" transform="rotate(90 36.3776 50.6733)" />
+              <rect x={BAR.x} y={BAR.y} width={BAR.w} height={BAR.h} rx={BAR.rx} transform={`rotate(90 ${BAR.x} ${BAR.y})`} />
+            </g>
+          </clipPath>
+          <clipPath id="polucz-clip-pad" clipPathUnits="userSpaceOnUse">
+            <g transform={`translate(${GLASS_OVERSCAN} ${GLASS_OVERSCAN}) scale(${SX} ${SY})`}>
+              {LETTER_PATHS.map((d, i) => <path key={i} d={d} />)}
+              <rect x={BAR.x} y={BAR.y} width={BAR.w} height={BAR.h} rx={BAR.rx} transform={`rotate(90 ${BAR.x} ${BAR.y})`} />
             </g>
           </clipPath>
         </defs>
       </svg>
 
-      {/* Layer 1 — backdrop blur + colour tint, clipped to letter shapes */}
+      {/* Layer 1 — backdrop blur + displacement, clipped to letter shapes.
+          Extends GLASS_OVERSCAN beyond the logo (like .kube-glass-bg::before)
+          so edge displacement never samples outside the painted backdrop;
+          filter applies before clip-path, so the refraction survives the clip. */}
       <div
-        className="absolute inset-0"
+        className="absolute"
         style={{
+          inset: -GLASS_OVERSCAN,
           backdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
           WebkitBackdropFilter: 'blur(10px) saturate(180%) brightness(110%)',
-          clipPath: 'url(#polucz-clip)',
+          filter: `url(#${LOGO_FILTER_ID})`,
+          clipPath: 'url(#polucz-clip-pad)',
         }}
       />
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { generateGlassMap } from '../lib/generateGlassMap'
+import { generateGlassMap, GLASS_OVERSCAN, type GlassMaps } from '../lib/generateGlassMap'
 
 let counter = 0
 
@@ -19,7 +19,7 @@ function getSvgDefs(): SVGDefsElement {
   return defs as SVGDefsElement
 }
 
-function upsertFilter(id: string, dataUrl: string, w: number, h: number) {
+export function upsertFilter(id: string, maps: GlassMaps, w: number, h: number) {
   const defs = getSvgDefs()
   let filter = defs.querySelector(`#${id}`) as SVGFilterElement | null
 
@@ -32,27 +32,51 @@ function upsertFilter(id: string, dataUrl: string, w: number, h: number) {
     filter.setAttribute('width', '130%')
     filter.setAttribute('height', '130%')
 
-    const feImage = document.createElementNS('http://www.w3.org/2000/svg', 'feImage')
-    feImage.setAttribute('result', 'map')
-    filter.appendChild(feImage)
+    const feMap = document.createElementNS('http://www.w3.org/2000/svg', 'feImage')
+    feMap.setAttribute('result', 'map')
+    filter.appendChild(feMap)
 
     const feDisplace = document.createElementNS('http://www.w3.org/2000/svg', 'feDisplacementMap')
     feDisplace.setAttribute('in', 'SourceGraphic')
     feDisplace.setAttribute('in2', 'map')
-    feDisplace.setAttribute('scale', '60')
     feDisplace.setAttribute('xChannelSelector', 'R')
     feDisplace.setAttribute('yChannelSelector', 'G')
+    feDisplace.setAttribute('result', 'displaced')
     filter.appendChild(feDisplace)
+
+    // Specular rim light: the map's blue channel carries the intensity.
+    // RGB' = A' = B gives premultiplied white-at-intensity-B; Chromium
+    // composites feColorMatrix output as premultiplied, so the textbook
+    // "RGB=1, alpha=B" matrix bleeds additive white across the whole map.
+    const feSpec = document.createElementNS('http://www.w3.org/2000/svg', 'feColorMatrix')
+    feSpec.setAttribute('in', 'map')
+    feSpec.setAttribute('type', 'matrix')
+    feSpec.setAttribute('values', '0 0 1 0 0  0 0 1 0 0  0 0 1 0 0  0 0 1 0 0')
+    feSpec.setAttribute('result', 'spec')
+    filter.appendChild(feSpec)
+
+    const feBlend = document.createElementNS('http://www.w3.org/2000/svg', 'feBlend')
+    feBlend.setAttribute('in', 'spec')
+    feBlend.setAttribute('in2', 'displaced')
+    feBlend.setAttribute('mode', 'screen')
+    filter.appendChild(feBlend)
 
     defs.appendChild(filter)
   }
 
+  // Displacement is normalized against the map's maximum, so that maximum
+  // is reused directly as the filter's scale.
+  filter.querySelector('feDisplacementMap')!.setAttribute('scale', String(maps.scale))
+
+  // The filter's user space is the ::before pseudo-element, which starts
+  // GLASS_OVERSCAN px up-left of the element — the padded map covers it
+  // exactly from its own origin.
   const feImage = filter.querySelector('feImage')!
-  feImage.setAttribute('href', dataUrl)
+  feImage.setAttribute('href', maps.url)
   feImage.setAttribute('x', '0')
   feImage.setAttribute('y', '0')
-  feImage.setAttribute('width', String(w))
-  feImage.setAttribute('height', String(h))
+  feImage.setAttribute('width', String(w + GLASS_OVERSCAN * 2))
+  feImage.setAttribute('height', String(h + GLASS_OVERSCAN * 2))
 }
 
 export function useGlassFilter(borderRadius: number) {
@@ -68,13 +92,20 @@ export function useGlassFilter(borderRadius: number) {
       if (w === prevSize.current.w && h === prevSize.current.h) return
       prevSize.current = { w, h }
       if (w < 2 || h < 2) return
-      const dataUrl = generateGlassMap(w, h, borderRadius)
-      upsertFilter(filterId, dataUrl, w, h)
+      const maps = generateGlassMap(w, h, borderRadius)
+      upsertFilter(filterId, maps, w, h)
     }
 
     const ro = new ResizeObserver(entries => {
-      const { width, height } = entries[0].contentRect
-      update(Math.round(width), Math.round(height))
+      // Border-box size: contentRect excludes the pane's own padding, which
+      // would size the map smaller than the ::before it must cover.
+      const box = entries[0].borderBoxSize?.[0]
+      if (box) {
+        update(Math.round(box.inlineSize), Math.round(box.blockSize))
+      } else {
+        const rect = entries[0].target.getBoundingClientRect()
+        update(Math.round(rect.width), Math.round(rect.height))
+      }
     })
     ro.observe(el)
 

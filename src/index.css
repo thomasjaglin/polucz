@@ -111,9 +111,14 @@ body {
 .kube-glass-bg::before {
   content: '';
   position: absolute;
+  /* Must match GLASS_OVERSCAN in generateGlassMap.ts */
   inset: -20px;
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  /* Paint below all children (translateZ(0) on the parent creates the
+     stacking context) so content inside a GlassPane is never caught by
+     the backdrop blur/displacement, regardless of its own z-index. */
+  z-index: -1;
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  backdrop-filter: blur(8px) saturate(140%);
   filter: var(--glass-filter, none);
   pointer-events: none;
 }
