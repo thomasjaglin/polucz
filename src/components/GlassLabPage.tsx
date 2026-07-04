@@ -169,7 +169,17 @@ export default function GlassLabPage() {
 
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-48">
-      <h1 className="font-instrument text-[22px] font-semibold text-white/80">Glass lab</h1>
+      {/* ?lab overrides all page routing, so the lab needs its own way out */}
+      <div className="flex items-center justify-between">
+        <h1 className="font-instrument text-[22px] font-semibold text-white/80">Glass lab</h1>
+        <button
+          onClick={() => { window.location.href = window.location.pathname }}
+          className="flex items-center gap-1.5 rounded-full bg-white/[0.08] px-3.5 py-1.5 text-[13px] text-white/80"
+        >
+          <span className="material-symbols-rounded text-[16px]">close</span>
+          Exit
+        </button>
+      </div>
 
       {glassMode !== 'svg' && (
         <p className="text-[13px] text-amber-300/90">
