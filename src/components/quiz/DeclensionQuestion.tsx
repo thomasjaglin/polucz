@@ -5,6 +5,7 @@ import { getDistractors, checkAnswer, blankSentence, grammarPrompt } from '../..
 interface Props {
   sentence: SentenceEntry
   cards: VocabEntry[]
+  sentences: SentenceEntry[]
   onAnswered: (given: string) => void
 }
 
@@ -17,14 +18,14 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-export default function DeclensionQuestion({ sentence, cards, onAnswered }: Props) {
+export default function DeclensionQuestion({ sentence, cards, sentences, onAnswered }: Props) {
   const options = useMemo(() => {
     const targetCase =
       sentence.cardType === 'noun' ? sentence.targetCase :
       sentence.cardType === 'adjective' ? sentence.targetCase : ''
-    const distractors = getDistractors(sentence, targetCase, cards, 3)
+    const distractors = getDistractors(sentence, targetCase, cards, 3, sentences)
     return shuffle([sentence.targetForm, ...distractors])
-  }, [sentence, cards])
+  }, [sentence, cards, sentences])
 
   const [chosen, setChosen] = useState<string | null>(null)
   const isCorrect = chosen !== null ? checkAnswer(chosen, sentence.targetForm) : null

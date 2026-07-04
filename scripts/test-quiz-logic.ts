@@ -205,6 +205,36 @@ const correctAdj = adj('ca', 'uroczy', 'uroczy', 'masculine')
 const adjDistractors = getDistractors(correctAdj, 'nominative', cards, 3)
 expectTrue ('adj: returns [] (v2 stub)',         adjDistractors.length === 0)
 
+// ── tier 3: card not in cards array → falls through to sentences dataset ─────
+// 'unknown' has no card, so tiers 1+2 yield 0; sentences provides the 3 forms
+const tier3Correct = noun('t3c', 'unknown', 'nieznanego', 'genitive', 'singular')
+const tier3Sentences: SentenceEntry[] = [
+  noun('ts1', 'other1', 'domu',   'genitive',   'singular'),  // same case+num ← preferred
+  noun('ts2', 'other2', 'kota',   'genitive',   'singular'),  // same case+num ← preferred
+  noun('ts3', 'other3', 'drzewo', 'nominative', 'plural'),    // diff case     ← fallback
+]
+const tier3Result = getDistractors(tier3Correct, 'genitive', cards, 3, tier3Sentences)
+expectTrue ('tier3: returns 3',             tier3Result.length === 3)
+expectTrue ('tier3: same-case forms first', tier3Result.includes('domu') && tier3Result.includes('kota'))
+expectFalse('tier3: excludes correct form', tier3Result.includes('nieznanego'))
+expectTrue ('tier3: no duplicates',         new Set(tier3Result).size === 3)
+
+// ── tier 4: pathologically syncretic card — only 1 unique distractor in table,
+//    no sentences → duplication guarantees count=3
+//    (console.error expected — this is the intended safety-net behaviour)
+// singular: [formb, forma, formb, formb, formb, formb, formb]
+//   gen sg  → singular[1] = 'forma'  ← correct
+//   all other sg slots = 'formb', all pl = 'formb'  ← only 1 unique distractor
+const pathCard = makeNounCard(
+  'pathword',
+  ['formb','forma','formb','formb','formb','formb','formb'],
+  ['formb','formb','formb','formb','formb','formb','formb'],
+)
+const tier4Correct = noun('t4c', 'pathword', 'forma', 'genitive', 'singular')
+const tier4Result = getDistractors(tier4Correct, 'genitive', [pathCard], 3)
+expectTrue ('tier4: always returns count=3', tier4Result.length === 3)
+expectFalse('tier4: correct form excluded',  tier4Result.includes('forma'))
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n${'─'.repeat(44)}`)

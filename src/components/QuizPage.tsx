@@ -53,6 +53,7 @@ export default function QuizPage() {
         questions={questions}
         type={quizType}
         cards={cards}
+        sentences={sentences}
         onComplete={handleComplete}
       />
     )

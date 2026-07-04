@@ -110,9 +110,6 @@ const NOUN_CONFUSION: Record<string, CaseSlot[]> = {
                             { case: 'dative',       number: 'plural'   }],
 }
 
-// Remaining slots used when priority forms are syncretic with the correct answer
-const ALL_NOUN_CASES = ['nominative', 'genitive', 'dative', 'accusative', 'instrumental', 'locative']
-
 function getNounForm(d: NounDeclensions, caseName: string, number: 'singular' | 'plural'): string | null {
   const plName = EN_TO_PL_CASE[caseName]
   if (!plName) return null
@@ -122,13 +119,17 @@ function getNounForm(d: NounDeclensions, caseName: string, number: 'singular' | 
 }
 
 /**
- * Returns `count` distractor form strings for a multiple-choice noun question.
+ * Returns exactly `count` distractor form strings for a multiple-choice noun question.
  *
- * Strategy: pull other case/number forms of the same word using a pedagogical
- * confusion-priority map, so distractors are plausible inflections rather than
- * forms from unrelated words. Deduplicates via normalised string comparison to
- * handle Polish syncretism (e.g. książki = gen.sg = nom.pl = acc.pl).
- * Falls back to remaining table slots if priorities are all syncretic.
+ * Four-tier fallback chain:
+ *   1. Priority confusion-map slots (most pedagogically confusable for this case/number)
+ *   2. All remaining slots in the word's declension table (7 cases × 2 numbers)
+ *   3. Cross-word forms from the sentences dataset (same-case preferred)
+ *   4. Duplicate a distractor rather than return fewer than count
+ *
+ * Deduplicates via normalised string comparison throughout (Polish syncretism means
+ * the same surface form can appear in many slots — e.g. książki = gen.sg = nom.pl).
+ * Logs a console.error if the invariant (result.length === count) is violated.
  *
  * Adjective distractors are v2 — returns [] until a confusion map is added.
  */
@@ -137,37 +138,91 @@ export function getDistractors(
   targetCase: string,
   cards: VocabEntry[],
   count: number,
+  sentences: SentenceEntry[] = [],
 ): string[] {
   if (correct.cardType !== 'noun') return []
-
-  const card = cards.find(c => c.id === correct.cardLemma) as VocabNoun | undefined
-  const decl = card?.declensions
-  if (!decl) return []
-
-  const targetNumber = correct.targetNumber as 'singular' | 'plural'
-  const priorities = NOUN_CONFUSION[`${targetCase} ${targetNumber}`] ?? []
-
-  // Remaining slots in the table (for fallback when priorities are all syncretic)
-  const priorityKeys = new Set(priorities.map(s => `${s.case} ${s.number}`))
-  const fallback: CaseSlot[] = []
-  for (const c of ALL_NOUN_CASES) {
-    for (const n of ['singular', 'plural'] as const) {
-      if (c === targetCase && n === targetNumber) continue
-      if (!priorityKeys.has(`${c} ${n}`)) fallback.push({ case: c, number: n })
-    }
-  }
+  // correct is SentenceNoun from here (control-flow narrowing)
 
   const seen = new Set<string>([correct.targetForm.trim().toLowerCase()])
   const result: string[] = []
 
-  for (const slot of [...priorities, ...fallback]) {
-    if (result.length >= count) break
-    const form = getNounForm(decl, slot.case, slot.number)
-    if (!form) continue
-    const norm = form.trim().toLowerCase()
-    if (seen.has(norm)) continue
-    seen.add(norm)
-    result.push(form)
+  // ── Tier 1 + 2: same word's declension table ──────────────────────────────
+  const card = cards.find(c => c.id === correct.cardLemma) as VocabNoun | undefined
+  const decl = card?.declensions
+
+  if (decl) {
+    const targetNumber = correct.targetNumber as 'singular' | 'plural'
+    const priorities = NOUN_CONFUSION[`${targetCase} ${targetNumber}`] ?? []
+    const priorityKeys = new Set(priorities.map(s => `${s.case} ${s.number}`))
+
+    // All 7 cases × 2 numbers, minus the correct slot, priorities handled separately
+    // cases: nominative[0] genitive[1] dative[2] accusative[3] instrumental[4] locative[5] vocative[6]
+    const ALL_CASES_7 = ['nominative','genitive','dative','accusative',
+                         'instrumental','locative','vocative']
+    const fallback: CaseSlot[] = []
+    for (const c of ALL_CASES_7) {
+      for (const n of ['singular', 'plural'] as const) {
+        if (c === targetCase && n === targetNumber) continue
+        if (!priorityKeys.has(`${c} ${n}`)) fallback.push({ case: c, number: n })
+      }
+    }
+
+    for (const slot of [...priorities, ...fallback]) {
+      if (result.length >= count) break
+      const form = getNounForm(decl, slot.case, slot.number)
+      if (!form) continue
+      const norm = form.trim().toLowerCase()
+      if (seen.has(norm)) continue
+      seen.add(norm)
+      result.push(form)
+    }
+  }
+
+  // ── Tier 3: cross-word forms from the sentences dataset ───────────────────
+  if (result.length < count && sentences.length > 0) {
+    const sameCaseForms: string[] = []
+    const anyForms: string[] = []
+    const t3Seen = new Set<string>(seen) // local copy — only pollute `seen` for forms we use
+
+    for (const s of sentences) {
+      if (!s.approved) continue
+      if (s.cardLemma === correct.cardLemma) continue
+      if (s.cardType !== 'noun') continue
+      // s is SentenceNoun here
+      const norm = s.targetForm.trim().toLowerCase()
+      if (t3Seen.has(norm)) continue
+      t3Seen.add(norm)
+      if (s.targetCase === targetCase && s.targetNumber === correct.targetNumber) {
+        sameCaseForms.push(s.targetForm)
+      } else {
+        anyForms.push(s.targetForm)
+      }
+    }
+
+    for (const form of [...shuffle(sameCaseForms), ...shuffle(anyForms)]) {
+      if (result.length >= count) break
+      seen.add(form.trim().toLowerCase())
+      result.push(form)
+    }
+  }
+
+  // ── Tier 4: duplicate rather than show fewer than count ───────────────────
+  if (result.length > 0 && result.length < count) {
+    console.error(
+      `[getDistractors] only ${result.length} unique forms for` +
+      ` "${correct.cardLemma}" ${targetCase} ${correct.targetNumber}` +
+      ` — duplicating to reach ${count}`
+    )
+    const snapshot = [...result]
+    let i = 0
+    while (result.length < count) result.push(snapshot[i++ % snapshot.length])
+  }
+
+  if (result.length < count) {
+    console.error(
+      `[getDistractors] invariant violated: no forms at all for` +
+      ` "${correct.cardLemma}" — no declension table and sentences dataset empty`
+    )
   }
 
   return result

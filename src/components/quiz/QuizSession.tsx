@@ -15,10 +15,11 @@ interface Props {
   questions: SentenceEntry[]
   type: 'declension' | 'conjugation'
   cards: VocabEntry[]
+  sentences: SentenceEntry[]
   onComplete: (answers: AnswerRecord[]) => void
 }
 
-export default function QuizSession({ questions, type, cards, onComplete }: Props) {
+export default function QuizSession({ questions, type, cards, sentences, onComplete }: Props) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
 
@@ -64,6 +65,7 @@ export default function QuizSession({ questions, type, cards, onComplete }: Prop
           key={current.id}
           sentence={current}
           cards={cards}
+          sentences={sentences}
           onAnswered={handleAnswered}
         />
       ) : (
