@@ -129,5 +129,10 @@ body {
   -webkit-backdrop-filter: blur(8px) saturate(140%);
   backdrop-filter: blur(8px) saturate(140%);
   filter: var(--glass-filter, none);
+  /* Optional non-rect silhouette (e.g. the nav's gooey bubble). Inline
+     path() only — svg clipPath url() refs silently fail inside the scrolled
+     content. Coordinates are in this pseudo-element's space: shape coords
+     shifted by the 20px overscan. */
+  clip-path: var(--glass-clip, none);
   pointer-events: none;
 }

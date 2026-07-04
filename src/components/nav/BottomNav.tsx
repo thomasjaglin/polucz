@@ -1,7 +1,9 @@
-import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { motion, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import { pages, pageOrder } from '../../data/pages'
 import { activeSvgMask } from '../../data/gradients'
 import GlassPane from '../GlassPane'
+import { GLASS_OVERSCAN } from '../../lib/glassParams'
 import type { PageId } from '../../data/types'
 
 interface Props {
@@ -9,20 +11,92 @@ interface Props {
   onChangePage: (id: PageId) => void
 }
 
-// Bubble tab bar: one continuous glass bar; the active item sits in a glass
-// bubble that bulges above the bar's top edge and springs between slots.
-const SLOT = 56          // per-item width
-const PAD = 10           // bar end padding
+// Gooey tab bar: one glass silhouette — a rounded bar with a slightly larger
+// circle around the active item, vertically centered and joined to the bar by
+// concave neck fillets, so bubble and bar read as a single attached shape.
+// The silhouette is recomputed every animation frame while the bubble springs
+// between slots, and applied as an inline clip-path on the pane's glass layer.
+const SLOT = 56           // per-item width
+const PAD = 14            // bar end padding (keeps fillets off the end caps)
 const BAR_H = 56
-const BUBBLE = 58
-const RAISE = 16         // how far the bubble/icon rise above the bar center
+const BAR_R = 24          // bar corner radius
+const BUBBLE_R = 32       // active circle radius (pokes 4px past the bar)
+const NECK = 10           // fillet radius joining circle and bar
+const W = PAD * 2 + SLOT * pageOrder.length
+const BOX_H = BUBBLE_R * 2          // container height — silhouette must fit
+const Y0 = (BOX_H - BAR_H) / 2      // bar top edge in container coords
+const Y1 = Y0 + BAR_H
+const CY = BOX_H / 2
 
-const SPRING = { type: 'spring', stiffness: 420, damping: 30 } as const
+const SPRING = { type: 'spring', stiffness: 420, damping: 32 } as const
+
+// Union outline of the bar and the bubble circle at center x = cx, with
+// tangent neck fillets (classic metaball construction). Clockwise path.
+function gooeyPath(cx: number, off = 0): string {
+  const half = BAR_H / 2
+  // Fillet circle centers sit NECK px outside the bar edge; tangency to the
+  // bubble puts them sqrt((R+f)² − (half+f)²) from cx horizontally.
+  const dx = Math.sqrt((BUBBLE_R + NECK) ** 2 - (half + NECK) ** 2)
+  const k = BUBBLE_R / (BUBBLE_R + NECK)
+  const px = k * dx                    // bubble tangent point, x offset from cx
+  const tTop = CY - k * (half + NECK)  // bubble tangent point y (top side)
+  const tBot = CY + k * (half + NECK)
+
+  const o = off
+  const p = (n: number) => (n + o).toFixed(2)
+
+  return [
+    `M ${p(BAR_R)} ${p(Y0)}`,
+    `H ${p(cx - dx)}`,
+    `A ${NECK} ${NECK} 0 0 0 ${p(cx - px)} ${p(tTop)}`,   // neck up (concave)
+    `A ${BUBBLE_R} ${BUBBLE_R} 0 0 1 ${p(cx + px)} ${p(tTop)}`, // over the bubble
+    `A ${NECK} ${NECK} 0 0 0 ${p(cx + dx)} ${p(Y0)}`,     // neck down
+    `H ${p(W - BAR_R)}`,
+    `A ${BAR_R} ${BAR_R} 0 0 1 ${p(W)} ${p(Y0 + BAR_R)}`, // right cap
+    `V ${p(Y1 - BAR_R)}`,
+    `A ${BAR_R} ${BAR_R} 0 0 1 ${p(W - BAR_R)} ${p(Y1)}`,
+    `H ${p(cx + dx)}`,
+    `A ${NECK} ${NECK} 0 0 0 ${p(cx + px)} ${p(tBot)}`,   // bottom necks + arc
+    `A ${BUBBLE_R} ${BUBBLE_R} 0 0 1 ${p(cx - px)} ${p(tBot)}`,
+    `A ${NECK} ${NECK} 0 0 0 ${p(cx - dx)} ${p(Y1)}`,
+    `H ${p(BAR_R)}`,
+    `A ${BAR_R} ${BAR_R} 0 0 1 ${p(0)} ${p(Y1 - BAR_R)}`, // left cap
+    `V ${p(Y0 + BAR_R)}`,
+    `A ${BAR_R} ${BAR_R} 0 0 1 ${p(BAR_R)} ${p(Y0)}`,
+    'Z',
+  ].join(' ')
+}
+
+const slotCenter = (i: number) => PAD + SLOT * i + SLOT / 2
 
 export default function BottomNav({ activeId, onChangePage }: Props) {
   const idx = Math.max(0, pageOrder.indexOf(activeId))
-  const barW = PAD * 2 + SLOT * pageOrder.length
-  const bubbleX = PAD + SLOT * idx + (SLOT - BUBBLE) / 2
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const fillRef = useRef<SVGPathElement | null>(null)
+  const strokeRef = useRef<SVGPathElement | null>(null)
+  const shadowRef = useRef<SVGPathElement | null>(null)
+
+  const cx = useMotionValue(slotCenter(idx))
+  const discX = useTransform(cx, v => v - 21) // 42px gradient disc
+
+  function applyShape(v: number) {
+    const d = gooeyPath(v)
+    containerRef.current?.style.setProperty('--glass-clip', `path('${gooeyPath(v, GLASS_OVERSCAN)}')`)
+    fillRef.current?.setAttribute('d', d)
+    strokeRef.current?.setAttribute('d', d)
+    shadowRef.current?.setAttribute('d', d)
+  }
+
+  useMotionValueEvent(cx, 'change', applyShape)
+
+  useEffect(() => {
+    const controls = animate(cx, slotCenter(idx), SPRING)
+    return () => controls.stop()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx])
+
+  // Initial paint (before any animation)
+  useEffect(() => { applyShape(cx.get()) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2">
@@ -45,35 +119,41 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
       </div>
 
       <nav
+        ref={containerRef}
         className="relative"
-        style={{ width: barW, height: BAR_H, viewTransitionName: 'nav-bar' }}
+        style={{ width: W, height: BOX_H, viewTransitionName: 'nav-bar' }}
       >
-        {/* Bar frame */}
-        <div className="absolute inset-0 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          <GlassPane borderRadius={BAR_H / 2} className="absolute inset-0 rounded-full bg-white/[0.02]" />
+        {/* Soft drop shadow following the silhouette (under the glass) */}
+        <div className="pointer-events-none absolute inset-0 translate-y-[6px] blur-[10px]">
+          <svg width={W} height={BOX_H} className="overflow-visible">
+            <path ref={shadowRef} fill="rgba(0,0,0,0.35)" />
+          </svg>
         </div>
 
-        {/* Sliding bubble — a glass circle bulging above the bar, still
-            overlapping it so the two read as one attached shape */}
+        {/* Glass, clipped to the gooey silhouette via --glass-clip */}
+        <GlassPane borderRadius={30} className="absolute inset-0" />
+
+        {/* Fill tint + rim stroke of the silhouette */}
+        <div className="pointer-events-none absolute inset-0 z-10">
+          <svg width={W} height={BOX_H} className="overflow-visible">
+            <path ref={fillRef} fill="rgba(255,255,255,0.02)" />
+            <path ref={strokeRef} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="1" />
+          </svg>
+        </div>
+
+        {/* Active gradient disc riding with the bubble */}
         <motion.div
-          className="absolute rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
-          style={{ width: BUBBLE, height: BUBBLE, top: (BAR_H - BUBBLE) / 2 - RAISE }}
-          initial={false}
-          animate={{ x: bubbleX }}
-          transition={SPRING}
+          className="pointer-events-none absolute z-20 h-[42px] w-[42px] overflow-hidden rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.4)]"
+          style={{ x: discX, top: CY - 21 }}
         >
-          <GlassPane borderRadius={BUBBLE / 2} className="absolute inset-0 rounded-full bg-white/[0.02]" />
-          {/* Active gradient disc, riding inside the bubble */}
-          <div className="absolute left-1/2 top-1/2 z-10 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),inset_0_-1px_1px_rgba(0,0,0,0.4)]">
-            <div
-              className="absolute inset-0 flex items-center justify-center opacity-90 mix-blend-screen blur-[2px]"
-              dangerouslySetInnerHTML={{ __html: activeSvgMask }}
-            />
-          </div>
+          <div
+            className="absolute inset-0 flex items-center justify-center opacity-90 mix-blend-screen blur-[2px]"
+            dangerouslySetInnerHTML={{ __html: activeSvgMask }}
+          />
         </motion.div>
 
         {/* Icon row */}
-        <div className="absolute inset-0 flex" style={{ padding: `0 ${PAD}px` }}>
+        <div className="absolute inset-0 z-30 flex" style={{ padding: `0 ${PAD}px` }}>
           {pageOrder.map(id => {
             const active = id === activeId
             return (
@@ -86,9 +166,9 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
               >
                 <motion.span
                   initial={false}
-                  animate={{ y: active ? -RAISE : 0, scale: active ? 1.15 : 1 }}
+                  animate={{ scale: active ? 1.15 : 1 }}
                   transition={SPRING}
-                  className={`material-symbols-rounded relative z-10 text-[24px] transition-colors duration-200 ${active ? 'text-[#F8FAFC]' : 'text-[#F8FAFC]/60'}`}
+                  className={`material-symbols-rounded text-[24px] transition-colors duration-200 ${active ? 'text-[#F8FAFC]' : 'text-[#F8FAFC]/60'}`}
                 >
                   {pages[id].icon}
                 </motion.span>
