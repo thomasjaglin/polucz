@@ -8,9 +8,10 @@ interface Props {
   onChange?: (v: string) => void
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void
   className?: string
+  clearable?: boolean
 }
 
-export default function GlassInput({ placeholder, type = 'text', icon, value, onChange, onKeyDown, className = '' }: Props) {
+export default function GlassInput({ placeholder, type = 'text', icon, value, onChange, onKeyDown, className = '', clearable = false }: Props) {
   return (
     <div className={`relative w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group ${className}`}>
       <GlassPane borderRadius={32} className="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
@@ -24,6 +25,15 @@ export default function GlassInput({ placeholder, type = 'text', icon, value, on
           onKeyDown={onKeyDown}
           className="w-full bg-transparent font-instrument text-[16px] text-[#F8FAFC] placeholder-[#F8FAFC]/40 outline-none"
         />
+        {clearable && !!value && (
+          <button
+            onClick={() => onChange?.('')}
+            aria-label="Clear input"
+            className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full bg-white/10 text-[#F8FAFC]/50 transition-colors hover:bg-white/20 hover:text-[#F8FAFC]"
+          >
+            <span className="material-symbols-rounded text-[16px]">close</span>
+          </button>
+        )}
       </div>
     </div>
   )

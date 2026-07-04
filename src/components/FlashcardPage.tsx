@@ -29,8 +29,6 @@ interface CardProps {
 function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay }: CardProps) {
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
-  const easyOpacity  = useTransform(x, [0, 80], [0, 1])
-  const hardOpacity  = useTransform(x, [-80, 0], [1, 0])
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     const cardWidth = window.innerWidth * 0.82
@@ -70,20 +68,6 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
 
       <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
-
-        {/* Directional hint overlays — only active after reveal */}
-        {revealed && (
-          <>
-            <motion.div style={{ opacity: hardOpacity }}
-              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-start rounded-[36px] pl-8">
-              <span className="font-instrument text-[20px] font-semibold text-red-400/90">← Hard</span>
-            </motion.div>
-            <motion.div style={{ opacity: easyOpacity }}
-              className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end rounded-[36px] pr-8">
-              <span className="font-instrument text-[20px] font-semibold text-emerald-400/90">Easy →</span>
-            </motion.div>
-          </>
-        )}
 
         <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
           {/* Type badge */}
@@ -185,18 +169,6 @@ function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLa
         <span className="material-symbols-rounded text-[18px]">military_tech</span>
         Conquered
       </button>
-    </div>
-  )
-}
-
-// ─── Swipe hint ───────────────────────────────────────────────────────────────
-
-function SwipeHint() {
-  return (
-    <div className="flex items-center justify-center gap-6 font-instrument text-[13px] text-white/25">
-      <span>← Hard</span>
-      <span className="material-symbols-rounded text-[16px]">swipe</span>
-      <span>Easy →</span>
     </div>
   )
 }
@@ -348,7 +320,6 @@ export default function FlashcardPage({ cards }: Props) {
                 transition={{ duration: 0.2, delay: 0.05 }}
                 className="flex w-full flex-col gap-3"
               >
-                <SwipeHint />
                 <ActionButtons onConquered={handleConquered} onLapse={handleLapse} />
               </motion.div>
             )}

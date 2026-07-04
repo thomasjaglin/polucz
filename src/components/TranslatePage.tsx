@@ -131,12 +131,13 @@ export default function TranslatePage({ onAddCard }: Props) {
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
       <GlassCard contentClassName="flex flex-col p-[20px]">
         <GlassInput
-          placeholder="Enter a Polish word or phrase…"
+          placeholder="pisz tutaj..."
           icon="translate"
           value={input}
           onChange={v => { setInput(v); if (phase === 'error') setPhase('idle') }}
           onKeyDown={e => { if (e.key === 'Enter') handleTranslate() }}
           className="mb-4"
+          clearable
         />
         <button
           onClick={handleTranslate}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyLapse } from '../lib/scheduler'
@@ -41,15 +41,22 @@ function Waveform({ active }: { active: boolean }) {
 // ─── Audio Playback Page ──────────────────────────────────────────────────────
 
 export default function AudioPlaybackPage({ cards }: Props) {
+  // Index-based queue (rather than popping) so swiping can go back to
+  // previous cards
   const [queue, setQueue]       = useState<VocabEntry[]>([])
-  const [doneCount, setDoneCount] = useState(0)
+  const [idx, setIdx]           = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [phase, setPhase]       = useState<Phase>('idle')
   const tts = useTTS()
 
+  // Swipe motion for the card
+  const x = useMotionValue(0)
+  const rotate = useTransform(x, [-300, 0, 300], [-14, 0, 14])
+
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
-  // true when the user manually rated a card — suppresses the auto-easy-advance
+  // true when the user manually rated/skipped a card — suppresses the
+  // auto-easy-advance when the interrupted playback settles to idle
   const userRatedRef    = useRef(false)
 
   // ─── Initialise / reset queue ──────────────────────────────────────────────
@@ -57,14 +64,16 @@ export default function AudioPlaybackPage({ cards }: Props) {
     const due = getDueCards(cards, getAllReviews())
     setQueue(due)
     setTotalCount(due.length)
-    setDoneCount(0)
-    setPhase('idle')
+    setIdx(0)
     tts.stop()
+    // Auto-start: no play tap needed. If the browser blocks autoplay the
+    // status shows an audio error and play/pause still works manually.
+    setPhase(due.length > 0 ? 'playing' : 'idle')
   }
 
   useEffect(() => { loadQueue() }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const current = queue[0] ?? null
+  const current = queue[idx] ?? null
 
   // ─── Start TTS when phase becomes 'playing' or the current card changes ────
   useEffect(() => {
@@ -75,8 +84,8 @@ export default function AudioPlaybackPage({ cards }: Props) {
 
   // Prefetch next card while current is playing
   useEffect(() => {
-    if (queue[1]) tts.prefetch(queue[1].pl, queue[1].en)
-  }, [queue[1]?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (queue[idx + 1]) tts.prefetch(queue[idx + 1].pl, queue[idx + 1].en)
+  }, [queue[idx + 1]?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Detect natural sequence completion (playing → idle) ──────────────────
   useEffect(() => {
@@ -86,16 +95,14 @@ export default function AudioPlaybackPage({ cards }: Props) {
     if (prev === 'playing' && tts.state === 'idle' && phase === 'playing') {
       const wasUserRated = userRatedRef.current
       userRatedRef.current = false
-      if (wasUserRated) return // user already rated — queue effect plays next card
+      if (wasUserRated) return // user already rated/skipped — idx change plays next card
 
       // Natural completion: advance as Easy, then wait 2 s before next card
-      setQueue(q => {
-        if (!q[0]) return q
-        const state = getReview(q[0].id) ?? initReview(q[0].id)
-        saveReview(q[0].id, applyEasy(state))
-        return q.slice(1)
-      })
-      setDoneCount(n => n + 1)
+      if (current) {
+        const state = getReview(current.id) ?? initReview(current.id)
+        saveReview(current.id, applyEasy(state))
+      }
+      setIdx(i => i + 1)
       setPhase('waiting')
     }
   }, [tts.state, phase]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -109,8 +116,8 @@ export default function AudioPlaybackPage({ cards }: Props) {
 
   // ─── All-done detection ───────────────────────────────────────────────────
   useEffect(() => {
-    if (phase === 'playing' && queue.length === 0) setPhase('done')
-  }, [phase, queue.length])
+    if (phase === 'playing' && totalCount > 0 && idx >= queue.length) setPhase('done')
+  }, [phase, idx, queue.length, totalCount])
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -136,13 +143,36 @@ export default function AudioPlaybackPage({ cards }: Props) {
     tts.stop()
     const state = getReview(current.id) ?? initReview(current.id)
     saveReview(current.id, outcome === 'hard' ? applyHard(state) : applyLapse(state))
-    setDoneCount(n => n + 1)
-    setQueue(q => q.slice(1))
+    setIdx(i => i + 1)
     // phase stays 'playing' → effect fires on current?.id change → plays next card
+  }
+
+  // Manual navigation (swipe) — no rating, just moves through the queue
+  function skipTo(newIdx: number) {
+    if (tts.state === 'playing') userRatedRef.current = true
+    tts.stop()
+    setIdx(newIdx)
+    setPhase('playing')
+  }
+
+  function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
+    const committed = Math.abs(info.offset.x) > window.innerWidth * 0.25 || Math.abs(info.velocity.x) > 400
+    if (committed && info.offset.x < 0 && idx < queue.length) {
+      // swipe left → next card
+      animate(x, -600, { duration: 0.22 })
+      setTimeout(() => { x.set(0); skipTo(idx + 1) }, 200)
+    } else if (committed && info.offset.x > 0 && idx > 0) {
+      // swipe right → previous card
+      animate(x, 600, { duration: 0.22 })
+      setTimeout(() => { x.set(0); skipTo(idx - 1) }, 200)
+    } else {
+      animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 })
+    }
   }
 
   // ─── Derived UI values ────────────────────────────────────────────────────
 
+  const doneCount     = Math.min(idx, totalCount)
   const progress      = totalCount > 0 ? doneCount / totalCount : 0
   const typeGradient  = current ? (tagGradients[current.type] ?? tagGradients['unknown']) : null
   const isActive      = phase === 'playing' || phase === 'waiting'
@@ -233,8 +263,15 @@ export default function AudioPlaybackPage({ cards }: Props) {
             exit={{ opacity: 0 }}
             className="flex w-full flex-1 flex-col items-center gap-6"
           >
-            {/* Card */}
-            <div className="relative w-full rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+            {/* Card — swipe left for next, right for previous */}
+            <motion.div
+              style={{ x, rotate }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.8}
+              onDragEnd={handleDragEnd}
+              className="relative w-full cursor-grab select-none rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
+            >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
               <div className="relative z-10 flex flex-col items-center gap-5 px-8 py-10">
 
@@ -292,7 +329,7 @@ export default function AudioPlaybackPage({ cards }: Props) {
                   )}
                 </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
 
             {/* Waveform */}
             <Waveform active={isActive && tts.state === 'playing'} />
@@ -314,9 +351,10 @@ export default function AudioPlaybackPage({ cards }: Props) {
                 <button
                   onClick={phase === 'idle' ? handleStart : (isActive ? handlePause : handleResume)}
                   disabled={!current}
-                  className="flex h-[60px] w-[60px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 bg-[#B4A0FF]/20 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:bg-[#B4A0FF]/30 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
+                  className="relative flex h-[60px] w-[60px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
                 >
-                  <span className="material-symbols-rounded text-[28px] text-[#B4A0FF]">
+                  <GlassPane borderRadius={30} className="absolute inset-0 z-0 rounded-full bg-[#B4A0FF]/15" />
+                  <span className="material-symbols-rounded relative z-10 text-[28px] text-[#B4A0FF]">
                     {isActive ? 'pause' : 'play_arrow'}
                   </span>
                 </button>

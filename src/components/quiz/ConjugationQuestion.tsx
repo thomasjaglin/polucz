@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { SentenceEntry } from '../../data/types'
 import { checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
+import GlassPane from '../GlassPane'
 
 interface Props {
   sentence: SentenceEntry
@@ -59,9 +60,12 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="rounded-[20px] border border-white/10 bg-white/[0.03] p-5">
-        <p className="font-instrument text-[20px] leading-relaxed text-white/90">{display}</p>
-        <p className="mt-2 font-instrument text-[14px] italic text-white/40">{sentence.english}</p>
+      <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-white/[0.02]" />
+        <div className="relative z-10 p-5">
+          <p className="font-instrument text-[20px] leading-relaxed text-white/90">{display}</p>
+          <p className="mt-2 font-instrument text-[14px] italic text-white/40">{sentence.english}</p>
+        </div>
       </div>
 
       <p className="font-instrument text-[13px] text-white/45">{grammarPrompt(sentence)}</p>
