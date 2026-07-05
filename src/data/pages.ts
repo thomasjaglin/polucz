@@ -11,7 +11,7 @@ export const pages: Record<PageId, PageConfig> = {
     title: 'Translate',
     icon: 'translate',
     desc: 'Translate a Polish word or phrase.',
-    gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#01404A"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#09808B"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#2ABFC8"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#7DF5EE"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>`,
+    gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#4A0101"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#8B0909"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#C82A2A"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#F57D7D"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>`,
   },
   dynamic_feed: {
     title: 'Flashcard Game',

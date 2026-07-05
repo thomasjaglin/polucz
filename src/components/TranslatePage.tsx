@@ -1,19 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
-import GlassCard from './GlassCard'
-import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
 import { tagGradients } from '../data/gradients'
 import { findByLemma } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
 
-const translateGradient = (
-  <svg className="h-full w-full object-cover" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 376 64" fill="none" preserveAspectRatio="none">
-    <rect x="21.8" y="21.8" width="332" height="26" rx="13" fill="#016670" filter="blur(10.9px)" />
-    <rect x="30.5883" y="29.5449" width="314.424" height="18.2553" rx="9.12766" fill="#09B8C9" filter="blur(10.9px)" />
-    <rect x="73.553" y="31.7576" width="264.624" height="13.8298" rx="6.91489" fill="#5BDFDF" filter="blur(10.9px)" />
-  </svg>
-)
+type Direction = 'pl-en' | 'en-pl'
 
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
@@ -41,23 +33,25 @@ interface Props {
   onAddCard: (entry: VocabEntry) => void
 }
 
+const isSingleWord = (text: string) => {
+  const words = text.trim().split(/\s+/)
+  return words.length === 1 || (words.length === 2 && words[1].toLowerCase() === 'się')
+}
+
 export default function TranslatePage({ onAddCard }: Props) {
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<Result | null>(null)
   const [added, setAdded] = useState(false)
+  const [direction, setDirection] = useState<Direction>('pl-en')
+  const [swapAngle, setSwapAngle] = useState(0)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
 
-  // Reset card position whenever a new result arrives
-  useEffect(() => { x.set(0) }, [result, x])
-
-  const isSingleWord = (text: string) => {
-    const words = text.trim().split(/\s+/)
-    // Reflexive verbs ("stać się", "cieszyć się", …) are a single lexical unit
-    return words.length === 1 || (words.length === 2 && words[1].toLowerCase() === 'się')
-  }
+  const sourceLabel = direction === 'pl-en' ? 'Polish' : 'English'
+  const targetLabel = direction === 'pl-en' ? 'English' : 'Polish'
 
   async function handleTranslate() {
     const text = input.trim()
@@ -65,14 +59,15 @@ export default function TranslatePage({ onAddCard }: Props) {
     setPhase('loading')
     setResult(null)
     setAdded(false)
+    x.set(0)
 
     try {
-      const single = isSingleWord(text)
+      const single = direction === 'pl-en' && isSingleWord(text)
       const [translateRes, lemmaRes] = await Promise.all([
         fetch('/api/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, direction }),
         }),
         single
           ? fetch('/api/lemmatize', {
@@ -105,144 +100,175 @@ export default function TranslatePage({ onAddCard }: Props) {
     }
   }
 
+  function handleSwap() {
+    const nextDir: Direction = direction === 'pl-en' ? 'en-pl' : 'pl-en'
+    setSwapAngle(a => a + 180)
+    setDirection(nextDir)
+    // Move the current translation output back into the input
+    if (result?.translation) {
+      setInput(result.translation)
+    } else if (!input) {
+      setInput('')
+    }
+    setResult(null)
+    setPhase('idle')
+    setTimeout(() => textareaRef.current?.focus(), 50)
+  }
+
   function handleAdd() {
     if (!result) return
     onAddCard(buildEntry(result.lemma, result.canonicalEn, result.type, result.gender))
     setAdded(true)
   }
 
-  const alreadySaved = result?.isSingleWord ? !!findByLemma(result.lemma) : false
-  const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
-
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     const committed = info.offset.x > window.innerWidth * 0.30 || info.velocity.x > 400
     if (committed && canSwipe) {
       animate(x, 700, { duration: 0.25 })
-      setTimeout(() => {
-        x.set(0)
-        handleAdd()
-      }, 270)
+      setTimeout(() => { x.set(0); handleAdd() }, 270)
     } else {
       animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 })
     }
   }
 
+  const alreadySaved = result?.isSingleWord ? !!findByLemma(result.lemma) : false
+  const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
+
   return (
-    <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
-      <GlassCard contentClassName="flex flex-col p-[20px]">
-        <GlassInput
-          placeholder="pisz tutaj..."
-          icon="translate"
-          value={input}
-          onChange={v => { setInput(v); if (phase === 'error') setPhase('idle') }}
-          onKeyDown={e => { if (e.key === 'Enter') handleTranslate() }}
-          className="mb-4"
-          clearable
-        />
+    <div className="fixed inset-0 flex flex-col">
+
+      {/* ── Top section: source language ───────────────────────── */}
+      <div className="relative flex flex-[53] flex-col justify-end px-6 pb-7">
+        <p className="mb-2 font-instrument text-[14px] font-medium text-white/50">
+          {sourceLabel}
+        </p>
+
+        {/* Glass textarea */}
+        <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.10)]">
+          <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-white/[0.03]" />
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={e => { setInput(e.target.value); if (phase === 'error') setPhase('idle') }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
+            placeholder="Translate text…"
+            rows={3}
+            className="relative z-10 w-full resize-none bg-transparent px-5 py-4 font-instrument text-[17px] text-white/90 placeholder:text-white/30 outline-none"
+          />
+        </div>
+
+        {/* Translate button */}
         <button
           onClick={handleTranslate}
           disabled={!input.trim() || phase === 'loading'}
-          className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group disabled:pointer-events-none disabled:opacity-40"
+          className="mt-3 w-full rounded-[14px] border border-white/10 bg-white/[0.05] py-3 font-instrument text-[15px] font-medium text-white/65 transition-all hover:bg-white/[0.09] disabled:pointer-events-none disabled:opacity-30"
         >
-          <div className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-          <div className="absolute inset-0 z-10 flex items-center justify-center opacity-90 mix-blend-screen">
-            {translateGradient}
-          </div>
-          <span className="relative z-20 font-instrument text-[16px] font-semibold text-[#F8FAFC]">
-            {phase === 'loading' ? 'Translating…' : 'Translate'}
-          </span>
+          {phase === 'loading' ? 'Translating…' : 'Translate'}
         </button>
 
         {phase === 'error' && (
-          <p className="mt-3 text-center font-instrument text-[13px] text-red-400/80">
+          <p className="mt-2 text-center font-instrument text-[12px] text-red-400/70">
             Translation unavailable — check your connection
           </p>
         )}
-      </GlassCard>
+      </div>
 
-      {phase === 'done' && result && (
-        <>
-        <motion.div
-          style={{ x }}
-          drag={canSwipe ? 'x' : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={{ left: 0.08, right: 0.8 }}
-          onDragEnd={canSwipe ? handleDragEnd : undefined}
-          className={`w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] select-none ${canSwipe ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      {/* ── Swap button (straddles the boundary) ───────────────── */}
+      <div className="relative z-10 flex justify-center" style={{ marginTop: -21, marginBottom: -21 }}>
+        <button
+          onClick={handleSwap}
+          className="flex h-[42px] w-[42px] items-center justify-center rounded-full border border-white/10 bg-[#181818] shadow-[0_4px_20px_rgba(0,0,0,0.6)] transition-colors hover:bg-[#222]"
         >
-          <div className="relative flex w-full flex-col rounded-[36px] p-[24px]">
-            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+          <motion.span
+            className="material-symbols-rounded text-[20px] text-white/60"
+            animate={{ rotate: swapAngle }}
+            transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+          >
+            sync_alt
+          </motion.span>
+        </button>
+      </div>
 
-            {/* Swipe-to-add overlay */}
-            {canSwipe && (
-              <motion.div style={{ opacity: addOpacity }}
-                className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end rounded-[36px] pr-8">
-                <span className="font-instrument text-[20px] font-semibold text-emerald-400/90">Add →</span>
-              </motion.div>
-            )}
+      {/* ── Bottom section: target language ────────────────────── */}
+      <div className="relative flex flex-[47] flex-col bg-[#080808] px-6 pt-8 pb-[100px] overflow-y-auto no-scrollbar">
+        <p className="mb-4 font-instrument text-[14px] font-medium text-white/50">
+          {targetLabel}
+        </p>
 
-            <div className="relative z-20 flex flex-col gap-4">
-
-              {/* Translation */}
-              <p className="font-instrument text-[30px] italic leading-tight text-[#B4A0FF]">
-                {result.translation}
-              </p>
-
-              {result.isSingleWord && (
-                <>
-                  <div className="h-[1px] w-full bg-white/10" />
-
-                  {/* Lemma + type */}
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
-                      <span className="font-instrument text-[20px] font-medium text-white/80">
-                        {result.lemma}
-                      </span>
-                      {result.gender && (
-                        <span className="font-instrument text-[16px] italic text-[#e879f9]">
-                          {result.gender}
-                        </span>
-                      )}
-                      <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
-                        <div
-                          className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
-                          dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
-                        />
-                        <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-[#F8FAFC]">
-                          {result.type}
-                        </span>
-                      </div>
-                    </div>
-                    {result.canonicalEn && result.canonicalEn !== result.translation && (
-                      <span className="font-instrument text-[14px] text-white/40">{result.canonicalEn}</span>
-                    )}
-                  </div>
-
-                  {/* Add to vocab */}
-                  {added ? (
-                    <p className="font-instrument text-[14px] text-emerald-400/80">Added to vocabulary</p>
-                  ) : alreadySaved ? (
-                    <p className="font-instrument text-[14px] text-white/30">Already in your vocabulary</p>
-                  ) : (
-                    <button
-                      onClick={handleAdd}
-                      className="flex items-center gap-2 self-start font-instrument text-[14px] text-white/50 transition-colors hover:text-white/80"
-                    >
-                      <span className="material-symbols-rounded text-[18px]">add_circle</span>
-                      Add to vocabulary
-                    </button>
-                  )}
-                </>
+        {phase === 'done' && result && (
+          <>
+            <motion.div
+              style={{ x }}
+              drag={canSwipe ? 'x' : false}
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={{ left: 0.08, right: 0.8 }}
+              onDragEnd={canSwipe ? handleDragEnd : undefined}
+              className={`relative select-none ${canSwipe ? 'cursor-grab active:cursor-grabbing' : ''}`}
+            >
+              {canSwipe && (
+                <motion.div style={{ opacity: addOpacity }}
+                  className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end">
+                  <span className="font-instrument text-[18px] font-semibold text-emerald-400/90">Add →</span>
+                </motion.div>
               )}
-            </div>
-          </div>
-        </motion.div>
 
-        {canSwipe && (
-          <p className="text-center font-instrument text-[12px] text-white/20">swipe right to save</p>
+              <div className="relative z-20 flex flex-col gap-4">
+                <p className="font-instrument text-[28px] italic leading-tight text-[#B4A0FF]">
+                  {result.translation}
+                </p>
+
+                {result.isSingleWord && (
+                  <>
+                    <div className="h-[1px] w-full bg-white/8" />
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-3">
+                        <span className="font-instrument text-[18px] font-medium text-white/80">
+                          {result.lemma}
+                        </span>
+                        {result.gender && (
+                          <span className="font-instrument text-[15px] italic text-[#e879f9]">
+                            {result.gender}
+                          </span>
+                        )}
+                        <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                          <div
+                            className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                            dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
+                          />
+                          <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-[#F8FAFC]">
+                            {result.type}
+                          </span>
+                        </div>
+                      </div>
+                      {result.canonicalEn && result.canonicalEn !== result.translation && (
+                        <span className="font-instrument text-[13px] text-white/35">{result.canonicalEn}</span>
+                      )}
+                    </div>
+
+                    {added ? (
+                      <p className="font-instrument text-[13px] text-emerald-400/80">Added to vocabulary</p>
+                    ) : alreadySaved ? (
+                      <p className="font-instrument text-[13px] text-white/30">Already in your vocabulary</p>
+                    ) : (
+                      <button
+                        onClick={handleAdd}
+                        className="flex items-center gap-2 self-start font-instrument text-[13px] text-white/45 transition-colors hover:text-white/75"
+                      >
+                        <span className="material-symbols-rounded text-[17px]">add_circle</span>
+                        Add to vocabulary
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+
+            {canSwipe && (
+              <p className="mt-4 font-instrument text-[11px] text-white/20">swipe right to save</p>
+            )}
+          </>
         )}
-        </>
-      )}
+      </div>
     </div>
   )
 }
