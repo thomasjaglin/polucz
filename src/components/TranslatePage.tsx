@@ -152,8 +152,17 @@ export default function TranslatePage({ onAddCard }: Props) {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
           placeholder={srcTop ? 'pisz tutaj...' : 'Translate text…'}
           rows={2}
-          className="relative z-10 w-full resize-none bg-transparent px-6 py-4 font-instrument text-[17px] text-white/95 placeholder:text-white/40 outline-none"
+          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-white/95 placeholder:text-white/40 outline-none"
         />
+        {!!input && (
+          <button
+            onClick={() => setInput('')}
+            aria-label="Clear input"
+            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full bg-white/15 text-white/60 transition-colors hover:bg-white/25 hover:text-white"
+          >
+            <span className="material-symbols-rounded text-[16px]">close</span>
+          </button>
+        )}
       </div>
 
       <button
@@ -180,16 +189,18 @@ export default function TranslatePage({ onAddCard }: Props) {
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.08, right: 0.8 }}
         onDragEnd={canSwipe ? handleDragEnd : undefined}
-        className={`relative select-none ${canSwipe ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        className={`relative select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] ${canSwipe ? 'cursor-grab active:cursor-grabbing' : ''}`}
       >
+        <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-white/[0.02]" />
+
         {canSwipe && (
           <motion.div style={{ opacity: addOpacity }}
-            className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end">
+            className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end rounded-[24px] pr-6">
             <span className="font-instrument text-[18px] font-semibold text-emerald-400/90">Add →</span>
           </motion.div>
         )}
 
-        <div className="relative z-20 flex flex-col gap-4">
+        <div className="relative z-20 flex flex-col gap-4 p-6">
           <p className="font-instrument text-[28px] italic leading-tight text-[#B4A0FF]">
             {result.translation}
           </p>
