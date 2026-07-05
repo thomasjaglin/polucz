@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 959.4 908.4" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group 21" filter="url(#filter0_f_0_4)">
+<ellipse id="Ellipse 76" cx="336.2" cy="586.7" rx="247.5" ry="210" fill="var(--fill-0, #D94C30)"/>
+<ellipse id="Ellipse 76_2" cx="648.2" cy="634.7" rx="247.5" ry="210" fill="var(--fill-0, #EE9B3D)"/>
+<ellipse id="Ellipse 74" cx="311.2" cy="273.7" rx="247.5" ry="210" fill="var(--fill-0, #FF15B5)"/>
+<ellipse id="Ellipse 75" cx="501.2" cy="363.7" rx="247.5" ry="210" fill="var(--fill-0, #FC484B)"/>
+<path id="Vector 7" opacity="0.76" d="M447.128 763.839C447.677 749.698 448.225 735.556 458.236 717.118C468.247 698.68 487.705 676.374 503.008 661.547C527.163 638.144 550.211 628.322 572.791 619.861C584.912 616.25 598.379 614.026 606.5 613.298C614.62 612.571 616.986 613.407 619.462 615.219" stroke="var(--stroke-0, white)" stroke-width="48" stroke-linecap="round"/>
+<path id="Vector 6" opacity="0.39" d="M257.584 382.983C257.423 383.139 285.405 360.907 335.704 326.183C356.659 311.717 373.487 311.939 382.127 312.7C392.826 313.642 396.1 325.325 400.313 335.242C407.474 352.095 395.288 366.011 388.63 376.455C380.499 389.208 379.528 400.736 376.53 425.519C375.833 433.108 375.623 441.406 378.352 449.103C381.081 456.8 386.756 463.644 396.531 468.713" stroke="var(--stroke-0, white)" stroke-width="90" stroke-linecap="round"/>
+</g>
+<defs>
+<filter id="filter0_f_0_4" x="0" y="0" width="959.4" height="908.4" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="31.85" result="effect1_foregroundBlur_0_4"/>
+</filter>
+</defs>
+</svg>
