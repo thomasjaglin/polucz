@@ -118,7 +118,8 @@ export default function TranslatePage({ onAddCard }: Props) {
     if (result?.translation) setInput(result.translation)
     setResult(null)
     setPhase('idle')
-    setTimeout(() => textareaRef.current?.focus(), 350)
+    // No focus here on purpose: focusing would pop the keyboard mid-swap;
+    // the field activates only when the user taps it
   }
 
   function handleAdd() {
