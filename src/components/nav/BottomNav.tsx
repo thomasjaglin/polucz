@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react'
 import { motion, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import { pages, pageOrder } from '../../data/pages'
 import { activeSvgMask } from '../../data/gradients'
-import GlassPane from '../GlassPane'
+import { generateMaskGlassMap } from '../../lib/generateGlassMap'
+import { upsertFilter } from '../../hooks/useGlassFilter'
+import { getGlassMode } from '../../lib/glassMode'
 import { GLASS_OVERSCAN } from '../../lib/glassParams'
 import type { PageId } from '../../data/types'
 
@@ -12,10 +14,12 @@ interface Props {
 }
 
 // Gooey tab bar, illustration-style: the active item's circle is the SAME
-// height as the bar and sits in a gap in it, joined on both sides by deep
-// concave neck fillets (two-metaball union). The inactive icons reflow into
-// the bar segments. Near the bar ends the neck distance shrinks, so the
-// circle merges smoothly into the end cap instead of popping.
+// height as the bar and sits in a gap in it, joined by deep concave neck
+// fillets (two-metaball union). The inactive icons reflow into the bar
+// segments. When the first/last item is active, the bar's own end boundary
+// collapses onto the circle so the circle terminates the bar — no leftover
+// end cap. Glass comes from a mask-derived displacement/relief map built
+// from the actual silhouette, so refraction and rim light follow the shape.
 const BAR_H = 56
 const R = BAR_H / 2       // bubble radius = bar half height = cap radius
 const NECK = 14           // fillet radius of the concave necks
@@ -27,6 +31,7 @@ const N = pageOrder.length
 const W = PAD * 2 + ACTIVE_W + REG_W * (N - 1)
 const CY = R
 
+const NAV_FILTER_ID = 'kube-glass-nav'
 const SPRING = { type: 'spring', stiffness: 420, damping: 32 } as const
 
 // Slot centers for a given active index (active slot is wider)
@@ -42,86 +47,142 @@ function slotCenters(idx: number): number[] {
 }
 
 // Union outline of the split bar and the bubble circle at center x = cx.
-// Both bar-segment inner caps and the bubble have radius R; the concave
-// necks are tangent fillet arcs of radius NECK. Clamping the cap-center
-// distance to the bar's end caps makes the pinch relax smoothly to a full
-// merge at the ends. Clockwise path.
-function gooeyPath(cx: number, off = 0): string {
+// bl/br are the bar's live end boundaries (bl rises to cx−R when the first
+// item is active, br drops to cx+R for the last) — at that point the end
+// cap coincides with the bubble and the circle terminates the bar.
+// Clockwise path.
+function gooeyPath(cx: number, bl: number, br: number, off = 0): string {
   const k = R / (R + NECK)
   const o = off
   const p = (n: number) => (n + o).toFixed(2)
 
-  // Per-side neck geometry (D = distance bubble-center → cap-center)
   const side = (D: number) => {
-    const q = Math.sqrt((R + NECK) ** 2 - (D / 2) ** 2)
+    const q = Math.sqrt(Math.max((R + NECK) ** 2 - (D / 2) ** 2, 0))
     return {
-      e: k * (D / 2),        // tangent x-offset on the bubble
+      e: k * (D / 2),        // tangent x-offset from centers
       ty: CY - k * q,        // tangent y (top side)
       by: CY + k * q,        // tangent y (bottom side)
     }
   }
 
-  const capL = Math.max(cx - GAP_D, R)       // left segment inner-cap center
-  const capR = Math.min(cx + GAP_D, W - R)   // right segment inner-cap center
-  const L = side(cx - capL)
-  const Rt = side(capR - cx)
+  const capL = Math.max(cx - GAP_D, bl + R)  // left segment inner-cap center
+  const capR = Math.min(cx + GAP_D, br - R)  // right segment inner-cap center
+  const L = side(Math.max(cx - capL, 0))
+  const Rt = side(Math.max(capR - cx, 0))
 
   return [
-    `M ${p(R)} ${p(0)}`,
+    `M ${p(bl + R)} ${p(0)}`,
     `H ${p(capL)}`,
     `A ${R} ${R} 0 0 1 ${p(capL + L.e)} ${p(L.ty)}`,          // left inner cap
     `A ${NECK} ${NECK} 0 0 0 ${p(cx - L.e)} ${p(L.ty)}`,      // left neck
     `A ${R} ${R} 0 0 1 ${p(cx + Rt.e)} ${p(Rt.ty)}`,          // over the bubble
     `A ${NECK} ${NECK} 0 0 0 ${p(capR - Rt.e)} ${p(Rt.ty)}`,  // right neck
     `A ${R} ${R} 0 0 1 ${p(capR)} ${p(0)}`,                   // up right inner cap
-    `H ${p(W - R)}`,
-    `A ${R} ${R} 0 0 1 ${p(W)} ${p(CY)}`,                     // right end cap
-    `A ${R} ${R} 0 0 1 ${p(W - R)} ${p(BAR_H)}`,
+    `H ${p(br - R)}`,
+    `A ${R} ${R} 0 0 1 ${p(br)} ${p(CY)}`,                    // right end cap
+    `A ${R} ${R} 0 0 1 ${p(br - R)} ${p(BAR_H)}`,
     `H ${p(capR)}`,
     `A ${R} ${R} 0 0 1 ${p(capR - Rt.e)} ${p(Rt.by)}`,        // bottom mirror
     `A ${NECK} ${NECK} 0 0 0 ${p(cx + Rt.e)} ${p(Rt.by)}`,
     `A ${R} ${R} 0 0 1 ${p(cx - L.e)} ${p(L.by)}`,
     `A ${NECK} ${NECK} 0 0 0 ${p(capL + L.e)} ${p(L.by)}`,
     `A ${R} ${R} 0 0 1 ${p(capL)} ${p(BAR_H)}`,
-    `H ${p(R)}`,
-    `A ${R} ${R} 0 0 1 ${p(0)} ${p(CY)}`,                     // left end cap
-    `A ${R} ${R} 0 0 1 ${p(R)} ${p(0)}`,
+    `H ${p(bl + R)}`,
+    `A ${R} ${R} 0 0 1 ${p(bl)} ${p(CY)}`,                    // left end cap
+    `A ${R} ${R} 0 0 1 ${p(bl + R)} ${p(0)}`,
     'Z',
   ].join(' ')
 }
 
+const blTarget = (idx: number, centers: number[]) => (idx === 0 ? centers[0] - R : 0)
+const brTarget = (idx: number, centers: number[]) => (idx === N - 1 ? centers[N - 1] + R : W)
+
 export default function BottomNav({ activeId, onChangePage }: Props) {
   const idx = Math.max(0, pageOrder.indexOf(activeId))
+  const glassMode = getGlassMode()
+  const outerRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
   const fillRef = useRef<SVGPathElement | null>(null)
   const strokeRef = useRef<SVGPathElement | null>(null)
   const shadowRef = useRef<SVGPathElement | null>(null)
+  const lastMapAt = useRef(0)
 
   const centers = slotCenters(idx)
   const cx = useMotionValue(centers[idx])
+  const bl = useMotionValue(blTarget(idx, centers))
+  const br = useMotionValue(brTarget(idx, centers))
   const discX = useTransform(cx, v => v - 21) // 42px gradient disc
+  // Keep the visible silhouette centered while an end boundary is collapsed
+  const shiftX = useTransform([bl, br], (v: number[]) => -((v[0] + v[1]) / 2 - W / 2))
 
-  function applyShape(v: number) {
-    const d = gooeyPath(v)
-    containerRef.current?.style.setProperty('--glass-clip', `path('${gooeyPath(v, GLASS_OVERSCAN)}')`)
+  // Displacement/relief map from the current silhouette — refraction and rim
+  // light follow the gooey outline instead of the old rectangular pane map.
+  function regenMap() {
+    if (glassMode !== 'svg') return
+    const d = gooeyPath(cx.get(), bl.get(), br.get())
+    const maps = generateMaskGlassMap(
+      W, BAR_H,
+      ctx => { ctx.fillStyle = '#fff'; ctx.fill(new Path2D(d)) },
+      { blurRadius: 4, scale: 36, highlight: 0.55, shade: 0.1 },
+    )
+    upsertFilter(NAV_FILTER_ID, maps, W, BAR_H)
+    lastMapAt.current = performance.now()
+  }
+
+  function applyShape() {
+    const v = cx.get(), a = bl.get(), b = br.get()
+    const d = gooeyPath(v, a, b)
+    containerRef.current?.style.setProperty('--glass-clip', `path('${gooeyPath(v, a, b, GLASS_OVERSCAN)}')`)
     fillRef.current?.setAttribute('d', d)
     strokeRef.current?.setAttribute('d', d)
     shadowRef.current?.setAttribute('d', d)
+    // Refresh the glass map at ~15fps while in flight; the settle pass in the
+    // animation's onComplete does the final exact one
+    if (performance.now() - lastMapAt.current > 66) regenMap()
   }
 
   useMotionValueEvent(cx, 'change', applyShape)
+  useMotionValueEvent(bl, 'change', applyShape)
+  useMotionValueEvent(br, 'change', applyShape)
 
   useEffect(() => {
-    const controls = animate(cx, centers[idx], SPRING)
-    return () => controls.stop()
+    const controls = [
+      animate(cx, centers[idx], { ...SPRING, onComplete: () => { applyShape(); regenMap() } }),
+      animate(bl, blTarget(idx, centers), SPRING),
+      animate(br, brTarget(idx, centers), SPRING),
+    ]
+    return () => controls.forEach(c => c.stop())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx])
 
-  // Initial paint (before any animation)
-  useEffect(() => { applyShape(cx.get()) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // Initial paint + cleanup
+  useEffect(() => {
+    applyShape()
+    regenMap()
+    return () => {
+      document.querySelector(`#kube-glass-filters #${NAV_FILTER_ID}`)?.remove()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Keep the nav pinned to the physical screen bottom when the keyboard opens.
+  // On mobile, the visual viewport shrinks (keyboard takes space) and fixed
+  // elements float above the keyboard — push the nav back down so it doesn't
+  // cover the active input field.
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    function update() {
+      if (!outerRef.current) return
+      const keyboardH = window.innerHeight - vv!.height
+      outerRef.current.style.bottom = keyboardH > 10 ? `${16 - keyboardH}px` : ''
+    }
+    vv.addEventListener('resize', update)
+    return () => vv.removeEventListener('resize', update)
+  }, [])
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2">
+    <div ref={outerRef} className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2" style={{ transition: 'bottom 0.25s ease-out' }}>
       {/* Background glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
         <svg xmlns="http://www.w3.org/2000/svg" width="330" height="66" viewBox="0 0 367 82" fill="none">
@@ -140,10 +201,10 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
         </svg>
       </div>
 
-      <nav
+      <motion.nav
         ref={containerRef}
         className="relative"
-        style={{ width: W, height: BAR_H, viewTransitionName: 'nav-bar' }}
+        style={{ width: W, height: BAR_H, x: shiftX, viewTransitionName: 'nav-bar' }}
       >
         {/* Soft drop shadow following the silhouette (under the glass) */}
         <div className="pointer-events-none absolute inset-0 translate-y-[6px] blur-[10px]">
@@ -152,8 +213,12 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
           </svg>
         </div>
 
-        {/* Glass, clipped to the gooey silhouette via --glass-clip */}
-        <GlassPane borderRadius={R} className="absolute inset-0" />
+        {/* Glass layer: blur + silhouette displacement map, clipped to the
+            silhouette via --glass-clip (inherited by the ::before) */}
+        <div
+          className="kube-glass-bg absolute inset-0"
+          style={{ '--glass-filter': glassMode === 'svg' ? `url(#${NAV_FILTER_ID})` : 'none' } as React.CSSProperties}
+        />
 
         {/* Fill tint + rim stroke of the silhouette */}
         <div className="pointer-events-none absolute inset-0 z-10">
@@ -195,7 +260,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
             )
           })}
         </div>
-      </nav>
+      </motion.nav>
     </div>
   )
 }
