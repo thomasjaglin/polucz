@@ -61,6 +61,7 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
+  const clearOpacity = useTransform(x, [-80, 0], [1, 0])
 
   const srcTop = direction === 'pl-en' // source = Polish (top) or English (bottom)
 
@@ -128,11 +129,24 @@ export default function TranslatePage({ onAddCard }: Props) {
     setAdded(true)
   }
 
+  function handleDismiss() {
+    setInput('')
+    setResult(null)
+    setPhase('idle')
+    setAdded(false)
+  }
+
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
-    const committed = info.offset.x > window.innerWidth * 0.30 || info.velocity.x > 400
-    if (committed && canSwipe) {
+    const threshold = window.innerWidth * 0.30
+    const goRight = info.offset.x > threshold || info.velocity.x > 400
+    const goLeft = info.offset.x < -threshold || info.velocity.x < -400
+    if (goRight && canSwipe) {
       animate(x, 700, { duration: 0.25 })
       setTimeout(() => { x.set(0); handleAdd() }, 270)
+    } else if (goLeft) {
+      // Left swipe clears everything — input and translation
+      animate(x, -700, { duration: 0.25 })
+      setTimeout(() => { x.set(0); handleDismiss() }, 270)
     } else {
       animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 })
     }
@@ -185,11 +199,11 @@ export default function TranslatePage({ onAddCard }: Props) {
     <>
       <motion.div
         style={{ x }}
-        drag={canSwipe ? 'x' : false}
+        drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={{ left: 0.08, right: 0.8 }}
-        onDragEnd={canSwipe ? handleDragEnd : undefined}
-        className={`relative select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] ${canSwipe ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        dragElastic={{ left: 0.8, right: canSwipe ? 0.8 : 0.08 }}
+        onDragEnd={handleDragEnd}
+        className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
       >
         <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-white/[0.02]" />
 
@@ -199,6 +213,10 @@ export default function TranslatePage({ onAddCard }: Props) {
             <span className="font-instrument text-[18px] font-semibold text-emerald-400/90">Add →</span>
           </motion.div>
         )}
+        <motion.div style={{ opacity: clearOpacity }}
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-start rounded-[24px] pl-6">
+          <span className="font-instrument text-[18px] font-semibold text-white/50">← Clear</span>
+        </motion.div>
 
         <div className="relative z-20 flex flex-col gap-4 p-6">
           <p className="font-instrument text-[28px] italic leading-tight text-[#B4A0FF]">
@@ -233,27 +251,20 @@ export default function TranslatePage({ onAddCard }: Props) {
                 )}
               </div>
 
-              {added ? (
+              {added && (
                 <p className="font-instrument text-[13px] text-emerald-400/80">Added to vocabulary</p>
-              ) : alreadySaved ? (
+              )}
+              {!added && alreadySaved && (
                 <p className="font-instrument text-[13px] text-white/30">Already in your vocabulary</p>
-              ) : (
-                <button
-                  onClick={handleAdd}
-                  className="flex items-center gap-2 self-start font-instrument text-[13px] text-white/45 transition-colors hover:text-white/75"
-                >
-                  <span className="material-symbols-rounded text-[17px]">add_circle</span>
-                  Add to vocabulary
-                </button>
               )}
             </>
           )}
         </div>
       </motion.div>
 
-      {canSwipe && (
-        <p className="mt-4 font-instrument text-[11px] text-white/20">swipe right to save</p>
-      )}
+      <p className="mt-4 font-instrument text-[11px] text-white/20">
+        {canSwipe ? 'swipe right to save · swipe left to clear' : 'swipe left to clear'}
+      </p>
     </>
   )
 
