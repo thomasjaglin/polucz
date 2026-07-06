@@ -17,7 +17,7 @@ type Direction = 'pl-en' | 'en-pl'
 const BOUNDARY = 51.4 // vh — circle edge & swap button center
 const CIRCLE_H = 73.4 // vh (673/917)
 const CIRCLE_W = 135  // vw (557/412)
-const EDGE_OFFSET = 2.2 // vh — the doubled soft edge sits 20px into the dark side
+const EDGE_OFFSET = 0 // vh — border ring aligned flush with the gradient circle clip
 
 const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
 
@@ -288,7 +288,7 @@ export default function TranslatePage({ onAddCard }: Props) {
           src={gradientUrl}
           alt=""
           className="absolute max-w-none"
-          style={{ left: '-11.3%', top: '-3.7%', width: '149.4%', height: '116%' }}
+          style={{ left: '-11.3%', top: '5%', width: '149.4%', height: '116%' }}
         />
       </motion.div>
 
