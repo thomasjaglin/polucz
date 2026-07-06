@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { getDistractors, checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
 import GlassPane from '../GlassPane'
+import GlassButton from '../GlassButton'
 
 interface Props {
   sentence: SentenceEntry
@@ -40,15 +41,22 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
 
   function getButtonStyle(opt: string): string {
     if (chosen === null) {
-      return 'border-white/10 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:border-white/20 active:scale-[0.97]'
+      return 'border-white/10 text-white/80 hover:border-white/20'
     }
     if (checkAnswer(opt, sentence.targetForm)) {
-      return 'border-green-400/40 bg-green-400/15 text-green-300'
+      return 'border-green-400/40 text-green-300'
     }
     if (opt === chosen) {
-      return 'border-red-400/40 bg-red-400/15 text-red-300'
+      return 'border-red-400/40 text-red-300'
     }
-    return 'border-white/5 bg-white/[0.02] text-white/25'
+    return 'border-white/5 text-white/25'
+  }
+
+  function getPaneTint(opt: string): string {
+    if (chosen === null) return 'bg-white/[0.04]'
+    if (checkAnswer(opt, sentence.targetForm)) return 'bg-green-400/15'
+    if (opt === chosen) return 'bg-red-400/15'
+    return 'bg-white/[0.02]'
   }
 
   const display = blankSentence(sentence.polish, sentence.targetForm)
@@ -67,14 +75,16 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
 
       <div className="grid grid-cols-2 gap-3">
         {options.map(opt => (
-          <button
+          <GlassButton
             key={opt}
             onClick={() => { if (chosen === null) setChosen(opt) }}
             disabled={chosen !== null}
-            className={`rounded-[16px] border px-4 py-4 font-instrument text-[17px] font-medium transition-all disabled:cursor-default ${getButtonStyle(opt)}`}
+            radius={16}
+            pane={getPaneTint(opt)}
+            className={`border px-4 py-4 font-instrument text-[17px] font-medium disabled:cursor-default ${getButtonStyle(opt)}`}
           >
             {opt}
-          </button>
+          </GlassButton>
         ))}
       </div>
     </div>

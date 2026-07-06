@@ -45,7 +45,7 @@ export default function ApiConfigPage({ onSave }: Props) {
           onClick={onSave}
           className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
         >
-          <div className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+          <GlassPane borderRadius={25} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
           <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save Configuration</span>
         </button>
       </GlassCard>

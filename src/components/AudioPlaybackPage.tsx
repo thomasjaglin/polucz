@@ -6,6 +6,7 @@ import { getDueCards, applyEasy, applyHard, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import GlassPane from './GlassPane'
+import GlassButton from './GlassButton'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -227,20 +228,24 @@ export default function AudioPlaybackPage({ cards }: Props) {
             <p className="font-instrument text-[16px] text-[#F8FAFC]/40">
               You've listened to all {totalCount} cards.
             </p>
-            <button
+            <GlassButton
               onClick={loadQueue}
-              className="mt-2 flex items-center gap-2 rounded-[28px] border border-[#B4A0FF]/20 bg-[#B4A0FF]/10 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF] transition-all hover:bg-[#B4A0FF]/20 active:scale-[0.97]"
+              radius={28}
+              pane="bg-[#B4A0FF]/10"
+              className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
             >
               <span className="material-symbols-rounded text-[18px]">replay</span>
               Listen again
-            </button>
-            <button
+            </GlassButton>
+            <GlassButton
               onClick={() => { resetAllReviews(); loadQueue() }}
-              className="flex items-center gap-2 rounded-[28px] border border-white/10 bg-white/5 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50 transition-all hover:bg-white/10 active:scale-[0.97]"
+              radius={28}
+              pane="bg-white/5"
+              className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
             >
               <span className="material-symbols-rounded text-[16px]">refresh</span>
               Reset all progress
-            </button>
+            </GlassButton>
           </motion.div>
         ) : totalCount === 0 ? (
           <motion.div
@@ -338,14 +343,17 @@ export default function AudioPlaybackPage({ cards }: Props) {
             {showControls && (
               <div className="flex w-full items-center justify-between gap-3 pb-4">
                 {/* Hard */}
-                <button
+                <GlassButton
                   onClick={() => rateAndAdvance('hard')}
                   disabled={phase !== 'playing'}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[24px] border border-white/10 bg-white/5 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 transition-all hover:bg-white/10 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-30"
+                  radius={24}
+                  pane="bg-white/5"
+                  contentClassName="flex w-full items-center justify-center gap-1.5"
+                  className="flex-1 border border-white/10 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
                 >
                   <span className="material-symbols-rounded text-[16px]">thumb_down</span>
                   Hard
-                </button>
+                </GlassButton>
 
                 {/* Play / Pause */}
                 <button
@@ -360,14 +368,17 @@ export default function AudioPlaybackPage({ cards }: Props) {
                 </button>
 
                 {/* Again */}
-                <button
+                <GlassButton
                   onClick={() => rateAndAdvance('lapse')}
                   disabled={phase !== 'playing'}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-[24px] border border-white/10 bg-white/5 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 transition-all hover:bg-white/10 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-30"
+                  radius={24}
+                  pane="bg-white/5"
+                  contentClassName="flex w-full items-center justify-center gap-1.5"
+                  className="flex-1 border border-white/10 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
                 >
                   Again
                   <span className="material-symbols-rounded text-[16px]">replay</span>
-                </button>
+                </GlassButton>
               </div>
             )}
           </motion.div>

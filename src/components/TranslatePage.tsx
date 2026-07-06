@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
+import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
@@ -179,13 +180,15 @@ export default function TranslatePage({ onAddCard }: Props) {
         )}
       </div>
 
-      <button
+      <GlassButton
         onClick={handleTranslate}
         disabled={!input.trim() || phase === 'loading'}
-        className="mt-3 w-full rounded-[14px] border border-white/15 bg-white/[0.07] py-3 font-instrument text-[15px] font-medium text-white/75 transition-all hover:bg-white/[0.12] disabled:pointer-events-none disabled:opacity-35"
+        radius={14}
+        pane="bg-white/[0.07]"
+        className="mt-3 w-full border border-white/15 py-3 font-instrument text-[15px] font-medium text-white/75 disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
-      </button>
+      </GlassButton>
 
       {phase === 'error' && (
         <p className="mt-2 text-center font-instrument text-[12px] text-red-400/70">
@@ -307,10 +310,12 @@ export default function TranslatePage({ onAddCard }: Props) {
       </div>
 
       {/* ── Swap button on the boundary ────────────────────────── */}
-      <button
+      <GlassButton
         onClick={handleSwap}
         aria-label="Swap languages"
-        className="absolute left-1/2 z-20 flex h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-[#181818]/90 shadow-[0_4px_20px_rgba(0,0,0,0.6)] backdrop-blur-md transition-colors hover:bg-[#222]"
+        radius={21}
+        pane="bg-[#181818]/80"
+        className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
         style={{ top: `${BOUNDARY}vh` }}
       >
         <motion.span
@@ -321,7 +326,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         >
           sync_alt
         </motion.span>
-      </button>
+      </GlassButton>
 
       {/* ── English — fixed bottom section ─────────────────────── */}
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-8 pt-[9.5vh] pb-[110px] overflow-y-auto no-scrollbar" style={{ top: `${BOUNDARY}vh` }}>

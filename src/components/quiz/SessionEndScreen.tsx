@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { AnswerRecord } from './QuizSession'
 import { saveSession } from '../../lib/quizHistory'
+import GlassButton from '../GlassButton'
 
 interface Props {
   type: 'declension' | 'conjugation'
@@ -65,18 +66,22 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        <button
+        <GlassButton
           onClick={onRetry}
-          className="w-full rounded-[16px] border border-[#B4A0FF]/20 bg-[#B4A0FF]/10 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF] transition-all hover:bg-[#B4A0FF]/15"
+          radius={16}
+          pane="bg-[#B4A0FF]/10"
+          className="w-full border border-[#B4A0FF]/20 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF]"
         >
           Try again
-        </button>
-        <button
+        </GlassButton>
+        <GlassButton
           onClick={onBack}
-          className="w-full rounded-[16px] border border-white/10 bg-white/[0.03] py-3.5 font-instrument text-[16px] font-medium text-white/55 transition-all hover:bg-white/[0.06]"
+          radius={16}
+          pane="bg-white/[0.03]"
+          className="w-full border border-white/10 py-3.5 font-instrument text-[16px] font-medium text-white/55"
         >
           Back to menu
-        </button>
+        </GlassButton>
       </div>
     </div>
   )

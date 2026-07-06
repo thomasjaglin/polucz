@@ -6,6 +6,7 @@ import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } fro
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import GlassPane from './GlassPane'
+import GlassButton from './GlassButton'
 
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
 
@@ -113,14 +114,16 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
                 <div className="h-[1px] w-full bg-white/10" />
                 <div className="flex w-full items-center justify-between gap-3">
                   <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.en}</p>
-                  <button
+                  <GlassButton
                     onClick={e => { e.stopPropagation(); onReplay() }}
-                    className={`flex h-[32px] w-[32px] flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 transition-all hover:bg-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
+                    radius={16}
+                    pane="bg-white/5"
+                    className={`h-[32px] w-[32px] flex-shrink-0 border border-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
                   >
                     <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
                       {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
                     </span>
-                  </button>
+                  </GlassButton>
                 </div>
               </motion.div>
             )}
@@ -139,13 +142,15 @@ function AllCaughtUp({ onReset }: { onReset: () => void }) {
       <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">check_circle</span>
       <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">All caught up</h2>
       <p className="font-instrument text-[16px] text-[#F8FAFC]/40">No cards due for review right now.</p>
-      <button
+      <GlassButton
         onClick={onReset}
-        className="mt-2 flex items-center gap-2 rounded-[28px] border border-[#B4A0FF]/20 bg-[#B4A0FF]/10 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF] transition-all hover:bg-[#B4A0FF]/20 active:scale-[0.97]"
+        radius={28}
+        pane="bg-[#B4A0FF]/10"
+        className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Review again
-      </button>
+      </GlassButton>
     </div>
   )
 }
@@ -155,20 +160,24 @@ function AllCaughtUp({ onReset }: { onReset: () => void }) {
 function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLapse: () => void }) {
   return (
     <div className="flex w-full gap-3">
-      <button
+      <GlassButton
         onClick={onLapse}
-        className="flex flex-1 items-center justify-center gap-2 rounded-[28px] border border-red-400/20 bg-red-400/10 py-4 font-instrument text-[15px] font-medium text-red-400/80 transition-all hover:bg-red-400/20 active:scale-[0.97]"
+        radius={28}
+        pane="bg-red-400/10"
+        className="flex-1 border border-red-400/20 py-4 font-instrument text-[15px] font-medium text-red-400/80"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Again
-      </button>
-      <button
+      </GlassButton>
+      <GlassButton
         onClick={onConquered}
-        className="flex flex-1 items-center justify-center gap-2 rounded-[28px] border border-[#B4A0FF]/20 bg-[#B4A0FF]/10 py-4 font-instrument text-[15px] font-medium text-[#B4A0FF] transition-all hover:bg-[#B4A0FF]/20 active:scale-[0.97]"
+        radius={28}
+        pane="bg-[#B4A0FF]/10"
+        className="flex-1 border border-[#B4A0FF]/20 py-4 font-instrument text-[15px] font-medium text-[#B4A0FF]"
       >
         <span className="material-symbols-rounded text-[18px]">military_tech</span>
         Conquered
-      </button>
+      </GlassButton>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import GlassCard from './GlassCard'
+import GlassPane from './GlassPane'
 import GlassInput from './GlassInput'
 import { findByLemma } from '../lib/storage'
 import type { VocabEntry } from '../data/types'
@@ -21,7 +22,7 @@ function GlassButton({
       disabled={disabled}
       className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group disabled:pointer-events-none disabled:opacity-40"
     >
-      <div className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+      <GlassPane borderRadius={25} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
       {gradient && (
         <div className="absolute inset-0 z-10 flex items-center justify-center opacity-90 mix-blend-screen">
           {gradient}

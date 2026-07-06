@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import type { SentenceEntry } from '../../data/types'
 import { checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
 import GlassPane from '../GlassPane'
+import GlassButton from '../GlassButton'
 
 interface Props {
   sentence: SentenceEntry
@@ -89,12 +90,14 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
       {phase === 'wrong-can-retry' && (
         <div className="flex items-center gap-3">
           <p className="font-instrument text-[14px] text-red-400/75">Not quite — try again</p>
-          <button
+          <GlassButton
             onClick={handleTryAgain}
-            className="rounded-[10px] border border-white/10 bg-white/[0.05] px-3 py-1.5 font-instrument text-[13px] text-white/65 transition-colors hover:bg-white/[0.09]"
+            radius={10}
+            pane="bg-white/[0.05]"
+            className="border border-white/10 px-3 py-1.5 font-instrument text-[13px] text-white/65"
           >
             Try again
-          </button>
+          </GlassButton>
         </div>
       )}
 
@@ -112,13 +115,15 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
       )}
 
       {!locked && (
-        <button
+        <GlassButton
           onClick={handleSubmit}
           disabled={!input.trim()}
-          className="w-full rounded-[16px] border border-[#B4A0FF]/20 bg-[#B4A0FF]/10 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF] transition-all hover:bg-[#B4A0FF]/15 disabled:pointer-events-none disabled:opacity-35"
+          radius={16}
+          pane="bg-[#B4A0FF]/10"
+          className="w-full border border-[#B4A0FF]/20 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF] disabled:opacity-35"
         >
           Submit
-        </button>
+        </GlassButton>
       )}
     </div>
   )

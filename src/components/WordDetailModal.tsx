@@ -5,6 +5,7 @@ import type {
   VerbConjugations, NounDeclensions, AdjectiveDeclensions,
 } from '../data/types'
 import GlassPane from './GlassPane'
+import GlassButton from './GlassButton'
 import { useTTS } from '../lib/useTTS'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
@@ -224,10 +225,12 @@ function ExamplesSection({ word }: { word: string }) {
   }
 
   return (
-    <button
+    <GlassButton
       onClick={handleFind}
       disabled={loading}
-      className="mt-8 flex w-full items-center justify-center gap-2 rounded-[24px] bg-white/5 py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:bg-white/10"
+      radius={24}
+      pane="bg-white/5"
+      className="mt-8 w-full py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
     >
       {loading ? (
         <span className="material-symbols-rounded animate-spin text-white/40">progress_activity</span>
@@ -239,7 +242,7 @@ function ExamplesSection({ word }: { word: string }) {
       ) : (
         <span className="text-white/40">Fetch examples</span>
       )}
-    </button>
+    </GlassButton>
   )
 }
 
@@ -313,12 +316,15 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
         <div className="relative w-full rounded-[40px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
 
           {/* Close button — anchored to the outer relative div */}
-          <button
+          <GlassButton
             onClick={onClose}
-            className="absolute -top-16 right-0 z-20 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white/70 backdrop-blur-md transition-all hover:bg-white/20 hover:text-white"
+            aria-label="Close"
+            radius={24}
+            pane="bg-white/10"
+            className="absolute -top-16 right-0 z-20 h-12 w-12 border border-white/10 text-white/70 hover:text-white"
           >
             <span className="material-symbols-rounded text-[28px]">close</span>
-          </button>
+          </GlassButton>
 
           <div className="relative flex w-full flex-col rounded-[40px]">
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
@@ -362,19 +368,24 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
               {confirmDelete ? (
                 <div className="flex items-center gap-2">
-                  <button
+                  <GlassButton
                     onClick={() => setConfirmDelete(false)}
-                    className="flex h-[38px] items-center rounded-full border border-white/10 bg-white/5 px-4 font-instrument text-[13px] text-white/50 transition-all hover:bg-white/10 hover:text-white"
+                    radius={19}
+                    pane="bg-white/5"
+                    className="h-[38px] border border-white/10 px-4 font-instrument text-[13px] text-white/50 hover:text-white"
                   >
                     Cancel
-                  </button>
-                  <button
+                  </GlassButton>
+                  <GlassButton
                     onClick={onDelete}
-                    className="flex h-[38px] items-center gap-1.5 rounded-full border border-red-400/30 bg-red-400/10 px-4 font-instrument text-[13px] text-red-400 transition-all hover:bg-red-400/20"
+                    radius={19}
+                    pane="bg-red-400/10"
+                    contentClassName="flex w-full items-center justify-center gap-1.5"
+                    className="h-[38px] border border-red-400/30 px-4 font-instrument text-[13px] text-red-400"
                   >
                     <span className="material-symbols-rounded text-[16px]">delete_forever</span>
                     Delete
-                  </button>
+                  </GlassButton>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
