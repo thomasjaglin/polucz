@@ -329,7 +329,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassButton>
 
       {/* ── English — fixed bottom section ─────────────────────── */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-8 pt-[9.5vh] pb-[110px] overflow-y-auto no-scrollbar" style={{ top: `${BOUNDARY}vh` }}>
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col bg-[#080808] px-8 pt-[9.5vh] pb-[110px] overflow-y-auto no-scrollbar" style={{ top: `${BOUNDARY}vh` }}>
         <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">English</p>
         {srcTop ? resultBlock : inputBlock}
       </div>
