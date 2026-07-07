@@ -319,19 +319,17 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
         else backdropLastTap.current = now
       }}
     >
-      <div className={`modal-content-wrapper w-full max-w-[400px] cursor-default${flipIn ? ' flip-in' : ''}`}>
-        <div className="relative w-full rounded-[40px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-
-          {/* Close button — anchored to the outer relative div */}
+      <div className={`modal-content-wrapper flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
             onClick={onClose}
             aria-label="Close"
             radius={24}
             pane="bg-white/10"
-            className="absolute -top-16 right-0 z-20 h-12 w-12 border border-white/10 text-white/70 hover:text-white"
+            className="self-start mb-3 h-12 w-12 border border-white/10 text-white/70 hover:text-white"
           >
             <span className="material-symbols-rounded text-[28px]">close</span>
           </GlassButton>
+        <div className="relative w-full rounded-[40px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
 
           <div className="relative flex w-full flex-col rounded-[40px]">
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}

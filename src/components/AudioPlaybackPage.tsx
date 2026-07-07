@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
-import { getAllReviews, getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
-import { getDueCards, applyEasy, applyHard, applyLapse } from '../lib/scheduler'
+import { getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
+import { applyEasy, applyHard, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import GlassPane from './GlassPane'
@@ -64,7 +64,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
 
   // ─── Initialise / reset queue ──────────────────────────────────────────────
   function loadQueue() {
-    const due = getDueCards(cards, getAllReviews())
+    const due = cards.filter(c => c.enriched).sort(() => Math.random() - 0.5)
     setQueue(due)
     setTotalCount(due.length)
     setIdx(0)
