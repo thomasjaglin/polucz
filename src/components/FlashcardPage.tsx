@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } from '../lib/reviewStorage'
@@ -17,6 +17,7 @@ const THRESHOLD = 0.30
 
 interface CardProps {
   entry: VocabEntry
+  x: MotionValue<number>
   onEasy: () => void
   onHard: () => void
   onConquered: () => void
@@ -29,11 +30,8 @@ interface CardProps {
   onOpenModal?: (entry: VocabEntry) => void
 }
 
-function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
-  const x = useMotionValue(0)
+function FlashCard({ entry, x, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
-  const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
-  const rightOpacity = useTransform(x, [0, 100],  [0, 1])
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
@@ -74,14 +72,6 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
       )}
 
       <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-10 rounded-[36px]"
-          style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left center, rgba(222,0,4,0.9) 0%, transparent 100%)' }}
-        />
-        <motion.div
-          className="pointer-events-none absolute inset-0 z-10 rounded-[36px]"
-          style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right center, rgba(39,209,178,0.9) 0%, transparent 100%)' }}
-        />
         <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
 
         <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
@@ -230,6 +220,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const tts = useTTS()
+  const x = useMotionValue(0)
+  const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
+  const rightOpacity = useTransform(x, [0, 100],  [0, 1])
 
   useEffect(() => {
     const reviews = getAllReviews()
@@ -251,6 +244,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   const advance = useCallback(() => {
     tts.stop()
+    x.set(0)
     setQueue(q => q.slice(1))
     setRevealed(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -259,6 +253,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   // Move current card to position ~3 in queue so it comes back soon in this session
   const requeueCurrent = useCallback(() => {
     tts.stop()
+    x.set(0)
     setQueue(q => {
       if (q.length <= 1) return q  // only card left — stays at front, re-revealed
       const [head, ...tail] = q
@@ -316,6 +311,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   }
 
   return (
+    <>
+      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left center, rgba(222,0,4,0.55) 0%, transparent 65%)' }} />
+      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right center, rgba(39,209,178,0.55) 0%, transparent 65%)' }} />
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
       {totalCount > 0 && (
         <ProgressBar done={doneCount} total={totalCount} />
@@ -326,6 +324,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
           <FlashCard
             key={current.id}
             entry={current}
+            x={x}
             onEasy={handleEasy}
             onHard={handleHard}
             onConquered={handleConquered}
@@ -354,5 +353,6 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         <AllCaughtUp onReset={handleReset} />
       )}
     </div>
+    </>
   )
 }
