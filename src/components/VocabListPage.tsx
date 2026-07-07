@@ -46,7 +46,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   )
 
   const q = searchQuery.toLowerCase()
-  const filtered = cards.filter(v => {
+  const filtered = [...cards].reverse().filter(v => {
     if ((v.type === 'noun' || v.type === 'verb' || v.type === 'adjective') && !activeFilters[v.type as WordType & FilterKey]) return false
     if (masteredIds.has(v.id) && !activeFilters.mastered) return false
     return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
