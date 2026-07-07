@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { AnswerRecord } from './QuizSession'
 import { saveSession } from '../../lib/quizHistory'
 import GlassButton from '../GlassButton'
+import { haptics } from '../../lib/haptics'
 
 interface Props {
   type: 'declension' | 'conjugation'
@@ -24,6 +25,7 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
   useEffect(() => {
     if (saved.current) return
     saved.current = true
+    haptics.sessionDone()
     saveSession({
       date: new Date().toISOString(),
       type,

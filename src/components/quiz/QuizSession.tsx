@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { checkAnswer } from '../../lib/quizLogic'
+import { haptics } from '../../lib/haptics'
 import DeclensionQuestion from './DeclensionQuestion'
 import ConjugationQuestion from './ConjugationQuestion'
 
@@ -32,6 +33,7 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
       given,
       wasCorrect: checkAnswer(given, current.targetForm),
     }
+    if (record.wasCorrect) haptics.correct(); else haptics.wrong()
     const next = [...answers, record]
     if (currentIdx + 1 >= questions.length) {
       onComplete(next)

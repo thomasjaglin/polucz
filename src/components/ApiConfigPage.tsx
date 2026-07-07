@@ -2,6 +2,7 @@ import { useState } from 'react'
 import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
+import { haptics } from '../lib/haptics'
 
 interface Props {
   onSave: () => void
@@ -10,6 +11,7 @@ interface Props {
 export default function ApiConfigPage({ onSave }: Props) {
   const [provider, setProvider] = useState('gemini')
   const [apiKey, setApiKey] = useState('')
+  const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
@@ -40,6 +42,22 @@ export default function ApiConfigPage({ onSave }: Props) {
           onChange={setApiKey}
           className="mb-8"
         />
+
+        {/* Haptic feedback toggle */}
+        <div className="mb-8 flex items-center justify-between">
+          <span className="font-instrument text-[16px] text-[#F8FAFC]/70">Haptic feedback</span>
+          <button
+            onClick={() => {
+              const next = !hapticsOn
+              setHapticsOn(next)
+              localStorage.setItem('polucz_haptics', next ? 'true' : 'false')
+              if (next) haptics.tap()
+            }}
+            className={`relative h-[28px] w-[48px] rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-white/10 bg-white/10'}`}
+          >
+            <span className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-white transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
+          </button>
+        </div>
 
         <button
           onClick={onSave}

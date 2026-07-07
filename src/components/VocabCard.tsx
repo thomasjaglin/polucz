@@ -2,6 +2,7 @@ import { forwardRef } from 'react'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
 import GlassPane from './GlassPane'
+import { haptics } from '../lib/haptics'
 
 interface Props {
   entry: VocabEntry
@@ -18,7 +19,7 @@ function cardMeta(entry: VocabEntry): string | null {
 const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, mastered = false, onClick }, ref) {
   const meta = cardMeta(entry)
   return (
-    <div className="perspective w-full cursor-pointer" onClick={onClick}>
+    <div className="perspective w-full cursor-pointer" onClick={() => { haptics.tap(); onClick() }}>
       <div
         ref={ref}
         className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"

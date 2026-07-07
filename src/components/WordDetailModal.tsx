@@ -7,6 +7,7 @@ import type {
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useTTS } from '../lib/useTTS'
+import { haptics } from '../lib/haptics'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const base = { ...entry, enriched: true }
@@ -265,6 +266,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
   const backdropLastTap = useRef(0)
 
   function handleSpeaker() {
+    haptics.ttsStart()
     if (tts.state === 'loading' || tts.state === 'playing') {
       tts.stop()
     } else {
@@ -405,7 +407,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                     </span>
                   </button>
                   <button
-                    onClick={() => setConfirmDelete(true)}
+                    onClick={() => { haptics.destructive(); setConfirmDelete(true) }}
                     className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-red-400/20 text-red-400/50 transition-all hover:scale-105 hover:text-red-400 active:scale-95"
                   >
                     <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-red-400/5" />

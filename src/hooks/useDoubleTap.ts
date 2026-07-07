@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react'
+import { haptics } from '../lib/haptics'
 
 export function useDoubleTap(callback: () => void, threshold = 300) {
   const lastTap = useRef<number>(0)
@@ -7,6 +8,7 @@ export function useDoubleTap(callback: () => void, threshold = 300) {
     const now = Date.now()
     if (now - lastTap.current < threshold) {
       lastTap.current = 0
+      haptics.doubleTap()
       callback()
     } else {
       lastTap.current = now

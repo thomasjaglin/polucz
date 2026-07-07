@@ -8,6 +8,7 @@ import { useTTS, type AudioState } from '../lib/useTTS'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
+import { haptics } from '../lib/haptics'
 
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
 
@@ -39,9 +40,11 @@ function FlashCard({ entry, x, onEasy, onHard, onConquered, onLapse, isConquerin
     const committed = Math.abs(info.offset.x) > cardWidth * THRESHOLD || Math.abs(info.velocity.x) > 400
 
     if (committed && info.offset.x > 0) {
+      haptics.swipeRight()
       animate(x, 600, { duration: 0.25 })
       setTimeout(onEasy, 220)
     } else if (committed && info.offset.x < 0) {
+      haptics.swipeLeft()
       animate(x, -600, { duration: 0.25 })
       setTimeout(onHard, 220)
     } else {
@@ -296,6 +299,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleConquered() {
     if (!current) return
+    haptics.conquered()
     saveReview(current.id, applyConquered(getOrInit(current.id)))
     setIsConquering(true)
     setTimeout(() => {
@@ -306,6 +310,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleLapse() {
     if (!current) return
+    haptics.repeat()
     saveReview(current.id, applyLapse(getOrInit(current.id)))
     requeueCurrent()
   }
