@@ -32,6 +32,8 @@ interface CardProps {
 function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
+  const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
+  const rightOpacity = useTransform(x, [0, 100],  [0, 1])
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
@@ -72,6 +74,14 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
       )}
 
       <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-10 rounded-[36px]"
+          style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left center, rgba(222,0,4,0.7) 0%, transparent 70%)' }}
+        />
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-10 rounded-[36px]"
+          style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right center, rgba(39,209,178,0.7) 0%, transparent 70%)' }}
+        />
         <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
 
         <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
