@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
@@ -7,6 +7,7 @@ import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
+import { useDoubleTap } from '../hooks/useDoubleTap'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +15,7 @@ type Phase = 'idle' | 'playing' | 'waiting' | 'done'
 
 interface Props {
   cards: VocabEntry[]
+  onOpenModal?: (entry: VocabEntry) => void
 }
 
 // ─── Animated waveform ────────────────────────────────────────────────────────
@@ -41,7 +43,7 @@ function Waveform({ active }: { active: boolean }) {
 
 // ─── Audio Playback Page ──────────────────────────────────────────────────────
 
-export default function AudioPlaybackPage({ cards }: Props) {
+export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
   const [queue, setQueue]       = useState<VocabEntry[]>([])
@@ -75,6 +77,7 @@ export default function AudioPlaybackPage({ cards }: Props) {
   useEffect(() => { loadQueue() }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const current = queue[idx] ?? null
+  const doubleTap = useDoubleTap(useCallback(() => { if (current) onOpenModal?.(current) }, [current, onOpenModal]))
 
   // ─── Start TTS when phase becomes 'playing' or the current card changes ────
   useEffect(() => {
@@ -275,6 +278,8 @@ export default function AudioPlaybackPage({ cards }: Props) {
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.8}
               onDragEnd={handleDragEnd}
+              onTouchEnd={doubleTap.onTouchEnd}
+              onClick={doubleTap.onClick}
               className="relative w-full cursor-grab select-none rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />

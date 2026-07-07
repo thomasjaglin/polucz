@@ -7,6 +7,7 @@ import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '.
 import { useTTS, type AudioState } from '../lib/useTTS'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
+import { useDoubleTap } from '../hooks/useDoubleTap'
 
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
 
@@ -25,11 +26,13 @@ interface CardProps {
   onReveal: () => void
   ttsState: AudioState
   onReplay: () => void
+  onOpenModal?: (entry: VocabEntry) => void
 }
 
-function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay }: CardProps) {
+function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
+  const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     const cardWidth = window.innerWidth * 0.82
@@ -53,7 +56,8 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
       onDragEnd={revealed ? handleDragEnd : undefined}
-      onClick={!revealed ? onReveal : undefined}
+      onTouchEnd={doubleTap.onTouchEnd}
+      onClick={e => { doubleTap.onClick(e); if (!revealed) onReveal() }}
       className={`relative w-full select-none ${revealed ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
       animate={isConquering ? { scale: [1, 1.04, 1], transition: { duration: 0.4 } } : {}}
     >
@@ -207,9 +211,10 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
 
 interface Props {
   cards: VocabEntry[]
+  onOpenModal?: (entry: VocabEntry) => void
 }
 
-export default function FlashcardPage({ cards }: Props) {
+export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const [queue, setQueue] = useState<VocabEntry[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [isConquering, setIsConquering] = useState(false)
@@ -320,6 +325,7 @@ export default function FlashcardPage({ cards }: Props) {
             onReveal={handleReveal}
             ttsState={tts.state}
             onReplay={() => tts.playSequence(current.pl, current.en)}
+            onOpenModal={onOpenModal}
           />
           <AnimatePresence>
             {revealed && (

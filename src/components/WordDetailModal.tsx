@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { tagGradients } from '../data/gradients'
 import type {
   VocabEntry, VocabVerb, VocabNoun, VocabAdjective, VocabUnknown,
@@ -262,6 +262,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
   const [enrichError, setEnrichError] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const tts = useTTS()
+  const backdropLastTap = useRef(0)
 
   function handleSpeaker() {
     if (tts.state === 'loading' || tts.state === 'playing') {
@@ -311,6 +312,12 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
     <div
       className={`fixed inset-0 z-[100] flex cursor-pointer items-center justify-center bg-black/30 p-6 backdrop-blur-md transition-opacity duration-300 ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onTouchEnd={e => {
+        if (e.target !== e.currentTarget) return
+        const now = Date.now()
+        if (now - backdropLastTap.current < 300) { backdropLastTap.current = 0; onClose() }
+        else backdropLastTap.current = now
+      }}
     >
       <div className={`modal-content-wrapper w-full max-w-[400px] cursor-default${flipIn ? ' flip-in' : ''}`}>
         <div className="relative w-full rounded-[40px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
