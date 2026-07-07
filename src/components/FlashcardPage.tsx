@@ -76,11 +76,11 @@ function FlashCard({ entry, onEasy, onHard, onConquered, onLapse, isConquering, 
       <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <motion.div
           className="pointer-events-none absolute inset-0 z-10 rounded-[36px]"
-          style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left center, rgba(222,0,4,0.6) 0%, transparent 90%)' }}
+          style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left center, rgba(222,0,4,0.9) 0%, transparent 100%)' }}
         />
         <motion.div
           className="pointer-events-none absolute inset-0 z-10 rounded-[36px]"
-          style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right center, rgba(39,209,178,0.6) 0%, transparent 90%)' }}
+          style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right center, rgba(39,209,178,0.9) 0%, transparent 100%)' }}
         />
         <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
 
