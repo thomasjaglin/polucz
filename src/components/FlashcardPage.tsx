@@ -247,7 +247,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   const advance = useCallback(() => {
     tts.stop()
-    x.set(0)
+    animate(x, 0, { duration: 0 })
     setQueue(q => q.slice(1))
     setRevealed(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -256,7 +256,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   // Move current card to position ~3 in queue so it comes back soon in this session
   const requeueCurrent = useCallback(() => {
     tts.stop()
-    x.set(0)
+    animate(x, 0, { duration: 0 })
     setQueue(q => {
       if (q.length <= 1) return q  // only card left — stays at front, re-revealed
       const [head, ...tail] = q
