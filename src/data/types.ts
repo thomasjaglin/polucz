@@ -40,6 +40,11 @@ interface VocabBase {
   left: string
   right: string
   tags: WordType[]
+  sourceContext?: {
+    sentence: string
+    translation: string
+    addedFrom: 'sentence-mining' | 'manual' | 'import'
+  }
 }
 
 export interface VocabVerb extends VocabBase {

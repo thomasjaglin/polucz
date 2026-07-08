@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react'
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
-import { findByLemma } from '../lib/storage'
+import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
 import gradientUrl from '../assets/translate-gradient.svg'
 
@@ -34,6 +34,27 @@ function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: 
   return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: '', right: '', tags: ['unknown'], type: 'unknown' }
 }
 
+function buildMiningEntry(word: AnalyzedWord, plSentence: string, enSentence: string): VocabEntry {
+  const sourceContext = { sentence: plSentence, translation: enSentence, addedFrom: 'sentence-mining' as const }
+  if (word.type === 'verb') {
+    return { id: word.lemma, enriched: false, pl: word.lemma, en: word.english, left: '', right: '', tags: ['verb'], type: 'verb', conjugations: null, otherForm: null, sourceContext }
+  }
+  if (word.type === 'noun') {
+    return { id: word.lemma, enriched: false, pl: word.lemma, en: word.english, left: word.gender, right: '', tags: ['noun'], type: 'noun', gender: word.gender, plAlt: '', declensions: null, sourceContext }
+  }
+  if (word.type === 'adjective') {
+    return { id: word.lemma, enriched: false, pl: word.lemma, en: word.english, left: 'adj', right: '', tags: ['adjective'], type: 'adjective', declensions: null, sourceContext }
+  }
+  return { id: word.lemma, enriched: false, pl: word.lemma, en: word.english, left: '', right: '', tags: ['unknown'], type: 'unknown', sourceContext }
+}
+
+interface AnalyzedWord {
+  lemma: string
+  type: 'noun' | 'verb' | 'adjective' | 'adverb' | 'unknown'
+  english: string
+  gender: string
+}
+
 interface Result {
   translation: string
   lemma: string
@@ -41,6 +62,8 @@ interface Result {
   gender: string
   isSingleWord: boolean
   canonicalEn: string
+  plSentence: string
+  enSentence: string
 }
 
 interface Props {
@@ -52,6 +75,38 @@ const isSingleWord = (text: string) => {
   return words.length === 1 || (words.length === 2 && words[1].toLowerCase() === 'się')
 }
 
+const TYPE_BADGE: Record<string, string> = {
+  noun:      'text-[#FB923C] bg-[#FB923C]/10 border-[#FB923C]/25',
+  verb:      'text-[#60A5FA] bg-[#60A5FA]/10 border-[#60A5FA]/25',
+  adjective: 'text-[#34D399] bg-[#34D399]/10 border-[#34D399]/25',
+  adverb:    'text-[#C084FC] bg-[#C084FC]/10 border-[#C084FC]/25',
+  unknown:   'text-[#B4A0FF] bg-[#B4A0FF]/10 border-[#B4A0FF]/25',
+}
+
+function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolean; onAdd: () => void }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-white/[0.06] py-2.5 last:border-0">
+      <span className={`shrink-0 rounded-full border px-2 py-0.5 font-instrument text-[10px] font-medium capitalize ${TYPE_BADGE[word.type] ?? TYPE_BADGE.unknown}`}>
+        {word.type === 'adjective' ? 'adj' : word.type}
+      </span>
+      <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-white/90">{word.lemma}</span>
+      {word.gender && <span className="shrink-0 font-instrument text-[13px] italic text-[#e879f9]">{word.gender}</span>}
+      <span className="shrink-0 text-white/20">·</span>
+      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] text-white/50">{word.english}</span>
+      {isSaved ? (
+        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] text-white/25">✓ In vocabulary</span>
+      ) : (
+        <button
+          onClick={onAdd}
+          className="shrink-0 whitespace-nowrap rounded-full border border-white/15 bg-white/5 px-3 py-1 font-instrument text-[11px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          + Add card
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function TranslatePage({ onAddCard }: Props) {
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
@@ -59,6 +114,11 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [added, setAdded] = useState(false)
   const [direction, setDirection] = useState<Direction>('pl-en')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [wordPhase, setWordPhase] = useState<'idle' | 'loading' | 'done'>('idle')
+  const [words, setWords] = useState<AnalyzedWord[]>([])
+  const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
+  const [toast, setToast] = useState<string | null>(null)
+  const translateIdRef = useRef(0)
 
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
@@ -72,24 +132,41 @@ export default function TranslatePage({ onAddCard }: Props) {
     setPhase('loading')
     setResult(null)
     setAdded(false)
+    setWords([])
+    setWordPhase('idle')
     x.set(0)
+
+    const myId = ++translateIdRef.current
 
     try {
       const single = direction === 'pl-en' && isSingleWord(text)
-      const [translateRes, lemmaRes] = await Promise.all([
-        fetch('/api/translate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text, direction }),
-        }),
-        single
-          ? fetch('/api/lemmatize', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text }),
-            })
-          : Promise.resolve(null),
-      ])
+
+      // Start translate + lemmatize
+      const translateFetch = fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, direction }),
+      })
+      const lemmaFetch: Promise<Response | null> = single
+        ? fetch('/api/lemmatize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          })
+        : Promise.resolve(null)
+
+      // pl-en multi-word: fire analyze-sentence in parallel immediately
+      const canAnalyzeNow = direction === 'pl-en' && !single
+      if (canAnalyzeNow) setWordPhase('loading')
+      const analyzeFetch: Promise<Response> | null = canAnalyzeNow
+        ? fetch('/api/analyze-sentence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sentence: text, sourceLang: 'pl' }),
+          })
+        : null
+
+      const [translateRes, lemmaRes] = await Promise.all([translateFetch, lemmaFetch])
 
       if (!translateRes.ok) throw new Error()
       const { translation } = await translateRes.json()
@@ -106,22 +183,58 @@ export default function TranslatePage({ onAddCard }: Props) {
         canonicalEn = data.canonicalEn || translation
       }
 
-      setResult({ translation, lemma, type, gender, isSingleWord: single, canonicalEn })
+      const plSentence = direction === 'pl-en' ? text : translation
+      const enSentence = direction === 'pl-en' ? translation : text
+
+      setResult({ translation, lemma, type, gender, isSingleWord: single, canonicalEn, plSentence, enSentence })
       setPhase('done')
+
+      // Resolve word analysis (independent of main phase)
+      if (analyzeFetch) {
+        // pl-en: already in flight — await and apply
+        try {
+          const analyzeRes = await analyzeFetch
+          if (translateIdRef.current !== myId) return
+          if (analyzeRes.ok) {
+            const data = await analyzeRes.json()
+            setWords(data.words ?? [])
+          }
+        } catch { /* silent */ }
+        if (translateIdRef.current === myId) setWordPhase('done')
+      } else if (direction === 'en-pl' && !isSingleWord(translation)) {
+        // en-pl: sequential — Polish output now known
+        if (translateIdRef.current !== myId) return
+        setWordPhase('loading')
+        try {
+          const analyzeRes = await fetch('/api/analyze-sentence', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sentence: translation, sourceLang: 'pl' }),
+          })
+          if (translateIdRef.current !== myId) return
+          if (analyzeRes.ok) {
+            const data = await analyzeRes.json()
+            setWords(data.words ?? [])
+          }
+        } catch { /* silent */ }
+        if (translateIdRef.current === myId) setWordPhase('done')
+      }
     } catch {
       setPhase('error')
+      setWordPhase('idle')
     }
   }
 
   function handleSwap() {
+    translateIdRef.current++
     const nextDir: Direction = direction === 'pl-en' ? 'en-pl' : 'pl-en'
     setDirection(nextDir)
-    // Move the current translation output back into the input
     if (result?.translation) setInput(result.translation)
     setResult(null)
     setPhase('idle')
-    // No focus here on purpose: focusing would pop the keyboard mid-swap;
-    // the field activates only when the user taps it
+    setWords([])
+    setWordPhase('idle')
+    // No focus here on purpose: focusing would pop the keyboard mid-swap
   }
 
   function handleAdd() {
@@ -131,10 +244,23 @@ export default function TranslatePage({ onAddCard }: Props) {
   }
 
   function handleDismiss() {
+    translateIdRef.current++
     setInput('')
     setResult(null)
     setPhase('idle')
     setAdded(false)
+    setWords([])
+    setWordPhase('idle')
+  }
+
+  function handleAddMiningCard(word: AnalyzedWord) {
+    if (!result) return
+    const entry = buildMiningEntry(word, result.plSentence, result.enSentence)
+    saveCard(entry)
+    onAddCard(entry)
+    setSavedSet(prev => new Set([...prev, word.lemma.toLowerCase()]))
+    setToast(`${word.lemma} added to vocabulary`)
+    setTimeout(() => setToast(null), 2500)
   }
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
@@ -155,6 +281,27 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   const alreadySaved = result?.isSingleWord ? !!findByLemma(result.lemma) : false
   const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
+
+  const wordListBlock = wordPhase === 'loading' ? (
+    <div className="flex items-center gap-2 pt-4 text-white/30">
+      <span className="material-symbols-rounded animate-spin text-[16px]">progress_activity</span>
+      <span className="font-instrument text-[13px]">Analysing words…</span>
+    </div>
+  ) : wordPhase === 'done' && words.length > 1 ? (
+    <div className="pt-4">
+      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider text-white/25">
+        {srcTop ? 'Words in this sentence' : 'Words in the Polish translation'}
+      </p>
+      {words.map(word => (
+        <WordRow
+          key={word.lemma}
+          word={word}
+          isSaved={savedSet.has(word.lemma.toLowerCase())}
+          onAdd={() => handleAddMiningCard(word)}
+        />
+      ))}
+    </div>
+  ) : null
 
   const inputBlock = (
     <>
@@ -305,7 +452,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[13vh]">
         <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">Polish</p>
         {srcTop ? inputBlock : (
-          <div className="overflow-y-auto no-scrollbar">{resultBlock}</div>
+          <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
         )}
       </div>
 
@@ -329,10 +476,24 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassButton>
 
       {/* ── English — fixed bottom section ─────────────────────── */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-8 pt-[9.5vh] pb-[110px] overflow-y-auto no-scrollbar" style={{ top: `${BOUNDARY}vh` }}>
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[9.5vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
         <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">English</p>
-        {srcTop ? resultBlock : inputBlock}
+        {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
+
+      {/* ── Success toast ───────────────────────────────────────── */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 rounded-full border border-white/10 bg-white/10 px-5 py-2 backdrop-blur-md"
+          >
+            <span className="whitespace-nowrap font-instrument text-[14px] text-white/80">{toast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
