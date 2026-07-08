@@ -175,14 +175,16 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
     function update() {
       if (!outerRef.current) return
       const keyboardH = window.innerHeight - vv!.height
-      outerRef.current.style.bottom = keyboardH > 10 ? `${16 - keyboardH}px` : ''
+      const open = keyboardH > 10
+      outerRef.current.style.opacity = open ? '0' : ''
+      outerRef.current.style.pointerEvents = open ? 'none' : ''
     }
     vv.addEventListener('resize', update)
     return () => vv.removeEventListener('resize', update)
   }, [])
 
   return (
-    <div ref={outerRef} className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2" style={{ transition: 'bottom 0.25s ease-out' }}>
+    <div ref={outerRef} className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-[60] -translate-x-1/2">
       {/* Background glow */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
         <svg xmlns="http://www.w3.org/2000/svg" width="330" height="66" viewBox="0 0 367 82" fill="none">
