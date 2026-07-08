@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import IconButton from './IconButton'
-import AppLogo from './AppLogo'
 import type { PageId } from '../data/types'
 import { getCards, replaceAllCards } from '../lib/storage'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
@@ -121,9 +120,6 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
   return (
     <div className={`absolute inset-x-0 top-0 z-50 transition-transform duration-300 ease-in-out ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
     <div className="relative mx-auto flex max-w-[426px] items-center justify-center px-6 pt-4">
-      {/* Logo — centered */}
-      <AppLogo />
-
       {/* Folder-only: add + settings buttons on the right */}
       {activeId === 'folder' && (
         <div className="absolute right-6 flex items-center gap-[12px]">
