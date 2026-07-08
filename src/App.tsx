@@ -41,7 +41,18 @@ export default function App() {
       vocabularyData.forEach(c => saveCard(c))
       return vocabularyData
     }
-    return stored
+    // One-time backfill: write aspect to `left` for enriched verb cards that predate this field
+    let patched = false
+    stored.forEach(c => {
+      if (c.type === 'verb' && !c.left && c.enriched && c.otherForm?.label) {
+        const label = c.otherForm.label.toLowerCase()
+        const aspect = (label.startsWith('pf') && !label.startsWith('impf')) ? 'impf'
+                     : label.startsWith('impf') ? 'pf'
+                     : ''
+        if (aspect) { updateCard(c.id, { left: aspect }); patched = true }
+      }
+    })
+    return patched ? getCards() : stored
   })
 
   function handleAddCard(entry: VocabEntry) {

@@ -198,5 +198,12 @@ export default async function handler(req, res) {
     return res.status(502).json({ error: 'Invalid response shape from model' })
   }
 
+  if (type === 'verb') {
+    const label = (parsed.otherForm?.label ?? '').toLowerCase()
+    const aspect = (label.startsWith('pf') && !label.startsWith('impf')) ? 'impf'
+                 : label.startsWith('impf') ? 'pf'
+                 : ''
+    return res.status(200).json({ ...parsed, aspect })
+  }
   return res.status(200).json(parsed)
 }

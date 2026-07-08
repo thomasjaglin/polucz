@@ -12,7 +12,8 @@ import { haptics } from '../lib/haptics'
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const base = { ...entry, enriched: true }
   if (base.type === 'verb') {
-    return { ...base, conjugations: data.conjugations as VerbConjugations, otherForm: data.otherForm as { label: string; word: string } }
+    const aspect = typeof data.aspect === 'string' && data.aspect ? data.aspect : base.left
+    return { ...base, left: aspect, conjugations: data.conjugations as VerbConjugations, otherForm: data.otherForm as { label: string; word: string } }
   }
   if (base.type === 'noun') {
     return { ...base, declensions: data.declensions as NounDeclensions, plAlt: data.plAlt as string }
