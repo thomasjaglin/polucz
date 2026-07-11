@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
@@ -19,6 +19,8 @@ const THRESHOLD = 0.30
 interface CardProps {
   entry: VocabEntry
   x: MotionValue<number>
+  hardMode: boolean
+  onToggleHardMode: () => void
   onEasy: () => void
   onHard: () => void
   onConquered: () => void
@@ -31,9 +33,70 @@ interface CardProps {
   onOpenModal?: (entry: VocabEntry) => void
 }
 
-function FlashCard({ entry, x, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
+function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
+
+  const cardRef = useRef<HTMLDivElement>(null)
+  const rotateYVal = useMotionValue(0)
+  // Lags behind hardMode by one animation cycle so content swaps at the midpoint
+  const [displayHardMode, setDisplayHardMode] = useState(hardMode)
+
+  // Fold-swap-unfold when hardMode prop changes
+  useEffect(() => {
+    if (displayHardMode === hardMode) return
+    animate(rotateYVal, 90, {
+      duration: 0.18,
+      ease: 'easeIn',
+      onComplete: () => {
+        setDisplayHardMode(hardMode)
+        rotateYVal.set(-90)
+        animate(rotateYVal, 0, { duration: 0.18, ease: 'easeOut' })
+      },
+    })
+  }, [hardMode]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Two-finger rotation gesture — native listeners required for passive:false
+  useEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+
+    let startAngle: number | null = null
+    let committed = false
+
+    const getAngle = (t: TouchList) =>
+      Math.atan2(t[1].clientY - t[0].clientY, t[1].clientX - t[0].clientX) * (180 / Math.PI)
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return
+      startAngle = getAngle(e.touches)
+      committed = false
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || startAngle === null || committed) return
+      e.preventDefault()
+      const delta = getAngle(e.touches) - startAngle
+      const norm = ((delta + 180) % 360) - 180
+      if (Math.abs(norm) > 45) {
+        committed = true
+        haptics.swipeRight()
+        onToggleHardMode()
+      }
+    }
+
+    const onTouchEnd = () => { startAngle = null; committed = false }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true })
+    el.addEventListener('touchmove', onTouchMove, { passive: false })
+    el.addEventListener('touchend', onTouchEnd, { passive: true })
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart)
+      el.removeEventListener('touchmove', onTouchMove)
+      el.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [onToggleHardMode])
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     const cardWidth = window.innerWidth * 0.82
@@ -54,7 +117,8 @@ function FlashCard({ entry, x, onEasy, onHard, onConquered, onLapse, isConquerin
 
   return (
     <motion.div
-      style={{ x, rotate }}
+      ref={cardRef}
+      style={{ x, rotate, perspective: '1200px' }}
       drag={revealed ? 'x' : false}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
@@ -64,7 +128,7 @@ function FlashCard({ entry, x, onEasy, onHard, onConquered, onLapse, isConquerin
       className={`relative w-full select-none ${revealed ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
       animate={isConquering ? { scale: [1, 1.04, 1], transition: { duration: 0.4 } } : {}}
     >
-      {/* Conquered glow ring */}
+      {/* Conquered glow ring — sits outside the flipping element so it doesn't rotate */}
       {isConquering && (
         <motion.div
           className="pointer-events-none absolute inset-0 rounded-[36px]"
@@ -74,69 +138,86 @@ function FlashCard({ entry, x, onEasy, onHard, onConquered, onLapse, isConquerin
         />
       )}
 
-      <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-        <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+      {/* Inner wrapper that rotates on hard-mode toggle */}
+      <motion.div style={{ rotateY: rotateYVal }}>
+        <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
 
-        <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
-          {/* Type badge */}
-          <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[14px] py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
-            <div
-              className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
-              dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
-            />
-            <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
-              {entry.type}
-            </span>
+          <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
+            {/* Type badge + hard mode label */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[14px] py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                <div
+                  className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                  dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
+                />
+                <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
+                  {entry.type}
+                </span>
+              </div>
+              {displayHardMode && (
+                <span className="font-instrument text-[11px] font-medium text-[#B4A0FF]/50">hard</span>
+              )}
+            </div>
+
+            {/* Question word — pl in normal mode, en in hard mode */}
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h1 className="font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
+                {displayHardMode ? entry.en : entry.pl}
+              </h1>
+              {!displayHardMode && entry.type === 'noun' && entry.gender && (
+                <span className="font-instrument text-[22px] italic text-[#e879f9]">{entry.gender}</span>
+              )}
+            </div>
+
+            {/* Reveal area */}
+            <AnimatePresence mode="wait">
+              {!revealed ? (
+                <motion.div
+                  key="hint"
+                  exit={{ opacity: 0, transition: { duration: 0.1 } }}
+                  className="flex w-full flex-col items-center gap-3"
+                >
+                  <div className="h-[1px] w-full bg-white/10" />
+                  <p className="font-instrument text-[14px] text-[#F8FAFC]/30">tap to reveal</p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="translation"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex w-full flex-col items-center gap-3"
+                >
+                  <div className="h-[1px] w-full bg-white/10" />
+                  <div className="flex w-full items-center justify-between gap-3">
+                    {displayHardMode ? (
+                      <div className="flex flex-col gap-1">
+                        <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.pl}</p>
+                        {entry.type === 'noun' && entry.gender && (
+                          <span className="font-instrument text-[18px] italic text-[#e879f9]">{entry.gender}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.en}</p>
+                    )}
+                    <GlassButton
+                      onClick={e => { e.stopPropagation(); onReplay() }}
+                      radius={16}
+                      pane="bg-white/5"
+                      className={`h-[32px] w-[32px] flex-shrink-0 border border-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
+                    >
+                      <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
+                        {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
+                      </span>
+                    </GlassButton>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
-          {/* Polish word */}
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
-              {entry.pl}
-            </h1>
-            {entry.type === 'noun' && entry.gender && (
-              <span className="font-instrument text-[22px] italic text-[#e879f9]">{entry.gender}</span>
-            )}
-          </div>
-
-          {/* Reveal area */}
-          <AnimatePresence mode="wait">
-            {!revealed ? (
-              <motion.div
-                key="hint"
-                exit={{ opacity: 0, transition: { duration: 0.1 } }}
-                className="flex w-full flex-col items-center gap-3"
-              >
-                <div className="h-[1px] w-full bg-white/10" />
-                <p className="font-instrument text-[14px] text-[#F8FAFC]/30">tap to reveal</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="translation"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25 }}
-                className="flex w-full flex-col items-center gap-3"
-              >
-                <div className="h-[1px] w-full bg-white/10" />
-                <div className="flex w-full items-center justify-between gap-3">
-                  <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.en}</p>
-                  <GlassButton
-                    onClick={e => { e.stopPropagation(); onReplay() }}
-                    radius={16}
-                    pane="bg-white/5"
-                    className={`h-[32px] w-[32px] flex-shrink-0 border border-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
-                  >
-                    <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
-                      {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
-                    </span>
-                  </GlassButton>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
@@ -222,6 +303,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const [totalCount, setTotalCount] = useState(0)
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
+  const [hardMode, setHardMode] = useState(false)
   const tts = useTTS()
   const x = useMotionValue(0)
   const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
@@ -271,6 +353,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     if (!current) return
     setRevealed(true)
     tts.playSequence(current.pl, current.en)
+  }
+
+  function handleToggleHardMode() {
+    setHardMode(h => !h)
+    setRevealed(false)
   }
 
   function handleReset() {
@@ -330,6 +417,8 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             key={current.id}
             entry={current}
             x={x}
+            hardMode={hardMode}
+            onToggleHardMode={handleToggleHardMode}
             onEasy={handleEasy}
             onHard={handleHard}
             onConquered={handleConquered}
