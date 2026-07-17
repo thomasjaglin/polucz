@@ -63,7 +63,9 @@ function sideLayer(colors: string[]): BgLayer {
 
 export const pageBackgrounds: Record<PageId, BgLayer[]> = {
   folder:        [mainLayer(['#4A0101', '#8B0909', '#C82A2A', '#F57D7D', '#FFFFFF'])],
-  translate:     [mainLayer(['#01404A', '#09808B', '#2ABFC8', '#7DF5EE', '#FFFFFF'])],
+  // The translate page suppresses its page gradient in the DOM (it draws its
+  // own moving gradient circle instead) — plain dots background here too
+  translate:     [],
   dynamic_feed:  [mainLayer(['#014A2D', '#098B42', '#2AC87C', '#B3F57D', '#FFFFFF'])],
   question_mark: [mainLayer(['#484A01', '#8B8009', '#C8AB2A', '#FFDEB3', '#FFFFFF'])],
   spatial_audio: [mainLayer(['#14014A', '#16098B', '#2A59C8', '#7DD1F5', '#FFFFFF'])],

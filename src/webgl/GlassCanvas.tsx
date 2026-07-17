@@ -16,7 +16,7 @@ import {
   refractionProfile,
 } from '../lib/glassParams'
 
-const MAX_PANES = 24
+const MAX_PANES = 48
 
 // Fullscreen triangle from gl_VertexID — no vertex buffers needed.
 const VERT = `#version 300 es
@@ -70,12 +70,14 @@ void main() {
   vec3 col = mix(BASE, DOT_COLOR, dotA);
 
   // Vignette: radial-gradient(62% 67.44% at 47.57% 50.05%,
-  //   rgba(18,18,18,.99) 62.02%, rgba(18,18,18,.65) 100%)
+  //   rgba(18,18,18,.99) 62.02%, rgba(18,18,18,.65) 100%).
+  // NOTE: calibrated empirically, not from the stop values — Chrome renders
+  // this large gradient much flatter than spec math suggests (dots stay
+  // ~20% visible in the nominal 0.99 core; measured against the DOM).
   vec2 vc = vec2(0.4757, 0.5005) * uResCss;
   vec2 vr = vec2(0.62, 0.6744) * uResCss;
   float t = length((css - vc) / vr);
-  // CSS gradients interpolate linearly between stops
-  float va = mix(0.99, 0.65, clamp((t - 0.6202) / (1.0 - 0.6202), 0.0, 1.0));
+  float va = mix(0.78, 0.65, clamp((t - 0.6202) / (1.0 - 0.6202), 0.0, 1.0));
   col = mix(col, BASE, va);
 
   // Ellipse stacks: src-over within a layer (premultiplied), screen-blend
@@ -318,7 +320,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     let bgDirty = true
     let sceneDirty = true
     let lastActivity = performance.now()
-    let lastSig = ''
+    let lastSig = 0
     let frame = 0
     let raf = 0
     let dead = false
@@ -368,21 +370,29 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.generateMipmap(gl.TEXTURE_2D)
     }
 
-    // Reads live rects; returns a signature so the loop can skip
-    // recompositing when nothing moved.
-    function readPanes(): { count: number; sig: string } {
+    // Reads live rects; returns a numeric signature so the loop can skip
+    // recompositing when nothing moved. Panes fully outside the viewport are
+    // skipped, so long scrolling lists can't starve the visible ones out of
+    // the MAX_PANES uniform budget.
+    function readPanes(): { count: number; sig: number } {
       let i = 0
-      let sig = ''
+      let sig = 7
+      const hash = (v: number) => { sig = (sig * 31 + Math.round(v * 4)) | 0 }
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const M = 40 // off-screen margin — panes partially entering keep glass
+
       for (const p of getPanes()) {
         if (i >= MAX_PANES) break
         const r = p.el.getBoundingClientRect()
         if (r.width < 2 || r.height < 2) continue
+        if (r.bottom < -M || r.top > vh + M || r.right < -M || r.left > vw + M) continue
         paneRect[i * 4] = r.left
         paneRect[i * 4 + 1] = r.top
         paneRect[i * 4 + 2] = r.width
         paneRect[i * 4 + 3] = r.height
         paneRadius[i] = p.borderRadius
-        sig += `${r.left.toFixed(1)},${r.top.toFixed(1)},${r.width.toFixed(1)},${r.height.toFixed(1)};`
+        hash(r.left); hash(r.top); hash(r.width); hash(r.height)
         i++
       }
 
@@ -395,7 +405,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         maskRect[3] = r.height + mp.overscan * 2
         maskScale = mp.scale
         maskEnabled = 1
-        sig += `M${maskRect[0].toFixed(1)},${maskRect[1].toFixed(1)};`
+        hash(maskRect[0]); hash(maskRect[1])
         if (maskUploaded !== mp.map) {
           gl.bindTexture(gl.TEXTURE_2D, maskTex)
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, mp.map)
@@ -404,6 +414,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       } else {
         maskEnabled = 0
       }
+      hash(maskEnabled)
 
       return { count: i, sig }
     }
