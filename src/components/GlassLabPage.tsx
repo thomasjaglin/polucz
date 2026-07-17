@@ -3,6 +3,7 @@ import GlassPane from './GlassPane'
 import { generateMaskGlassMap, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { upsertFilter } from '../hooks/useGlassFilter'
 import { getGlassMode } from '../lib/glassMode'
+import { fx, setFx, type ShaderFx } from '../webgl/shaderFx'
 import { drawLogoMask, LETTER_PATHS, BAR, SX, SY, LOGO_W, LOGO_H } from './AppLogo'
 
 // Glass shader test bench (open with ?lab). Standard panes for reference on
@@ -167,6 +168,13 @@ export default function GlassLabPage() {
   const set = (patch: Partial<LabParams>) => setParams(p => ({ ...p, ...patch }))
   const glassMode = getGlassMode()
 
+  // WebGL shader FX (mirrors the mutable shaderFx store)
+  const [fxState, setFxState] = useState<ShaderFx>({ ...fx })
+  const setFxParam = (patch: Partial<ShaderFx>) => {
+    setFx(patch)
+    setFxState(s => ({ ...s, ...patch }))
+  }
+
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-48">
       {/* ?lab overrides all page routing, so the lab needs its own way out */}
@@ -186,6 +194,29 @@ export default function GlassLabPage() {
           Glass mode is “{glassMode}” — the mask shapes below render via SVG filters and
           are only meaningful with <code>?glass=svg</code> (default in Chrome).
         </p>
+      )}
+
+      {/* WebGL shader FX — applies live to every glass pane on screen */}
+      {glassMode === 'webgl' && (
+        <div className="flex flex-col gap-2 rounded-2xl bg-white/[0.04] p-4">
+          <h2 className="mb-1 text-[13px] uppercase tracking-wide text-white/40">WebGL shader FX</h2>
+          <Slider label="Chroma" min={0} max={1} step={0.05} value={fxState.chroma} onChange={v => setFxParam({ chroma: v })} />
+          <Slider label="Fresnel" min={0} max={1} step={0.05} value={fxState.fresnel} onChange={v => setFxParam({ fresnel: v })} />
+          <Slider label="Wobble" min={0} max={1} step={0.05} value={fxState.wobble} onChange={v => setFxParam({ wobble: v })} />
+          <Slider label="Light angle" min={-180} max={180} step={5}
+            value={Math.round(fxState.lightAngle * 180 / Math.PI)}
+            onChange={v => setFxParam({ lightAngle: v * Math.PI / 180 })} />
+          <label className="flex items-center gap-3 text-[13px] text-white/70">
+            <span className="w-28 shrink-0">Auto light</span>
+            <input type="checkbox" checked={fxState.autoLight}
+              onChange={e => setFxParam({ autoLight: e.target.checked })} className="accent-purple-300" />
+          </label>
+          <label className="flex items-center gap-3 text-[13px] text-white/70">
+            <span className="w-28 shrink-0">Tilt light</span>
+            <input type="checkbox" checked={fxState.tiltLight}
+              onChange={e => setFxParam({ tiltLight: e.target.checked })} className="accent-purple-300" />
+          </label>
+        </div>
       )}
 
       {/* Controls */}

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
 import { getPanes, onPanesChanged, getMaskPane } from './glassStore'
+import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
   BEZEL_WIDTH,
@@ -128,6 +129,11 @@ uniform vec2 uLight;
 uniform float uSpecOpacity;
 uniform float uCounterLight;
 uniform float uSpecExponent;
+// Experimental FX (see shaderFx.ts / the glass lab)
+uniform float uChroma;
+uniform float uFresnel;
+uniform float uWobble;
+uniform float uTime;
 // Free-form mask glass (logo letterforms): prebaked displacement/specular map
 uniform sampler2D uMask;
 uniform vec4 uMaskRect;   // overscanned rect, css px
@@ -214,20 +220,43 @@ void main() {
       sdRoundRect(lp + vec2(0.0, e), halfSize, rad) - sdRoundRect(lp - vec2(0.0, e), halfSize, rad)
     ) / (2.0 * e);
     outward = normalize(grad);
+    // Liquid wobble: slow noise perturbing the surface normal at the bezel
+    if (uWobble > 0.001) {
+      float ph = uTime * 1.8 + css.x * 0.10 + css.y * 0.13;
+      vec2 n2 = vec2(sin(ph), cos(ph * 0.83 + css.x * 0.05));
+      outward = normalize(outward + uWobble * 0.35 * n2);
+    }
     float s = dispMag(u);
     rim = s / uMaxDisp;
     disp = -outward * s;  // inward — bends the backdrop in at the edges
   }
 
-  vec2 sampleCss = css + disp;
-  vec2 uv = vec2(sampleCss.x / uResCss.x, 1.0 - sampleCss.y / uResCss.y);
   // CSS blur(r) is a gaussian with σ = r/2; a mip texel footprint of ~2σ
   // matches it best: lod = log2(blur · dpr) − 1
   float lod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
-  vec3 c = textureLod(uBg, uv, lod).rgb;
+  vec2 sampleCss = css + disp;
+  vec2 uv = vec2(sampleCss.x / uResCss.x, 1.0 - sampleCss.y / uResCss.y);
+  vec3 c;
+  if (uChroma > 0.001 && rim > 0.0) {
+    // Chromatic aberration: red and blue refract slightly differently
+    vec2 cssR = css + disp * (1.0 + 0.14 * uChroma);
+    vec2 cssB = css + disp * (1.0 - 0.14 * uChroma);
+    vec2 uvR = vec2(cssR.x / uResCss.x, 1.0 - cssR.y / uResCss.y);
+    vec2 uvB = vec2(cssB.x / uResCss.x, 1.0 - cssB.y / uResCss.y);
+    c = vec3(textureLod(uBg, uvR, lod).r, textureLod(uBg, uv, lod).g, textureLod(uBg, uvB, lod).b);
+  } else {
+    c = textureLod(uBg, uv, lod).rgb;
+  }
 
   float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = clamp(mix(vec3(luma), c, uSaturation), 0.0, 1.0);
+
+  // Fresnel: edges reflect a fake environment (bright sky above, dark below)
+  if (uFresnel > 0.001) {
+    float fr = pow(1.0 - clamp(edgeDist / uBezel, 0.0, 1.0), 2.0);
+    vec3 env = mix(vec3(0.92, 0.95, 1.0), vec3(0.10, 0.10, 0.14), clamp(css.y / uResCss.y, 0.0, 1.0));
+    c = mix(c, env, uFresnel * fr * 0.45);
+  }
 
   if (rim > 0.0) {
     float dl = dot(outward, uLight);
@@ -316,6 +345,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     let maskScale = 0
     let maskEnabled = 0
 
+    const tiltRef = { gamma: null as number | null, beta: null as number | null }
     let page: PageId = activeId
     let bgDirty = true
     let sceneDirty = true
@@ -437,10 +467,22 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1f(compU('uMaxDisp'), maxDisp)
       gl.uniform1f(compU('uBlurPx'), BACKDROP_BLUR_PX)
       gl.uniform1f(compU('uSaturation'), BACKDROP_SATURATION)
-      gl.uniform2f(compU('uLight'), LIGHT_X, LIGHT_Y)
+      // Light direction: static default, slow drift, or device tilt
+      let angle = fx.lightAngle
+      if (fx.autoLight) angle += Math.sin(performance.now() / 1000 * 0.5) * 0.9
+      if (fx.tiltLight && tiltRef.gamma !== null) {
+        const gx = Math.max(-1, Math.min(1, tiltRef.gamma / 45))
+        const gy = Math.max(-1, Math.min(1, ((tiltRef.beta ?? 45) - 45) / 45))
+        angle = Math.atan2(-1 + gy * 0.8, gx)
+      }
+      gl.uniform2f(compU('uLight'), Math.cos(angle), Math.sin(angle))
       gl.uniform1f(compU('uSpecOpacity'), SPECULAR_OPACITY)
       gl.uniform1f(compU('uCounterLight'), COUNTER_LIGHT)
       gl.uniform1f(compU('uSpecExponent'), SPECULAR_EXPONENT)
+      gl.uniform1f(compU('uChroma'), fx.chroma)
+      gl.uniform1f(compU('uFresnel'), fx.fresnel)
+      gl.uniform1f(compU('uWobble'), fx.wobble)
+      gl.uniform1f(compU('uTime'), performance.now() / 1000)
       gl.activeTexture(gl.TEXTURE1)
       gl.bindTexture(gl.TEXTURE_2D, maskTex)
       gl.uniform1i(compU('uMask'), 1)
@@ -461,6 +503,9 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         bgDirty = false
         sceneDirty = true
       }
+
+      // Animated FX (wobble / moving light) need continuous re-rendering
+      if (isAnimated()) sceneDirty = true
 
       // While recently active poll rects every frame; when idle, every 6th —
       // catches CSS transitions/animations we get no events for.
@@ -483,14 +528,20 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     }
 
     const unsubPanes = onPanesChanged(markActive)
+    const unsubFx = onFxChange(markActive)
     const onScroll = () => markActive()
     const onResize = () => markActive()
     const onLost = (e: Event) => {
       e.preventDefault()
       onFallback()
     }
+    const onTilt = (e: DeviceOrientationEvent) => {
+      tiltRef.gamma = e.gamma
+      tiltRef.beta = e.beta
+    }
     window.addEventListener('scroll', onScroll, { capture: true, passive: true })
     window.addEventListener('resize', onResize)
+    window.addEventListener('deviceorientation', onTilt)
     canvas.addEventListener('webglcontextlost', onLost)
 
     raf = requestAnimationFrame(tick)
@@ -499,8 +550,10 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       dead = true
       cancelAnimationFrame(raf)
       unsubPanes()
+      unsubFx()
       window.removeEventListener('scroll', onScroll, { capture: true })
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('deviceorientation', onTilt)
       canvas.removeEventListener('webglcontextlost', onLost)
       gl.deleteTexture(bgTex)
       gl.deleteTexture(maskTex)
