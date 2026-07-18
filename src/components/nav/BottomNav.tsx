@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react'
 import { motion, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import { pages, pageOrder } from '../../data/pages'
 import { activeSvgMask } from '../../data/gradients'
-import { generateMaskGlassMap } from '../../lib/generateGlassMap'
+import { generateMaskGlassMap, generateMaskGlassCanvas } from '../../lib/generateGlassMap'
 import { upsertFilter } from '../../hooks/useGlassFilter'
+import { registerMaskPane } from '../../webgl/glassStore'
 import { getGlassMode } from '../../lib/glassMode'
 import { GLASS_OVERSCAN } from '../../lib/glassParams'
 import type { PageId } from '../../data/types'
@@ -106,6 +107,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
   const strokeRef = useRef<SVGPathElement | null>(null)
   const shadowRef = useRef<SVGPathElement | null>(null)
   const lastMapAt = useRef(0)
+  const maskUnregRef = useRef<(() => void) | null>(null)
 
   const centers = slotCenters(idx)
   const cx = useMotionValue(centers[idx])
@@ -117,15 +119,19 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
 
   // Displacement/relief map from the current silhouette — refraction and rim
   // light follow the gooey outline instead of the old rectangular pane map.
+  // svg mode feeds the filter defs; webgl mode registers the raw map canvas
+  // as the renderer's mask pane (the slot is free since the logo left the
+  // header), which gives the nav real frosted glass in webgl mode too.
+  const MASK_OPTS = { blurRadius: 4, scale: 36, highlight: 0.55, shade: 0.1, coverageAlpha: glassMode === 'webgl' }
   function regenMap() {
-    if (glassMode !== 'svg') return
     const d = gooeyPath(cx.get(), bl.get(), br.get())
-    const maps = generateMaskGlassMap(
-      W, BAR_H,
-      ctx => { ctx.fillStyle = '#fff'; ctx.fill(new Path2D(d)) },
-      { blurRadius: 4, scale: 36, highlight: 0.55, shade: 0.1 },
-    )
-    upsertFilter(NAV_FILTER_ID, maps, W, BAR_H)
+    const draw = (ctx: CanvasRenderingContext2D) => { ctx.fillStyle = '#fff'; ctx.fill(new Path2D(d)) }
+    if (glassMode === 'svg') {
+      upsertFilter(NAV_FILTER_ID, generateMaskGlassMap(W, BAR_H, draw, MASK_OPTS), W, BAR_H)
+    } else if (glassMode === 'webgl' && containerRef.current) {
+      const { canvas, scale } = generateMaskGlassCanvas(W, BAR_H, draw, MASK_OPTS)
+      maskUnregRef.current = registerMaskPane({ el: containerRef.current, map: canvas, scale, overscan: GLASS_OVERSCAN })
+    }
     lastMapAt.current = performance.now()
   }
 
@@ -161,6 +167,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
     regenMap()
     return () => {
       document.querySelector(`#kube-glass-filters #${NAV_FILTER_ID}`)?.remove()
+      maskUnregRef.current?.()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

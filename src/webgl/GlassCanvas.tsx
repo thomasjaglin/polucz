@@ -168,24 +168,31 @@ void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
 
-  // Logo letterforms: displacement + relief from the prebaked map, exactly
-  // like feDisplacementMap (offset = scale · (C − 0.5); B is signed relief:
-  // above 0.5 = white highlight, below = black shade).
-  // No blur here — the DOM layer's clipped backdrop-filter blurs on top.
+  // Mask glass (currently the gooey nav silhouette): displacement + relief
+  // from the prebaked map, exactly like feDisplacementMap (offset =
+  // scale · (C − 0.5); B is signed relief: above 0.5 = white highlight,
+  // below = black shade). Blur + saturation match the rect panes, and the
+  // map is neutral outside the silhouette so only the shape gets frosted.
   if (uMaskEnabled == 1 &&
       css.x >= uMaskRect.x && css.y >= uMaskRect.y &&
       css.x < uMaskRect.x + uMaskRect.z && css.y < uMaskRect.y + uMaskRect.w) {
     vec2 muv = (css - uMaskRect.xy) / uMaskRect.zw;
     vec4 m = texture(uMask, muv);
-    vec2 mcss = css + uMaskScale * (m.rg - vec2(128.0 / 255.0));
-    vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
-    vec3 mc = textureLod(uBg, muv2, 0.0).rgb;
-    float hl = max(2.0 * m.b - 1.0, 0.0);
-    float sh = max(1.0 - 2.0 * m.b, 0.0);
-    mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
-    mc *= 1.0 - sh;                     // darken
-    outColor = vec4(mc, 1.0);
-    return;
+    float cov = m.a; // shape coverage (crisp, canvas-antialiased)
+    if (cov > 0.01) {
+      float hl = max(2.0 * m.b - 1.0, 0.0);
+      float sh = max(1.0 - 2.0 * m.b, 0.0);
+      vec2 mcss = css + uMaskScale * (m.rg - vec2(128.0 / 255.0));
+      vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
+      float mlod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
+      vec3 mc = textureLod(uBg, muv2, mlod).rgb;
+      float mluma = dot(mc, vec3(0.2126, 0.7152, 0.0722));
+      mc = clamp(mix(vec3(mluma), mc, uSaturation), 0.0, 1.0);
+      mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
+      mc *= 1.0 - sh;                     // darken
+      outColor = vec4(mix(bg0.rgb, mc, cov), 1.0);
+      return;
+    }
   }
 
   // Smallest pane containing this pixel wins (inner pane over outer pane —
