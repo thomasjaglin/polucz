@@ -4,6 +4,8 @@ import { generateMaskGlassMap, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { upsertFilter } from '../hooks/useGlassFilter'
 import { getGlassMode } from '../lib/glassMode'
 import { fx, setFx, type ShaderFx } from '../webgl/shaderFx'
+import GlassButton from './GlassButton'
+import IconButton from './IconButton'
 import { drawLogoMask, LETTER_PATHS, BAR, SX, SY, LOGO_W, LOGO_H } from './AppLogo'
 
 // Glass shader test bench (open with ?lab). Standard panes for reference on
@@ -256,6 +258,31 @@ export default function GlassLabPage() {
           <GlassPane borderRadius={12} className="rounded-[12px] px-2 py-1">
             <span className="text-[12px] text-white/80">Tiny</span>
           </GlassPane>
+        </div>
+
+        {/* Button variants — the app's real GlassButton styles */}
+        <div className="flex items-center gap-3">
+          <GlassButton radius={16} pane="bg-[#B4A0FF]/10" className="flex-1 border border-[#B4A0FF]/20 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]">
+            Primary
+          </GlassButton>
+          <GlassButton radius={16} pane="bg-red-400/10" className="flex-1 border border-red-400/20 py-3 font-instrument text-[15px] font-medium text-red-400/80">
+            Danger
+          </GlassButton>
+          <GlassButton radius={16} pane="bg-white/[0.04]" className="flex-1 border border-white/10 py-3 font-instrument text-[15px] font-medium text-white/70">
+            Neutral
+          </GlassButton>
+        </div>
+
+        {/* Icon buttons + play-style circle */}
+        <div className="flex items-center gap-3">
+          <IconButton icon="search" onClick={() => {}} />
+          <IconButton icon="settings" onClick={() => {}} />
+          <GlassButton radius={30} pane="bg-[#B4A0FF]/15" className="h-[60px] w-[60px] border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)]">
+            <span className="material-symbols-rounded text-[28px] text-[#B4A0FF]">play_arrow</span>
+          </GlassButton>
+          <GlassButton radius={19} pane="bg-white/5" className="h-[38px] w-[38px] border border-white/10 text-white/50">
+            <span className="material-symbols-rounded text-[20px]">refresh</span>
+          </GlassButton>
         </div>
       </div>
 
