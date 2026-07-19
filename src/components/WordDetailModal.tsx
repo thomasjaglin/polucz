@@ -313,7 +313,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex cursor-pointer items-center justify-center bg-black/30 p-6 backdrop-blur-md transition-opacity duration-300 ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 z-[100] flex cursor-pointer items-center justify-center p-6 transition-opacity duration-300 ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
       onTouchEnd={e => {
         if (e.target !== e.currentTarget) return
@@ -322,7 +322,8 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
         else backdropLastTap.current = now
       }}
     >
-      <div className={`modal-content-wrapper flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
+      <GlassPane borderRadius={0} className="pointer-events-none absolute inset-0 z-0 bg-black/30" />
+      <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
             onClick={onClose}
             aria-label="Close"
