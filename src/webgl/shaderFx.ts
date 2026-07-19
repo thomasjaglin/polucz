@@ -11,6 +11,9 @@ export interface ShaderFx {
   lightAngle: number // radians — specular light direction
   autoLight: boolean // slowly drift the light for a living highlight
   tiltLight: boolean // drive the light from device orientation (mobile)
+  lead: number       // frames of rect extrapolation — compensates the canvas
+                     // lagging behind compositor-driven DOM motion (scroll,
+                     // drags); 0 disables prediction
 }
 
 export const fx: ShaderFx = {
@@ -20,6 +23,7 @@ export const fx: ShaderFx = {
   lightAngle: Math.atan2(LIGHT_Y, LIGHT_X),
   autoLight: false,
   tiltLight: false,
+  lead: 1.2,
 }
 
 const listeners = new Set<() => void>()

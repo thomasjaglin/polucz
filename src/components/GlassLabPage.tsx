@@ -208,6 +208,7 @@ export default function GlassLabPage() {
           <Slider label="Light angle" min={-180} max={180} step={5}
             value={Math.round(fxState.lightAngle * 180 / Math.PI)}
             onChange={v => setFxParam({ lightAngle: v * Math.PI / 180 })} />
+          <Slider label="Drag lead" min={0} max={3} step={0.1} value={fxState.lead} onChange={v => setFxParam({ lead: v })} />
           <label className="flex items-center gap-3 text-[13px] text-white/70">
             <span className="w-28 shrink-0">Auto light</span>
             <input type="checkbox" checked={fxState.autoLight}

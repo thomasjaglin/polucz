@@ -311,9 +311,11 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     if (!canvasEl) return
     const canvas: HTMLCanvasElement = canvasEl
 
-    // preserveDrawingBuffer: renders are on-demand (not per-frame), so the
-    // buffer must survive compositing; also enables pixel-level debugging.
-    const glCtx = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: true })
+    // preserveDrawingBuffer stays OFF: it forces a framebuffer copy on every
+    // composited frame (a real cost on mobile). We always draw full frames,
+    // so the cleared-after-present drawing buffer is never visible. Flip to
+    // true temporarily when readPixels-based debugging is needed.
+    const glCtx = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false })
     if (!glCtx) { onFallback(); return }
     const gl: WebGL2RenderingContext = glCtx
 
@@ -411,10 +413,38 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     // recompositing when nothing moved. Panes fully outside the viewport are
     // skipped, so long scrolling lists can't starve the visible ones out of
     // the MAX_PANES uniform budget.
+    //
+    // Rects are extrapolated by fx.lead frames of their measured velocity:
+    // the DOM is moved by the compositor (touch scroll, drags) ahead of what
+    // the main thread reads, so the un-predicted glass visibly trails its
+    // element. Velocity is EMA-smoothed; jumps are treated as teleports.
+    const rectHist = new WeakMap<object, { x: number; y: number; vx: number; vy: number; t: number }>()
+    function predictRect(key: object, r: DOMRect, now: number): { x: number; y: number } {
+      const h = rectHist.get(key)
+      let vx = 0
+      let vy = 0
+      if (h) {
+        const dt = now - h.t
+        if (dt > 0 && dt < 100) {
+          const ix = (r.left - h.x) / dt
+          const iy = (r.top - h.y) / dt
+          // >5px/ms is a teleport (page switch, remount) — don't predict
+          if (Math.abs(ix) < 5 && Math.abs(iy) < 5) {
+            vx = h.vx * 0.4 + ix * 0.6
+            vy = h.vy * 0.4 + iy * 0.6
+          }
+        }
+      }
+      rectHist.set(key, { x: r.left, y: r.top, vx, vy, t: now })
+      const lead = fx.lead * 16.7
+      return { x: r.left + vx * lead, y: r.top + vy * lead }
+    }
+
     function readPanes(): { count: number; sig: number } {
       let i = 0
       let sig = 7
       const hash = (v: number) => { sig = (sig * 31 + Math.round(v * 4)) | 0 }
+      const now = performance.now()
       const vw = window.innerWidth
       const vh = window.innerHeight
       const M = 40 // off-screen margin — panes partially entering keep glass
@@ -424,12 +454,13 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         const r = p.el.getBoundingClientRect()
         if (r.width < 2 || r.height < 2) continue
         if (r.bottom < -M || r.top > vh + M || r.right < -M || r.left > vw + M) continue
-        paneRect[i * 4] = r.left
-        paneRect[i * 4 + 1] = r.top
+        const pr = predictRect(p, r, now)
+        paneRect[i * 4] = pr.x
+        paneRect[i * 4 + 1] = pr.y
         paneRect[i * 4 + 2] = r.width
         paneRect[i * 4 + 3] = r.height
         paneRadius[i] = p.borderRadius
-        hash(r.left); hash(r.top); hash(r.width); hash(r.height)
+        hash(pr.x); hash(pr.y); hash(r.width); hash(r.height)
         i++
       }
 
