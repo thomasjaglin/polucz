@@ -38,6 +38,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const rotationJustFired = useRef(false)
   const rotateYVal = useMotionValue(0)
   // Lags behind hardMode by one animation cycle so content swaps at the midpoint
   const [displayHardMode, setDisplayHardMode] = useState(hardMode)
@@ -62,30 +63,47 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
     if (!el) return
 
     let startAngle: number | null = null
+    let startX: number | null = null
     let committed = false
 
     const getAngle = (t: TouchList) =>
       Math.atan2(t[1].clientY - t[0].clientY, t[1].clientX - t[0].clientX) * (180 / Math.PI)
+    const getX = (t: TouchList) => (t[0].clientX + t[1].clientX) / 2
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 2) return
       startAngle = getAngle(e.touches)
+      startX = getX(e.touches)
       committed = false
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 2 || startAngle === null || committed) return
+      if (e.touches.length !== 2 || startAngle === null || startX === null || committed) return
       e.preventDefault()
+      // A horizontal drag of the two fingers isn't a rotation intent — bail
+      // so this doesn't fight the swipe-to-rate gesture.
+      if (Math.abs(getX(e.touches) - startX) > 20) return
       const delta = getAngle(e.touches) - startAngle
       const norm = ((delta + 180) % 360) - 180
       if (Math.abs(norm) > 45) {
         committed = true
+        rotationJustFired.current = true
         haptics.swipeRight()
         onToggleHardMode()
       }
     }
 
-    const onTouchEnd = () => { startAngle = null; committed = false }
+    const onTouchEnd = () => {
+      startAngle = null
+      startX = null
+      if (committed) {
+        // The two lifted fingers each fire their own touchend, which would
+        // otherwise read as a double-tap and pop the modal right after
+        // rotating. Hold the guard past the double-tap window (300ms).
+        setTimeout(() => { rotationJustFired.current = false }, 400)
+      }
+      committed = false
+    }
 
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: false })
@@ -123,8 +141,8 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
       onDragEnd={revealed ? handleDragEnd : undefined}
-      onTouchEnd={doubleTap.onTouchEnd}
-      onClick={e => { doubleTap.onClick(e); if (!revealed) onReveal() }}
+      onTouchEnd={e => { if (rotationJustFired.current) return; doubleTap.onTouchEnd(e) }}
+      onClick={e => { if (rotationJustFired.current) return; doubleTap.onClick(e); if (!revealed) onReveal() }}
       className={`relative w-full select-none ${revealed ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
       animate={isConquering ? { scale: [1, 1.04, 1], transition: { duration: 0.4 } } : {}}
     >

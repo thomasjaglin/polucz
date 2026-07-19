@@ -170,7 +170,11 @@ export default function App() {
 
       <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} hidden={headerHidden} />
 
-      <div onScroll={handleScroll} className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[180px] pt-[82px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <div
+        onScroll={handleScroll}
+        className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[180px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}
+        style={{ paddingTop: 'calc(82px + env(safe-area-inset-top))' }}
+      >
         <div
           className="relative z-30 flex h-full w-full flex-col"
           style={{ viewTransitionName: 'page-content' }}

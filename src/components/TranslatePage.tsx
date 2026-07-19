@@ -98,9 +98,10 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
       ) : (
         <button
           onClick={onAdd}
-          className="shrink-0 whitespace-nowrap rounded-full border border-white/15 bg-white/5 px-3 py-1 font-instrument text-[11px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          className="relative shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-white/15 px-3 py-1 font-instrument text-[11px] text-white/60 transition-colors hover:text-white"
         >
-          + Add card
+          <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-white/5" />
+          <span className="relative z-10">+ Add card</span>
         </button>
       )}
     </div>
@@ -320,9 +321,10 @@ export default function TranslatePage({ onAddCard }: Props) {
           <button
             onClick={() => setInput('')}
             aria-label="Clear input"
-            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full bg-white/15 text-white/60 transition-colors hover:bg-white/25 hover:text-white"
+            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full text-white/60 transition-colors hover:text-white"
           >
-            <span className="material-symbols-rounded text-[16px]">close</span>
+            <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-full bg-white/15" />
+            <span className="material-symbols-rounded relative z-10 text-[16px]">close</span>
           </button>
         )}
       </div>
@@ -488,9 +490,10 @@ export default function TranslatePage({ onAddCard }: Props) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 rounded-full border border-white/10 bg-white/10 px-5 py-2 backdrop-blur-md"
+            className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 overflow-hidden rounded-full border border-white/10 px-5 py-2"
           >
-            <span className="whitespace-nowrap font-instrument text-[14px] text-white/80">{toast}</span>
+            <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-white/10" />
+            <span className="relative z-10 whitespace-nowrap font-instrument text-[14px] text-white/80">{toast}</span>
           </motion.div>
         )}
       </AnimatePresence>

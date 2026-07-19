@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import IconButton from './IconButton'
+import GlassPane from './GlassPane'
 import type { PageId } from '../data/types'
 import { getCards, replaceAllCards } from '../lib/storage'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
@@ -110,7 +111,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
   // Secondary pages: back button only, no logo
   if (activeId === 'add_page' || activeId === 'api_config') {
     return (
-      <div className="absolute left-6 top-4 z-50 flex items-center gap-[12px]">
+      <div
+        className="absolute left-6 z-50 flex items-center gap-[12px]"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+      >
         <IconButton icon="arrow_back" onClick={() => onChangePage('folder')} />
       </div>
     )
@@ -119,7 +123,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
   // Main nav pages: logo centered + optional right-side actions
   return (
     <div className={`absolute inset-x-0 top-0 z-50 transition-transform duration-300 ease-in-out ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
-    <div className="relative mx-auto flex max-w-[426px] items-center justify-center px-6 pt-4">
+    <div
+      className="relative mx-auto flex max-w-[426px] items-center justify-center px-6"
+      style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}
+    >
       {/* Folder-only: add + settings buttons on the right */}
       {activeId === 'folder' && (
         <div className="absolute right-6 flex items-center gap-[12px]">
@@ -133,8 +140,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
             {settingsOpen && (
               <div
                 ref={dropdownRef}
-                className="absolute right-0 top-[50px] z-[100] flex w-[200px] flex-col overflow-hidden rounded-[24px] border border-white/10 bg-[#1a1a1a]/95 shadow-2xl backdrop-blur-3xl"
+                className="absolute right-0 top-[50px] z-[100] w-[200px] overflow-hidden rounded-[24px] border border-white/10 shadow-2xl"
               >
+                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/60" />
+                <div className="relative z-10 flex flex-col">
                 <button
                   onClick={handleImportClick}
                   className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
@@ -184,6 +193,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
                   <span className="material-symbols-rounded text-[18px]">science</span>
                   Glass lab
                 </button>
+                </div>
               </div>
             )}
           </div>
