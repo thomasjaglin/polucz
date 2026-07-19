@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -6,6 +6,9 @@ import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
 import gradientUrl from '../assets/translate-gradient.svg'
+import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
+import { registerMaskPane } from '../webgl/glassStore'
+import { getGlassMode } from '../lib/glassMode'
 
 type Direction = 'pl-en' | 'en-pl'
 
@@ -20,6 +23,19 @@ const CIRCLE_W = 135  // vw (557/412)
 const EDGE_OFFSET = 0 // vh — border ring aligned flush with the gradient circle clip
 
 const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
+
+// Free-form mask glass for the background blob (webgl mode only): an
+// ellipse matching its rounded-[50%] box, so refraction and rim light
+// follow the true elliptical silhouette instead of GlassPane's rounded-rect
+// approximation (which would read as a flat-sided pill on this aspect ratio).
+function drawCircleMask(w: number, h: number) {
+  return (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
 
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
@@ -109,6 +125,8 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
 }
 
 export default function TranslatePage({ onAddCard }: Props) {
+  const glassMode = getGlassMode()
+  const circleRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<Result | null>(null)
@@ -120,6 +138,37 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
   const [toast, setToast] = useState<string | null>(null)
   const translateIdRef = useRef(0)
+
+  // Register the background blob as a mask pane so it gets real refraction +
+  // rim light instead of just its pre-blurred image. Its box tracks the
+  // viewport (CIRCLE_W/H are vw/vh), so the map only needs rebuilding on
+  // resize — its on-screen position (swap animation) is read live every
+  // frame by GlassCanvas, no regeneration needed for that.
+  useEffect(() => {
+    if (glassMode !== 'webgl') return
+    const el = circleRef.current
+    if (!el) return
+
+    function regenerate() {
+      const w = window.innerWidth * CIRCLE_W / 100
+      const h = window.innerHeight * CIRCLE_H / 100
+      const { canvas, scale } = generateMaskGlassCanvas(w, h, drawCircleMask(w, h), {
+        blurRadius: 5, scale: 40, highlight: 0.5, shade: 0.15, coverageAlpha: true,
+      })
+      return registerMaskPane({ el: el!, map: canvas, scale, overscan: GLASS_OVERSCAN })
+    }
+
+    let unregister = regenerate()
+    function onResize() {
+      unregister()
+      unregister = regenerate()
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      unregister()
+    }
+  }, [glassMode])
 
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
@@ -427,6 +476,7 @@ export default function TranslatePage({ onAddCard }: Props) {
           between halves on language swap. The global dots background shows
           through everywhere else. */}
       <motion.div
+        ref={circleRef}
         className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 overflow-hidden rounded-[50%]"
         style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
         initial={false}
@@ -436,7 +486,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         <img
           src={gradientUrl}
           alt=""
-          className="absolute max-w-none"
+          className={`absolute max-w-none ${glassMode === 'webgl' ? 'opacity-80' : ''}`}
           style={{ left: '-11.3%', top: '0%', width: '149.4%', height: '116%' }}
         />
       </motion.div>

@@ -29,9 +29,12 @@ export function onPanesChanged(cb: () => void): () => void {
   return () => listeners.delete(cb)
 }
 
-// A single free-form glass shape (the logo letterforms): its displacement +
-// specular map is prebaked into a canvas (see generateMaskGlassCanvas) and
-// sampled by the renderer over the element's overscanned rect.
+// Free-form glass shapes (logo letterforms, the gooey nav, the translate
+// page's background blob, ...): each one's displacement + specular map is
+// prebaked into a canvas (see generateMaskGlassCanvas) and sampled by the
+// renderer over the element's overscanned rect. GlassCanvas only has texture
+// budget for MAX_MASK_PANES slots (see there) — registering beyond that just
+// won't be drawn, so keep simultaneous mask consumers to that count.
 export interface MaskPaneRecord {
   el: HTMLElement
   map: HTMLCanvasElement // R/G = displacement, B = specular, like the SVG maps
@@ -39,17 +42,17 @@ export interface MaskPaneRecord {
   overscan: number       // map padding beyond the element, px per side
 }
 
-let maskPane: MaskPaneRecord | null = null
+const maskPanes = new Set<MaskPaneRecord>()
 
 export function registerMaskPane(rec: MaskPaneRecord): () => void {
-  maskPane = rec
+  maskPanes.add(rec)
   listeners.forEach(l => l())
   return () => {
-    if (maskPane === rec) maskPane = null
+    maskPanes.delete(rec)
     listeners.forEach(l => l())
   }
 }
 
-export function getMaskPane(): MaskPaneRecord | null {
-  return maskPane
+export function getMaskPanes(): ReadonlySet<MaskPaneRecord> {
+  return maskPanes
 }

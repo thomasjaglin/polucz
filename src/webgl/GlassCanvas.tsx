@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
-import { getPanes, onPanesChanged, getMaskPane } from './glassStore'
+import { getPanes, onPanesChanged, getMaskPanes } from './glassStore'
 import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
@@ -18,6 +18,10 @@ import {
 } from '../lib/glassParams'
 
 const MAX_PANES = 48
+// Free-form mask panes (logo letterforms, gooey nav, translate-page blob, ...)
+// each need their own prebaked texture, so the budget is small and fixed —
+// bump alongside the texture units wired up below if a third is ever needed.
+const MAX_MASK_PANES = 2
 
 // Fullscreen triangle from gl_VertexID — no vertex buffers needed.
 const VERT = `#version 300 es
@@ -134,11 +138,12 @@ uniform float uChroma;
 uniform float uFresnel;
 uniform float uWobble;
 uniform float uTime;
-// Free-form mask glass (logo letterforms): prebaked displacement/specular map
-uniform sampler2D uMask;
-uniform vec4 uMaskRect;   // overscanned rect, css px
-uniform float uMaskScale;
-uniform int uMaskEnabled;
+// Free-form mask glass (logo letterforms, gooey nav, translate blob, ...):
+// each registered shape gets its own prebaked displacement/specular map.
+uniform int uMaskCount;
+uniform sampler2D uMask[${MAX_MASK_PANES}];
+uniform vec4 uMaskRect[${MAX_MASK_PANES}];   // overscanned rect, css px
+uniform float uMaskScale[${MAX_MASK_PANES}];
 out vec4 outColor;
 
 float sdRoundRect(vec2 p, vec2 halfSize, float r) {
@@ -168,31 +173,34 @@ void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
 
-  // Mask glass (currently the gooey nav silhouette): displacement + relief
-  // from the prebaked map, exactly like feDisplacementMap (offset =
-  // scale · (C − 0.5); B is signed relief: above 0.5 = white highlight,
-  // below = black shade). Blur + saturation match the rect panes, and the
-  // map is neutral outside the silhouette so only the shape gets frosted.
-  if (uMaskEnabled == 1 &&
-      css.x >= uMaskRect.x && css.y >= uMaskRect.y &&
-      css.x < uMaskRect.x + uMaskRect.z && css.y < uMaskRect.y + uMaskRect.w) {
-    vec2 muv = (css - uMaskRect.xy) / uMaskRect.zw;
-    vec4 m = texture(uMask, muv);
+  // Mask glass (gooey nav, translate blob, ...): displacement + relief from
+  // each registered shape's prebaked map, exactly like feDisplacementMap
+  // (offset = scale · (C − 0.5); B is signed relief: above 0.5 = white
+  // highlight, below = black shade). Blur + saturation match the rect panes,
+  // and the map is neutral outside the silhouette so only the shape frosts.
+  // First registered mask whose rect contains this pixel wins — the app
+  // keeps mask shapes spatially separate (nav at the bottom, blobs in
+  // content), so shapes aren't expected to overlap.
+  for (int i = 0; i < ${MAX_MASK_PANES}; i++) {
+    if (i >= uMaskCount) break;
+    vec4 mr = uMaskRect[i];
+    if (css.x < mr.x || css.y < mr.y || css.x >= mr.x + mr.z || css.y >= mr.y + mr.w) continue;
+    vec2 muv = (css - mr.xy) / mr.zw;
+    vec4 m = texture(uMask[i], muv);
     float cov = m.a; // shape coverage (crisp, canvas-antialiased)
-    if (cov > 0.01) {
-      float hl = max(2.0 * m.b - 1.0, 0.0);
-      float sh = max(1.0 - 2.0 * m.b, 0.0);
-      vec2 mcss = css + uMaskScale * (m.rg - vec2(128.0 / 255.0));
-      vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
-      float mlod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
-      vec3 mc = textureLod(uBg, muv2, mlod).rgb;
-      float mluma = dot(mc, vec3(0.2126, 0.7152, 0.0722));
-      mc = clamp(mix(vec3(mluma), mc, uSaturation), 0.0, 1.0);
-      mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
-      mc *= 1.0 - sh;                     // darken
-      outColor = vec4(mix(bg0.rgb, mc, cov), 1.0);
-      return;
-    }
+    if (cov <= 0.01) continue;
+    float hl = max(2.0 * m.b - 1.0, 0.0);
+    float sh = max(1.0 - 2.0 * m.b, 0.0);
+    vec2 mcss = css + uMaskScale[i] * (m.rg - vec2(128.0 / 255.0));
+    vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
+    float mlod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
+    vec3 mc = textureLod(uBg, muv2, mlod).rgb;
+    float mluma = dot(mc, vec3(0.2126, 0.7152, 0.0722));
+    mc = clamp(mix(vec3(mluma), mc, uSaturation), 0.0, 1.0);
+    mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
+    mc *= 1.0 - sh;                     // darken
+    outColor = vec4(mix(bg0.rgb, mc, cov), 1.0);
+    return;
   }
 
   // Smallest pane containing this pixel wins (inner pane over outer pane —
@@ -342,17 +350,22 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
 
     const { max: maxDisp } = refractionProfile(BEZEL_WIDTH, THICKNESS, REFRACTIVE_INDEX)
 
-    // Mask glass (logo) texture — uploaded when the registered map changes
-    const maskTex = gl.createTexture()!
-    gl.bindTexture(gl.TEXTURE_2D, maskTex)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    let maskUploaded: HTMLCanvasElement | null = null
-    const maskRect = new Float32Array(4)
-    let maskScale = 0
-    let maskEnabled = 0
+    // Mask glass (nav, translate blob, ...) textures — each slot uploaded
+    // independently when its registered map changes
+    const maskTextures: WebGLTexture[] = []
+    for (let i = 0; i < MAX_MASK_PANES; i++) {
+      const tex = gl.createTexture()!
+      gl.bindTexture(gl.TEXTURE_2D, tex)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      maskTextures.push(tex)
+    }
+    const maskUploaded: (HTMLCanvasElement | null)[] = new Array(MAX_MASK_PANES).fill(null)
+    const maskRects = new Float32Array(MAX_MASK_PANES * 4)
+    const maskScales = new Float32Array(MAX_MASK_PANES)
+    let maskCount = 0
 
     const tiltRef = { gamma: null as number | null, beta: null as number | null }
     let page: PageId = activeId
@@ -464,25 +477,25 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         i++
       }
 
-      const mp = getMaskPane()
-      if (mp) {
+      let m = 0
+      for (const mp of getMaskPanes()) {
+        if (m >= MAX_MASK_PANES) break
         const r = mp.el.getBoundingClientRect()
-        maskRect[0] = r.left - mp.overscan
-        maskRect[1] = r.top - mp.overscan
-        maskRect[2] = r.width + mp.overscan * 2
-        maskRect[3] = r.height + mp.overscan * 2
-        maskScale = mp.scale
-        maskEnabled = 1
-        hash(maskRect[0]); hash(maskRect[1])
-        if (maskUploaded !== mp.map) {
-          gl.bindTexture(gl.TEXTURE_2D, maskTex)
+        maskRects[m * 4]     = r.left - mp.overscan
+        maskRects[m * 4 + 1] = r.top - mp.overscan
+        maskRects[m * 4 + 2] = r.width + mp.overscan * 2
+        maskRects[m * 4 + 3] = r.height + mp.overscan * 2
+        maskScales[m] = mp.scale
+        hash(maskRects[m * 4]); hash(maskRects[m * 4 + 1])
+        if (maskUploaded[m] !== mp.map) {
+          gl.bindTexture(gl.TEXTURE_2D, maskTextures[m])
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, mp.map)
-          maskUploaded = mp.map
+          maskUploaded[m] = mp.map
         }
-      } else {
-        maskEnabled = 0
+        m++
       }
-      hash(maskEnabled)
+      maskCount = m
+      hash(maskCount)
 
       return { count: i, sig }
     }
@@ -521,12 +534,16 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1f(compU('uFresnel'), fx.fresnel)
       gl.uniform1f(compU('uWobble'), fx.wobble)
       gl.uniform1f(compU('uTime'), performance.now() / 1000)
-      gl.activeTexture(gl.TEXTURE1)
-      gl.bindTexture(gl.TEXTURE_2D, maskTex)
-      gl.uniform1i(compU('uMask'), 1)
-      gl.uniform4fv(compU('uMaskRect'), maskRect)
-      gl.uniform1f(compU('uMaskScale'), maskScale)
-      gl.uniform1i(compU('uMaskEnabled'), maskEnabled)
+      const maskUnits: number[] = []
+      for (let i = 0; i < MAX_MASK_PANES; i++) {
+        gl.activeTexture(gl.TEXTURE1 + i)
+        gl.bindTexture(gl.TEXTURE_2D, maskTextures[i])
+        maskUnits.push(1 + i)
+      }
+      gl.uniform1iv(compU('uMask'), maskUnits)
+      gl.uniform1i(compU('uMaskCount'), maskCount)
+      gl.uniform4fv(compU('uMaskRect'), maskRects)
+      gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 
@@ -594,7 +611,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       window.removeEventListener('deviceorientation', onTilt)
       canvas.removeEventListener('webglcontextlost', onLost)
       gl.deleteTexture(bgTex)
-      gl.deleteTexture(maskTex)
+      maskTextures.forEach(t => gl.deleteTexture(t))
       gl.deleteFramebuffer(fbo)
       gl.deleteProgram(bgProg)
       gl.deleteProgram(compProg)
