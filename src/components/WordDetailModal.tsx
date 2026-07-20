@@ -322,7 +322,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
         else backdropLastTap.current = now
       }}
     >
-      <GlassPane borderRadius={0} className="pointer-events-none absolute inset-0 z-0 bg-black/30" />
+      <GlassPane borderRadius={0} className="pointer-events-none absolute inset-0 z-0 bg-black/70 backdrop-blur-xl" />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
             onClick={onClose}
