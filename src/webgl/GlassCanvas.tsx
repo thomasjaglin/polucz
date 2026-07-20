@@ -140,8 +140,13 @@ uniform float uWobble;
 uniform float uTime;
 // Free-form mask glass (logo letterforms, gooey nav, translate blob, ...):
 // each registered shape gets its own prebaked displacement/specular map.
+// Two explicitly named samplers rather than a sampler2D[2] array — dynamic
+// (loop-variable) indexing of sampler arrays is technically legal GLSL ES
+// 3.00 but unreliable across real WebGL2 drivers (notably ANGLE/D3D11 on
+// Windows Chrome), so this avoids it entirely at the cost of a fixed cap.
 uniform int uMaskCount;
-uniform sampler2D uMask[${MAX_MASK_PANES}];
+uniform sampler2D uMask0;
+uniform sampler2D uMask1;
 uniform vec4 uMaskRect[${MAX_MASK_PANES}];   // overscanned rect, css px
 uniform float uMaskScale[${MAX_MASK_PANES}];
 out vec4 outColor;
@@ -169,37 +174,47 @@ float dispMag(float u) {
   return uThick * y * tan(thetaI - thetaT);
 }
 
+// Mask glass (gooey nav, translate blob, ...): displacement + relief from a
+// registered shape's prebaked map, exactly like feDisplacementMap (offset =
+// scale · (C − 0.5); B is signed relief: above 0.5 = white highlight, below
+// = black shade). Blur + saturation match the rect panes, and the map is
+// neutral outside the silhouette so only the shape frosts. Returns false if
+// this pixel isn't covered by the shape.
+bool sampleMask(sampler2D tex, vec4 mr, float mscale, vec2 css, float blurPx, float dpr, vec2 resCss, float saturation, out vec3 outCol, out float outCov) {
+  if (css.x < mr.x || css.y < mr.y || css.x >= mr.x + mr.z || css.y >= mr.y + mr.w) return false;
+  vec2 muv = (css - mr.xy) / mr.zw;
+  vec4 m = texture(tex, muv);
+  float cov = m.a; // shape coverage (crisp, canvas-antialiased)
+  if (cov <= 0.01) return false;
+  float hl = max(2.0 * m.b - 1.0, 0.0);
+  float sh = max(1.0 - 2.0 * m.b, 0.0);
+  vec2 mcss = css + mscale * (m.rg - vec2(128.0 / 255.0));
+  vec2 muv2 = vec2(mcss.x / resCss.x, 1.0 - mcss.y / resCss.y);
+  float mlod = log2(max(blurPx * dpr, 2.0)) - 1.0;
+  vec3 mc = textureLod(uBg, muv2, mlod).rgb;
+  float mluma = dot(mc, vec3(0.2126, 0.7152, 0.0722));
+  mc = clamp(mix(vec3(mluma), mc, saturation), 0.0, 1.0);
+  mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
+  mc *= 1.0 - sh;                     // darken
+  outCol = mc;
+  outCov = cov;
+  return true;
+}
+
 void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
 
-  // Mask glass (gooey nav, translate blob, ...): displacement + relief from
-  // each registered shape's prebaked map, exactly like feDisplacementMap
-  // (offset = scale · (C − 0.5); B is signed relief: above 0.5 = white
-  // highlight, below = black shade). Blur + saturation match the rect panes,
-  // and the map is neutral outside the silhouette so only the shape frosts.
   // First registered mask whose rect contains this pixel wins — the app
   // keeps mask shapes spatially separate (nav at the bottom, blobs in
   // content), so shapes aren't expected to overlap.
-  for (int i = 0; i < ${MAX_MASK_PANES}; i++) {
-    if (i >= uMaskCount) break;
-    vec4 mr = uMaskRect[i];
-    if (css.x < mr.x || css.y < mr.y || css.x >= mr.x + mr.z || css.y >= mr.y + mr.w) continue;
-    vec2 muv = (css - mr.xy) / mr.zw;
-    vec4 m = texture(uMask[i], muv);
-    float cov = m.a; // shape coverage (crisp, canvas-antialiased)
-    if (cov <= 0.01) continue;
-    float hl = max(2.0 * m.b - 1.0, 0.0);
-    float sh = max(1.0 - 2.0 * m.b, 0.0);
-    vec2 mcss = css + uMaskScale[i] * (m.rg - vec2(128.0 / 255.0));
-    vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
-    float mlod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
-    vec3 mc = textureLod(uBg, muv2, mlod).rgb;
-    float mluma = dot(mc, vec3(0.2126, 0.7152, 0.0722));
-    mc = clamp(mix(vec3(mluma), mc, uSaturation), 0.0, 1.0);
-    mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
-    mc *= 1.0 - sh;                     // darken
-    outColor = vec4(mix(bg0.rgb, mc, cov), 1.0);
+  vec3 maskCol; float maskCov;
+  if (uMaskCount > 0 && sampleMask(uMask0, uMaskRect[0], uMaskScale[0], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
+    outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
+    return;
+  }
+  if (uMaskCount > 1 && sampleMask(uMask1, uMaskRect[1], uMaskScale[1], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
+    outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
     return;
   }
 
@@ -339,6 +354,13 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     }
     const bgU = (n: string) => gl.getUniformLocation(bgProg, n)
     const compU = (n: string) => gl.getUniformLocation(compProg, n)
+
+    // Sampler-to-texture-unit assignment is fixed for the program's
+    // lifetime — set once rather than every frame. uBg lives on unit 0.
+    gl.useProgram(compProg)
+    gl.uniform1i(compU('uBg'), 0)
+    gl.uniform1i(compU('uMask0'), 1)
+    gl.uniform1i(compU('uMask1'), 2)
 
     const bgTex = gl.createTexture()!
     const fbo = gl.createFramebuffer()!
@@ -534,13 +556,10 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1f(compU('uFresnel'), fx.fresnel)
       gl.uniform1f(compU('uWobble'), fx.wobble)
       gl.uniform1f(compU('uTime'), performance.now() / 1000)
-      const maskUnits: number[] = []
       for (let i = 0; i < MAX_MASK_PANES; i++) {
         gl.activeTexture(gl.TEXTURE1 + i)
         gl.bindTexture(gl.TEXTURE_2D, maskTextures[i])
-        maskUnits.push(1 + i)
       }
-      gl.uniform1iv(compU('uMask'), maskUnits)
       gl.uniform1i(compU('uMaskCount'), maskCount)
       gl.uniform4fv(compU('uMaskRect'), maskRects)
       gl.uniform1fv(compU('uMaskScale'), maskScales)
