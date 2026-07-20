@@ -1,6 +1,6 @@
 // Procedural description of the DOM background for the WebGL renderer —
 // a hand-mirrored transcription of the SVG ellipse stacks in data/pages.ts
-// (blurred concentric ellipses, screen-blended over the dot grid + vignette).
+// (blurred concentric ellipses, screen-blended over the base color).
 // If pages.ts gradients change, this table must be updated to match.
 
 import type { PageId } from '../data/types'

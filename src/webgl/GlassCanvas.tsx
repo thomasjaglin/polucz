@@ -30,7 +30,7 @@ void main() {
   gl_Position = vec4(pos * 2.0 - 1.0, 0.0, 1.0);
 }`
 
-// Pass 1 — the page background: base color, dot grid, vignette, then the
+// Pass 1 — the page background: base color, then the
 // per-page blurred ellipse stacks screen-blended on top (mirrors the DOM
 // layers in AppBackground.tsx / PageGradient.tsx).
 const BG_FRAG = `#version 300 es
@@ -45,7 +45,6 @@ uniform vec2 uLayerParams[${MAX_LAYERS}]; // opacity, blurPx
 out vec4 outColor;
 
 const vec3 BASE = vec3(18.0 / 255.0);   // body #121212
-const vec3 DOT_COLOR = vec3(217.0 / 255.0);
 
 // smoothstep with descending edges is undefined behavior in GLSL —
 // this is the explicit, any-order-safe equivalent.
@@ -68,22 +67,7 @@ float ellipseDist(vec2 p, vec4 geo, vec2 sc) {
 
 void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
-
-  // Dot grid: 10px tiles, 3px dots, #D9D9D9 @ 0.52
-  vec2 tile = mod(css, 10.0) - 5.0;
-  float dotA = fallStep(3.4, 2.6, length(tile)) * 0.52;
-  vec3 col = mix(BASE, DOT_COLOR, dotA);
-
-  // Vignette: radial-gradient(62% 67.44% at 47.57% 50.05%,
-  //   rgba(18,18,18,.99) 62.02%, rgba(18,18,18,.65) 100%).
-  // NOTE: calibrated empirically, not from the stop values — Chrome renders
-  // this large gradient much flatter than spec math suggests (dots stay
-  // ~20% visible in the nominal 0.99 core; measured against the DOM).
-  vec2 vc = vec2(0.4757, 0.5005) * uResCss;
-  vec2 vr = vec2(0.62, 0.6744) * uResCss;
-  float t = length((css - vc) / vr);
-  float va = mix(0.78, 0.65, clamp((t - 0.6202) / (1.0 - 0.6202), 0.0, 1.0));
-  col = mix(col, BASE, va);
+  vec3 col = BASE;
 
   // Ellipse stacks: src-over within a layer (premultiplied), screen-blend
   // each layer onto the base with its opacity.
