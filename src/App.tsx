@@ -173,7 +173,7 @@ export default function App() {
       <div
         onScroll={handleScroll}
         className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[180px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}
-        style={{ paddingTop: 'calc(82px + env(safe-area-inset-top))' }}
+        style={{ paddingTop: 'calc(90px + env(safe-area-inset-top))' }}
       >
         <div
           className="relative z-30 flex h-full w-full flex-col"
