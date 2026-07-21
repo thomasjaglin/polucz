@@ -340,23 +340,23 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
             <div className="absolute inset-0 overflow-hidden rounded-[40px]">
               {entry.type === 'verb' && (
                 <>
-                  <div className="absolute left-[-5%] top-[-10%] h-[55%] w-[65%] rounded-full bg-[#8C3FA0]/80 blur-3xl" />
-                  <div className="absolute right-[-5%] top-[5%] h-[45%] w-[50%] rounded-full bg-[#2D2DA0]/80 blur-3xl" />
-                  <div className="absolute bottom-[-10%] left-[10%] h-[55%] w-[65%] rounded-full bg-[#18AABF]/80 blur-3xl" />
+                  <div className="absolute left-[-5%] top-[-10%] h-[55%] w-[65%] rounded-full bg-[#8C3FA0]/80 blur-3xl mix-blend-screen" />
+                  <div className="absolute right-[-5%] top-[5%] h-[45%] w-[50%] rounded-full bg-[#2D2DA0]/80 blur-3xl mix-blend-screen" />
+                  <div className="absolute bottom-[-10%] left-[10%] h-[55%] w-[65%] rounded-full bg-[#18AABF]/80 blur-3xl mix-blend-screen" />
                 </>
               )}
               {entry.type === 'noun' && (
                 <>
-                  <div className="absolute left-[-5%] top-[-10%] h-[50%] w-[55%] rounded-full bg-[#6A2020]/80 blur-3xl" />
-                  <div className="absolute left-[5%] top-[20%] h-[60%] w-[70%] rounded-full bg-[#C06820]/80 blur-3xl" />
-                  <div className="absolute right-[-5%] top-[-10%] h-[45%] w-[40%] rounded-full bg-[#8A9220]/80 blur-3xl" />
+                  <div className="absolute left-[-5%] top-[-10%] h-[50%] w-[55%] rounded-full bg-[#6A2020]/80 blur-3xl mix-blend-screen" />
+                  <div className="absolute left-[5%] top-[20%] h-[60%] w-[70%] rounded-full bg-[#C06820]/80 blur-3xl mix-blend-screen" />
+                  <div className="absolute right-[-5%] top-[-10%] h-[45%] w-[40%] rounded-full bg-[#8A9220]/80 blur-3xl mix-blend-screen" />
                 </>
               )}
               {entry.type === 'adjective' && (
                 <>
-                  <div className="absolute left-[-5%] top-[-10%] h-[50%] w-[55%] rounded-full bg-[#0F4020]/80 blur-3xl" />
-                  <div className="absolute right-[-5%] top-[10%] h-[55%] w-[55%] rounded-full bg-[#1A8A30]/80 blur-3xl" />
-                  <div className="absolute bottom-[-10%] left-[-5%] h-[45%] w-[50%] rounded-full bg-[#0C4A30]/80 blur-3xl" />
+                  <div className="absolute left-[-5%] top-[-10%] h-[50%] w-[55%] rounded-full bg-[#0F4020]/80 blur-3xl mix-blend-screen" />
+                  <div className="absolute right-[-5%] top-[10%] h-[55%] w-[55%] rounded-full bg-[#1A8A30]/80 blur-3xl mix-blend-screen" />
+                  <div className="absolute bottom-[-10%] left-[-5%] h-[45%] w-[50%] rounded-full bg-[#0C4A30]/80 blur-3xl mix-blend-screen" />
                 </>
               )}
             </div>
