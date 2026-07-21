@@ -10,6 +10,12 @@ export type GlassMode = 'svg' | 'webgl' | 'css'
 
 let currentMode: GlassMode | null = null
 
+// Chromium reliably composites `filter: url(#…)` together with
+// backdrop-filter on the same element; Safari and Firefox do not.
+export function isChromium(): boolean {
+  return navigator.userAgent.includes('Chrome/') || 'chrome' in window
+}
+
 function detect(): GlassMode {
   const q = new URLSearchParams(window.location.search).get('glass')
   if (q === 'svg' || q === 'webgl' || q === 'css') return q
@@ -20,10 +26,7 @@ function detect(): GlassMode {
   const canvas = document.createElement('canvas')
   if (canvas.getContext('webgl2')) return 'webgl'
 
-  // Chromium reliably composites `filter: url(#…)` together with
-  // backdrop-filter on the same element; Safari and Firefox do not.
-  const isChromium = navigator.userAgent.includes('Chrome/') || 'chrome' in window
-  return isChromium ? 'svg' : 'css'
+  return isChromium() ? 'svg' : 'css'
 }
 
 export function getGlassMode(): GlassMode {

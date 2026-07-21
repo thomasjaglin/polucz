@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom'
 import AppBackground from './components/AppBackground'
 import PageGradient from './components/PageGradient'
 import GlassCanvas from './webgl/GlassCanvas'
-import { getGlassMode, setGlassMode } from './lib/glassMode'
+import { getGlassMode, setGlassMode, isChromium } from './lib/glassMode'
 import TopHeader from './components/TopHeader'
 import BottomNav from './components/nav/BottomNav'
 import VocabListPage from './components/VocabListPage'
@@ -24,11 +24,16 @@ export default function App() {
   const [activeId, setActiveId] = useState<PageId>('folder')
 
   // Glass renderer: 'svg' (Chromium), 'webgl' (Safari/Firefox) or 'css'
-  // fallback. Downgrades to 'css' if the WebGL context fails or is lost.
+  // fallback. If WebGL fails to init or its context is lost — some mobile
+  // GPUs choke on the shader (e.g. limited fragment uniform budget) even
+  // though canvas.getContext('webgl2') itself succeeds — prefer 'svg' on
+  // Chromium (still real glass, just the SVG filter path) over dropping
+  // all the way to flat css blur.
   const [glassMode, setGlassModeState] = useState(getGlassMode)
   function handleGlassFallback() {
-    setGlassMode('css')
-    setGlassModeState('css')
+    const next = isChromium() ? 'svg' : 'css'
+    setGlassMode(next)
+    setGlassModeState(next)
   }
 
   // Hide header on scroll down, reveal on scroll up
