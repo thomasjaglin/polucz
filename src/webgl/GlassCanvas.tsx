@@ -259,6 +259,14 @@ void main() {
     disp = -outward * s;  // inward — bends the backdrop in at the edges
   }
 
+  if (uDebugPanes == 2) {
+    // Grayscale rim strength (0=black, 1=white) — isolates whether the
+    // bezel/rim math itself ever activates, independent of the specular
+    // blend or background sampling that follow.
+    outColor = vec4(rim, rim, rim, 1.0);
+    return;
+  }
+
   // CSS blur(r) is a gaussian with σ = r/2; a mip texel footprint of ~2σ
   // matches it best: lod = log2(blur · dpr) − 1
   float lod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
@@ -352,7 +360,10 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     }
     const bgU = (n: string) => gl.getUniformLocation(bgProg, n)
     const compU = (n: string) => gl.getUniformLocation(compProg, n)
-    const debugPanes = new URLSearchParams(window.location.search).has('debugpanes')
+    // ?debugpanes=1 → solid color per matched pane; ?debugpanes=2 → grayscale
+    // rim/bezel strength. See the two uDebugPanes branches in COMPOSITE_FRAG.
+    const debugPanesParam = new URLSearchParams(window.location.search).get('debugpanes')
+    const debugPanes = debugPanesParam === '2' ? 2 : debugPanesParam === '1' ? 1 : 0
 
     // Sampler-to-texture-unit assignment is fixed for the program's
     // lifetime — set once rather than every frame. uBg lives on unit 0.
@@ -561,7 +572,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         gl.bindTexture(gl.TEXTURE_2D, maskTextures[i])
       }
       gl.uniform1i(compU('uMaskCount'), maskCount)
-      gl.uniform1i(compU('uDebugPanes'), debugPanes ? 1 : 0)
+      gl.uniform1i(compU('uDebugPanes'), debugPanes)
       gl.uniform4fv(compU('uMaskRect'), maskRects)
       gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
