@@ -16,6 +16,11 @@ export default function DebugHud() {
   const mode = getGlassMode()
   const panes = getPanes().size
   const masks = getMaskPanes().size
+  // DOM elements carrying the class vs. how many actually made it into the
+  // JS registry — a mismatch here means elements render (and get the CSS)
+  // but silently fail to registerPane(), which is the WebGL renderer's only
+  // way of knowing they exist.
+  const domCount = document.querySelectorAll('.kube-glass-bg').length
 
   return (
     <div
@@ -33,7 +38,7 @@ export default function DebugHud() {
         whiteSpace: 'pre',
       }}
     >
-      {`mode: ${mode}\npanes: ${panes} / 48\nmasks: ${masks} / 2`}
+      {`mode: ${mode}\npanes: ${panes} / 48\nmasks: ${masks} / 2\nDOM .kube-glass-bg: ${domCount}`}
     </div>
   )
 }
