@@ -98,7 +98,12 @@ export default function DebugHud() {
         {`mode: ${mode}\npanes: ${panes} / 48 (${sorted.length} real)\nmasks: ${masks} / 2\nDOM .kube-glass-bg: ${domCount}\n\n` +
           `GlassCanvas actual last frame:\nframe ${glassDebug.frame}, rendered @${glassDebug.lastRenderFrame} (${glassDebug.frame - glassDebug.lastRenderFrame} frames ago)\nsent uPaneCount=${glassDebug.lastPaneCount} uMaskCount=${glassDebug.lastMaskCount}\ndrawCalls total: ${glassDebug.drawCalls}\n` +
           (glassDebug.lastError ? `\nERROR @frame ${glassDebug.lastErrorFrame}:\n${glassDebug.lastError.slice(0, 300)}\n` : '\n(no error caught)\n') +
-          `\nsmallest-first REAL panes (shader pick order):\n` +
+          `\nACTUAL uPane[]/uPaneRadius[] values sent to shader:\n` +
+          glassDebug.lastPaneSample.map((p, i) => `${i}: ${p.w.toFixed(1)}x${p.h.toFixed(1)} @${p.x.toFixed(1)},${p.y.toFixed(1)} r${p.r.toFixed(1)}`).join('\n') +
+          `\n\nuniform constants sent:\n` +
+          Object.entries(glassDebug.uniforms).map(([k, v]) => `${k}=${v.toFixed(3)}`).join('  ') +
+          `\n\nreadPixels GROUND TRUTH @ ${glassDebug.readPixelAt}:\nRGBA = ${glassDebug.readPixel.join(', ')}\n` +
+          `\n\nsmallest-first REAL panes (independently computed):\n` +
           sorted.slice(0, 10).map((o, i) => `${i}: ${Math.round(o.w)}x${Math.round(o.h)} @${Math.round(o.x)},${Math.round(o.y)} r${o.radius}`).join('\n') +
           `\n\nmasks (checked BEFORE panes, first 2 win):\n` +
           maskOutlines.slice(0, 3).map((m, i) => `${i}: ${Math.round(m.w)}x${Math.round(m.h)} @${Math.round(m.x)},${Math.round(m.y)} +${m.overscan}`).join('\n')}

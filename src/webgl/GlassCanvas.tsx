@@ -551,6 +551,19 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1f(compU('uMaxDisp'), maxDisp)
       gl.uniform1f(compU('uBlurPx'), BACKDROP_BLUR_PX)
       gl.uniform1f(compU('uSaturation'), BACKDROP_SATURATION)
+      glassDebug.lastPaneSample = []
+      for (let i = 0; i < Math.min(count, 8); i++) {
+        glassDebug.lastPaneSample.push({
+          x: paneRect[i * 4], y: paneRect[i * 4 + 1],
+          w: paneRect[i * 4 + 2], h: paneRect[i * 4 + 3],
+          r: paneRadius[i],
+        })
+      }
+      glassDebug.uniforms = {
+        uBezel: BEZEL_WIDTH, uThick: THICKNESS, uN2: REFRACTIVE_INDEX, uMaxDisp: maxDisp,
+        uBlurPx: BACKDROP_BLUR_PX, uSaturation: BACKDROP_SATURATION,
+        uSpecOpacity: SPECULAR_OPACITY, uCounterLight: COUNTER_LIGHT, uSpecExponent: SPECULAR_EXPONENT,
+      }
       // Light direction: static default, slow drift, or device tilt
       let angle = fx.lightAngle
       if (fx.autoLight) angle += Math.sin(performance.now() / 1000 * 0.5) * 0.9
@@ -577,6 +590,20 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       glassDebug.drawCalls++
+
+      if (debugPanes && glassDebug.lastPaneSample.length > 0) {
+        // Ground truth: read the actual GPU-written pixel at the center of
+        // the smallest real pane, bypassing DOM/compositing entirely.
+        const smallest = glassDebug.lastPaneSample.reduce((a, b) => (a.w * a.h < b.w * b.h ? a : b))
+        const ccx = smallest.x + smallest.w / 2
+        const ccy = smallest.y + smallest.h / 2
+        const px = Math.round(ccx * dpr)
+        const py = Math.round((vh - ccy) * dpr) // WebGL readPixels origin is bottom-left
+        const buf = new Uint8Array(4)
+        gl.readPixels(px, py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+        glassDebug.readPixel = [buf[0], buf[1], buf[2], buf[3]]
+        glassDebug.readPixelAt = `${smallest.w.toFixed(0)}x${smallest.h.toFixed(0)} center css(${ccx.toFixed(0)},${ccy.toFixed(0)}) dev(${px},${py})`
+      }
     }
 
     function tick() {
