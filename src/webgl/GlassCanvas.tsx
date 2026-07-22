@@ -364,6 +364,10 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     // rim/bezel strength. See the two uDebugPanes branches in COMPOSITE_FRAG.
     const debugPanesParam = new URLSearchParams(window.location.search).get('debugpanes')
     const debugPanes = debugPanesParam === '2' ? 2 : debugPanesParam === '1' ? 1 : 0
+    // Ground-truth pixel sampling should run in NORMAL rendering too (not
+    // just the artificial debugpanes visualizations), so real vs. debug
+    // brightness can be compared directly — gate on the HUD flag instead.
+    const readbackEnabled = new URLSearchParams(window.location.search).has('debug')
 
     // Sampler-to-texture-unit assignment is fixed for the program's
     // lifetime — set once rather than every frame. uBg lives on unit 0.
@@ -591,7 +595,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       glassDebug.drawCalls++
 
-      if (debugPanes && glassDebug.lastPaneSample.length > 0) {
+      if (readbackEnabled && glassDebug.lastPaneSample.length > 0) {
         // Ground truth: read the actual GPU-written pixel at the center of
         // the smallest real pane, bypassing DOM/compositing entirely.
         const smallest = glassDebug.lastPaneSample.reduce((a, b) => (a.w * a.h < b.w * b.h ? a : b))
