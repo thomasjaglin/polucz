@@ -134,6 +134,10 @@ uniform sampler2D uMask0;
 uniform sampler2D uMask1;
 uniform vec4 uMaskRect[${MAX_MASK_PANES}];   // overscanned rect, css px
 uniform float uMaskScale[${MAX_MASK_PANES}];
+// Temporary diagnostic (?debugpanes=1): paint matched panes a solid color
+// instead of applying the glass math, to check pane-matching in isolation
+// from the refraction/rim-light computation. Safe to remove once resolved.
+uniform int uDebugPanes;
 out vec4 outColor;
 
 float sdRoundRect(vec2 p, vec2 halfSize, float r) {
@@ -217,6 +221,15 @@ void main() {
     if (d < 1.0 && area < hitArea) { hit = i; hitD = d; hitArea = area; }
   }
   if (hit < 0) { outColor = vec4(bg0.rgb, 1.0); return; }
+
+  if (uDebugPanes == 1) {
+    // Hue cycles by pane index so overlapping/adjacent panes are visually
+    // distinguishable; solid color proves pane-matching independent of the
+    // refraction/rim math below.
+    float t = float(hit) / 8.0;
+    outColor = vec4(1.0 - t, t, 0.2, 1.0);
+    return;
+  }
 
   vec4 r = uPane[hit];
   vec2 halfSize = r.zw * 0.5;
@@ -339,6 +352,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     }
     const bgU = (n: string) => gl.getUniformLocation(bgProg, n)
     const compU = (n: string) => gl.getUniformLocation(compProg, n)
+    const debugPanes = new URLSearchParams(window.location.search).has('debugpanes')
 
     // Sampler-to-texture-unit assignment is fixed for the program's
     // lifetime — set once rather than every frame. uBg lives on unit 0.
@@ -488,6 +502,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       for (const mp of getMaskPanes()) {
         if (m >= MAX_MASK_PANES) break
         const r = mp.el.getBoundingClientRect()
+        if (r.width < 2 || r.height < 2) continue
         maskRects[m * 4]     = r.left - mp.overscan
         maskRects[m * 4 + 1] = r.top - mp.overscan
         maskRects[m * 4 + 2] = r.width + mp.overscan * 2
@@ -546,6 +561,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         gl.bindTexture(gl.TEXTURE_2D, maskTextures[i])
       }
       gl.uniform1i(compU('uMaskCount'), maskCount)
+      gl.uniform1i(compU('uDebugPanes'), debugPanes ? 1 : 0)
       gl.uniform4fv(compU('uMaskRect'), maskRects)
       gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
