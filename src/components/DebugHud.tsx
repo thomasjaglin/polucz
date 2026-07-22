@@ -103,6 +103,8 @@ export default function DebugHud() {
           `\n\nuniform constants sent:\n` +
           Object.entries(glassDebug.uniforms).map(([k, v]) => `${k}=${v.toFixed(3)}`).join('  ') +
           `\n\nreadPixels GROUND TRUTH @ ${glassDebug.readPixelAt}:\nRGBA = ${glassDebug.readPixel.join(', ')}\n` +
+          `\nedge profile (distance in from top edge -> RGBA):\n` +
+          glassDebug.edgeProfile.map(e => `${e.distIn}px in: ${e.rgba.join(',')}`).join('\n') +
           `\n\nsmallest-first REAL panes (independently computed):\n` +
           sorted.slice(0, 10).map((o, i) => `${i}: ${Math.round(o.w)}x${Math.round(o.h)} @${Math.round(o.x)},${Math.round(o.y)} r${o.radius}`).join('\n') +
           `\n\nmasks (checked BEFORE panes, first 2 win):\n` +

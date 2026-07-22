@@ -23,4 +23,10 @@ export const glassDebug = {
   // entirely. Ground truth for what the shader really produced.
   readPixel: [0, 0, 0, 0] as [number, number, number, number],
   readPixelAt: '',
+  // Same pane, sampled at several distances in from its edge (not just
+  // center) — the bezel/rim profile can legitimately be near-zero at the
+  // exact center (u close to 1) while still correctly peaking closer to
+  // the edge (low u). One sample can't tell "never activates" apart from
+  // "activates, just not at dead center."
+  edgeProfile: [] as { distIn: number; rgba: [number, number, number, number] }[],
 }

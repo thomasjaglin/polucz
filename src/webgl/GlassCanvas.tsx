@@ -603,6 +603,23 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         gl.readPixels(px, py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf)
         glassDebug.readPixel = [buf[0], buf[1], buf[2], buf[3]]
         glassDebug.readPixelAt = `${smallest.w.toFixed(0)}x${smallest.h.toFixed(0)} center css(${ccx.toFixed(0)},${ccy.toFixed(0)}) dev(${px},${py})`
+
+        // Sample straight down from the pane's top edge toward its center —
+        // the bezel profile can legitimately be near-zero at dead center
+        // (u near 1) while correctly peaking closer to the edge (low u).
+        const maxIn = smallest.h / 2
+        const distances = [1, 2, 4, 7, 11, 16].filter(d => d < maxIn)
+        const profile: typeof glassDebug.edgeProfile = []
+        for (const d of distances) {
+          const ex = ccx
+          const ey = smallest.y + d
+          const epx = Math.round(ex * dpr)
+          const epy = Math.round((vh - ey) * dpr)
+          const ebuf = new Uint8Array(4)
+          gl.readPixels(epx, epy, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, ebuf)
+          profile.push({ distIn: d, rgba: [ebuf[0], ebuf[1], ebuf[2], ebuf[3]] })
+        }
+        glassDebug.edgeProfile = profile
       }
     }
 
