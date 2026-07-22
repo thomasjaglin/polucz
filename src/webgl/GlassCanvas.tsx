@@ -576,6 +576,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform4fv(compU('uMaskRect'), maskRects)
       gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
+      glassDebug.drawCalls++
     }
 
     function tick() {
@@ -584,6 +585,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       frame++
       glassDebug.frame = frame
 
+      try {
       if (resizeIfNeeded()) bgDirty = true
       if (bgDirty) {
         renderBg()
@@ -608,6 +610,14 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
           glassDebug.lastMaskCount = maskCount
           glassDebug.lastSig = sig
         }
+      }
+      } catch (err) {
+        // Swallowed exception would otherwise silently freeze the canvas on
+        // this exact frame forever, since requestAnimationFrame(tick) at the
+        // top already scheduled the next call before this throws — capture
+        // it instead of losing it.
+        glassDebug.lastError = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err)
+        glassDebug.lastErrorFrame = frame
       }
     }
 

@@ -7,4 +7,7 @@ export const glassDebug = {
   lastPaneCount: 0,
   lastMaskCount: 0,
   lastSig: 0,
+  lastError: '',
+  lastErrorFrame: 0,
+  drawCalls: 0,
 }
