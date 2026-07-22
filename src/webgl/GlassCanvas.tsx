@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
 import { getPanes, onPanesChanged, getMaskPanes } from './glassStore'
+import { glassDebug } from './debugState'
 import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
@@ -554,6 +555,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       if (dead) return
       raf = requestAnimationFrame(tick)
       frame++
+      glassDebug.frame = frame
 
       if (resizeIfNeeded()) bgDirty = true
       if (bgDirty) {
@@ -574,6 +576,10 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
           lastSig = sig
           renderComposite(count)
           sceneDirty = false
+          glassDebug.lastRenderFrame = frame
+          glassDebug.lastPaneCount = count
+          glassDebug.lastMaskCount = maskCount
+          glassDebug.lastSig = sig
         }
       }
     }

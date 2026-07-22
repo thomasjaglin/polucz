@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { getGlassMode } from '../lib/glassMode'
 import { getPanes, getMaskPanes, onPanesChanged } from '../webgl/glassStore'
+import { glassDebug } from '../webgl/debugState'
 
 interface Outline {
   x: number
@@ -94,7 +95,8 @@ export default function DebugHud() {
           overflow: 'hidden',
         }}
       >
-        {`mode: ${mode}\npanes: ${panes} / 48 (${sorted.length} real)\nmasks: ${masks} / 2\nDOM .kube-glass-bg: ${domCount}\n\nsmallest-first REAL panes (shader pick order):\n` +
+        {`mode: ${mode}\npanes: ${panes} / 48 (${sorted.length} real)\nmasks: ${masks} / 2\nDOM .kube-glass-bg: ${domCount}\n\n` +
+          `GlassCanvas actual last frame:\nframe ${glassDebug.frame}, rendered @${glassDebug.lastRenderFrame} (${glassDebug.frame - glassDebug.lastRenderFrame} frames ago)\nsent uPaneCount=${glassDebug.lastPaneCount} uMaskCount=${glassDebug.lastMaskCount}\n\nsmallest-first REAL panes (shader pick order):\n` +
           sorted.slice(0, 10).map((o, i) => `${i}: ${Math.round(o.w)}x${Math.round(o.h)} @${Math.round(o.x)},${Math.round(o.y)} r${o.radius}`).join('\n') +
           `\n\nmasks (checked BEFORE panes, first 2 win):\n` +
           maskOutlines.slice(0, 3).map((m, i) => `${i}: ${Math.round(m.w)}x${Math.round(m.h)} @${Math.round(m.x)},${Math.round(m.y)} +${m.overscan}`).join('\n')}
