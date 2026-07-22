@@ -11,6 +11,14 @@ interface Outline {
   area: number
 }
 
+interface MaskOutline {
+  x: number
+  y: number
+  w: number
+  h: number
+  overscan: number
+}
+
 // Temporary diagnostic overlay for the flat-modal-on-mobile investigation.
 // Enable with ?debug=1. Safe to delete once the root cause is confirmed.
 //
@@ -22,6 +30,7 @@ interface Outline {
 export default function DebugHud() {
   const [, forceTick] = useState(0)
   const [outlines, setOutlines] = useState<Outline[]>([])
+  const [maskOutlines, setMaskOutlines] = useState<MaskOutline[]>([])
   const rafRef = useRef(0)
 
   useEffect(() => {
@@ -35,6 +44,14 @@ export default function DebugHud() {
         next.push({ x: r.left, y: r.top, w: r.width, h: r.height, radius: p.borderRadius, area: r.width * r.height })
       }
       setOutlines(next)
+
+      const nextMasks: MaskOutline[] = []
+      for (const mp of getMaskPanes()) {
+        const r = mp.el.getBoundingClientRect()
+        nextMasks.push({ x: r.left, y: r.top, w: r.width, h: r.height, overscan: mp.overscan })
+      }
+      setMaskOutlines(nextMasks)
+
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
@@ -50,10 +67,12 @@ export default function DebugHud() {
   // but silently fail to registerPane(), which is the WebGL renderer's only
   // way of knowing they exist.
   const domCount = document.querySelectorAll('.kube-glass-bg').length
-  // Sorted smallest-first — matches the shader's "smallest pane wins" pick
-  // order, so index 0 in the list is whichever pane actually renders at any
-  // pixel where outlines overlap.
-  const sorted = [...outlines].sort((a, b) => a.area - b.area)
+  // Sorted smallest-first, real (non-hidden, non-zero) panes only — matches
+  // the shader's "smallest pane wins" pick order, so index 0 is whichever
+  // pane actually renders at any pixel where outlines overlap. Hidden
+  // (display:none) panes report 0x0 and are excluded so they don't drown
+  // out the panes that are actually competing on screen.
+  const sorted = [...outlines].filter(o => o.w >= 2 && o.h >= 2).sort((a, b) => a.area - b.area)
 
   return (
     <>
@@ -75,10 +94,12 @@ export default function DebugHud() {
           overflow: 'hidden',
         }}
       >
-        {`mode: ${mode}\npanes: ${panes} / 48\nmasks: ${masks} / 2\nDOM .kube-glass-bg: ${domCount}\n\nsmallest-first (shader pick order):\n` +
-          sorted.slice(0, 8).map((o, i) => `${i}: ${Math.round(o.w)}x${Math.round(o.h)} @${Math.round(o.x)},${Math.round(o.y)} r${o.radius}`).join('\n')}
+        {`mode: ${mode}\npanes: ${panes} / 48 (${sorted.length} real)\nmasks: ${masks} / 2\nDOM .kube-glass-bg: ${domCount}\n\nsmallest-first REAL panes (shader pick order):\n` +
+          sorted.slice(0, 10).map((o, i) => `${i}: ${Math.round(o.w)}x${Math.round(o.h)} @${Math.round(o.x)},${Math.round(o.y)} r${o.radius}`).join('\n') +
+          `\n\nmasks (checked BEFORE panes, first 2 win):\n` +
+          maskOutlines.slice(0, 3).map((m, i) => `${i}: ${Math.round(m.w)}x${Math.round(m.h)} @${Math.round(m.x)},${Math.round(m.y)} +${m.overscan}`).join('\n')}
       </div>
-      {outlines.map((o, i) => (
+      {outlines.filter(o => o.w >= 2 && o.h >= 2).map((o, i) => (
         <div
           key={i}
           style={{
@@ -89,6 +110,22 @@ export default function DebugHud() {
             height: o.h,
             borderRadius: o.radius,
             border: '2px solid magenta',
+            boxSizing: 'border-box',
+            pointerEvents: 'none',
+            zIndex: 999998,
+          }}
+        />
+      ))}
+      {maskOutlines.map((m, i) => (
+        <div
+          key={`mask-${i}`}
+          style={{
+            position: 'fixed',
+            left: m.x - m.overscan,
+            top: m.y - m.overscan,
+            width: m.w + m.overscan * 2,
+            height: m.h + m.overscan * 2,
+            border: '2px dashed cyan',
             boxSizing: 'border-box',
             pointerEvents: 'none',
             zIndex: 999998,
