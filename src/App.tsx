@@ -84,6 +84,9 @@ export default function App() {
   const [overlayMounted, setOverlayMounted] = useState(false)
   const [overlayVisible, setOverlayVisible] = useState(false)
   const [contentFlipIn,  setContentFlipIn]  = useState(false)
+  // True only during the "steady state" fully-open modal — not during either
+  // transition. See the background-hiding comment below for why this exists.
+  const [backgroundHidden, setBackgroundHidden] = useState(false)
   const activeCardElRef = useRef<HTMLDivElement | null>(null)
 
   function handleOpenModal(entry: VocabEntry, cardEl: HTMLDivElement | null) {
@@ -103,10 +106,17 @@ export default function App() {
         setOverlayVisible(true)
         setContentFlipIn(true)
       })
+      // Hide the background only once the backdrop's own fade-in (duration-300)
+      // has visually finished — hiding any earlier would pop the background
+      // out abruptly mid-fade instead of dimming smoothly alongside it.
+      setTimeout(() => setBackgroundHidden(true), 300)
     }, 250)
   }
 
   function handleCloseModal() {
+    // Restore the background immediately so its own card can visibly flip
+    // back in over the next 300-600ms — it must not be display:none for that.
+    setBackgroundHidden(false)
     // 1. Flip modal content back out
     setContentFlipIn(false)
 
@@ -174,22 +184,35 @@ export default function App() {
       <AppBackground />
       <PageGradient activeId={activeId} />
 
-      <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} hidden={headerHidden} />
+      {/* The modal's own backdrop already covers this entire layer while
+          open, so hiding it changes nothing visually — but it's essential:
+          the WebGL composite shader picks whichever registered pane has the
+          SMALLEST screen area at a given pixel, with no notion of z-index
+          or visibility. Panes back here (list cards, filter tags, header
+          buttons) stay registered and often have a smaller area than the
+          modal's own (necessarily large) card, so without this they'd win
+          the pick and the modal would render fragments of hidden background
+          content instead of itself — reading as flat, edge-less glass.
+          display:none zeroes their getBoundingClientRect(), which the
+          renderer's existing size check already excludes from the pane list. */}
+      <div className={backgroundHidden ? 'hidden' : ''}>
+        <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} hidden={headerHidden} />
 
-      <div
-        onScroll={handleScroll}
-        className={`relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col px-6 pb-[180px] no-scrollbar ${overlayMounted ? 'overflow-hidden' : 'overflow-y-auto'}`}
-        style={{ paddingTop: 'calc(90px + env(safe-area-inset-top))' }}
-      >
         <div
-          className="relative z-30 flex h-full w-full flex-col"
-          style={{ viewTransitionName: 'page-content' }}
+          onScroll={handleScroll}
+          className="relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col overflow-y-auto px-6 pb-[180px] no-scrollbar"
+          style={{ paddingTop: 'calc(90px + env(safe-area-inset-top))' }}
         >
-          {renderContent()}
+          <div
+            className="relative z-30 flex h-full w-full flex-col"
+            style={{ viewTransitionName: 'page-content' }}
+          >
+            {renderContent()}
+          </div>
         </div>
-      </div>
 
-      {showNav && <BottomNav activeId={activeId} onChangePage={changePage} />}
+        {showNav && <BottomNav activeId={activeId} onChangePage={changePage} />}
+      </div>
 
       {/* Modal — mounted only during open/close animation cycle */}
       {overlayMounted && modalEntry && (
