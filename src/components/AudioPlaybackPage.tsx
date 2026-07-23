@@ -66,15 +66,16 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const userRatedRef    = useRef(false)
 
   // ─── Initialise / reset queue ──────────────────────────────────────────────
-  function loadQueue() {
+  // autoStart begins playback immediately — used by the explicit "Listen
+  // again"/"Reset" actions. On page open it stays false so nothing plays until
+  // the user taps play (avoids surprise autoplay when landing on the page).
+  function loadQueue(autoStart = false) {
     const due = cards.filter(c => c.enriched).sort(() => Math.random() - 0.5)
     setQueue(due)
     setTotalCount(due.length)
     setIdx(0)
     tts.stop()
-    // Auto-start: no play tap needed. If the browser blocks autoplay the
-    // status shows an audio error and play/pause still works manually.
-    setPhase(due.length > 0 ? 'playing' : 'idle')
+    setPhase(due.length > 0 && autoStart ? 'playing' : 'idle')
   }
 
   useEffect(() => { loadQueue() }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -235,7 +236,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               You've listened to all {totalCount} cards.
             </p>
             <GlassButton
-              onClick={loadQueue}
+              onClick={() => loadQueue(true)}
               radius={28}
               pane="bg-[#B4A0FF]/10"
               className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
@@ -244,7 +245,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               Listen again
             </GlassButton>
             <GlassButton
-              onClick={() => { resetAllReviews(); loadQueue() }}
+              onClick={() => { resetAllReviews(); loadQueue(true) }}
               radius={28}
               pane="bg-white/5"
               className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
