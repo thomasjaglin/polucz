@@ -778,7 +778,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-0 h-full w-full"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full"
       aria-hidden
     />
   )
