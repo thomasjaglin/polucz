@@ -127,9 +127,16 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
       className="relative mx-auto flex max-w-[426px] items-center justify-center px-6"
       style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}
     >
-      {/* Folder-only: add + settings buttons on the right */}
+      {/* Folder-only: add + settings buttons on the right.
+          Explicit `top` (not relying on the parent's paddingTop): as an
+          absolutely-positioned child of a flex container, a `top`-less box
+          lands at the viewport's top edge and clips the buttons. Mirrors the
+          back-button path above; ~20px clears them with breathing room. */}
       {activeId === 'folder' && (
-        <div className="absolute right-6 flex items-center gap-[12px]">
+        <div
+          className="absolute right-6 flex items-center gap-[12px]"
+          style={{ top: 'calc(1.25rem + env(safe-area-inset-top))' }}
+        >
           <IconButton icon="add" onClick={() => onChangePage('add_page')} />
           <div className="relative">
             <IconButton
