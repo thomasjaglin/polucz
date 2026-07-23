@@ -210,6 +210,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const typeGradient  = current ? (tagGradients[current.type] ?? tagGradients['unknown']) : null
   const isActive      = phase === 'playing' || phase === 'waiting'
   const showControls  = phase !== 'done'
+  // Upcoming cards, fanned along an arc behind the current one (peek stack).
+  const peekCards     = queue.slice(idx + 1, idx + 1 + 3)
 
   function statusText(): string {
     if (phase === 'idle')    return 'Ready to start'
@@ -332,7 +334,24 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             exit={{ opacity: 0 }}
             className="flex w-full flex-1 flex-col items-center gap-6"
           >
-            {/* Card — swipe left for next, right for previous */}
+            {/* Card + peek stack: upcoming cards fanned along an arc, lower-right */}
+            <div className="relative w-full">
+              {peekCards.map((entry, i) => {
+                const n = i + 1
+                const phi = (n * 11 * Math.PI) / 180
+                const R = 130 // arc radius — larger = wider fan
+                return (
+                  <div
+                    key={entry.id}
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.03] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
+                    style={{
+                      transform: `translate(${R * Math.sin(phi)}px, ${R * (1 - Math.cos(phi))}px) rotate(${n * 11}deg) scale(${1 - n * 0.05})`,
+                      opacity: Math.max(0, 0.55 - i * 0.2),
+                    }}
+                  />
+                )
+              })}
             <motion.div
               style={{ x, rotate }}
               drag="x"
@@ -388,6 +407,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 </AnimatePresence>
               </div>
             </motion.div>
+            </div>
 
             {/* Waveform */}
             <Waveform active={isActive && tts.state === 'playing'} />
