@@ -487,7 +487,7 @@ export default function TranslatePage({ onAddCard }: Props) {
           src={gradientUrl}
           alt=""
           className={`absolute max-w-none ${glassMode === 'webgl' ? 'opacity-80' : ''}`}
-          style={{ left: '-11.3%', top: '0%', width: '149.4%', height: '116%' }}
+          style={{ left: '-11.3%', top: '-5%', width: '149.4%', height: '116%' }}
         />
       </motion.div>
 
