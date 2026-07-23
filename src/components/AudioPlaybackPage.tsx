@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
-import { getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
+import { getReview, getAllReviews, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
 import { applyEasy, applyHard, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
@@ -51,7 +51,13 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const [idx, setIdx]           = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [phase, setPhase]       = useState<Phase>('idle')
+  // Start screen: nothing plays until the user picks an order and taps play.
+  const [started, setStarted]   = useState(false)
+  const [order, setOrder]       = useState<'list' | 'new-first'>('list')
   const tts = useTTS()
+
+  // Enriched cards available for review — drives the start / empty screens.
+  const availableCount = cards.filter(c => c.enriched).length
 
   // Swipe motion for the card
   const x = useMotionValue(0)
@@ -65,20 +71,32 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // auto-easy-advance when the interrupted playback settles to idle
   const userRatedRef    = useRef(false)
 
-  // ─── Initialise / reset queue ──────────────────────────────────────────────
-  // autoStart begins playback immediately — used by the explicit "Listen
-  // again"/"Reset" actions. On page open it stays false so nothing plays until
-  // the user taps play (avoids surprise autoplay when landing on the page).
-  function loadQueue(autoStart = false) {
-    const due = cards.filter(c => c.enriched).sort(() => Math.random() - 0.5)
+  // ─── Queue building / start ────────────────────────────────────────────────
+  // Order: 'list' plays the enriched cards in list order (newest first, as on
+  // the folder page); 'new-first' floats never-reviewed cards to the front.
+  function buildQueue(o: 'list' | 'new-first'): VocabEntry[] {
+    const due = [...cards].reverse().filter(c => c.enriched)
+    if (o === 'new-first') {
+      const reviews = getAllReviews()
+      const isNew = (c: VocabEntry) => { const r = reviews[c.id]; return !r || r.reviewCount === 0 }
+      return [...due.filter(isNew), ...due.filter(c => !isNew(c))]
+    }
+    return due
+  }
+
+  function beginPlayback(o: 'list' | 'new-first') {
+    setOrder(o)
+    const due = buildQueue(o)
     setQueue(due)
     setTotalCount(due.length)
     setIdx(0)
     tts.stop()
-    setPhase(due.length > 0 && autoStart ? 'playing' : 'idle')
+    setPhase(due.length > 0 ? 'playing' : 'idle')
+    setStarted(true)
   }
 
-  useEffect(() => { loadQueue() }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Replay from the done screen keeps whichever order was chosen.
+  const replay = () => beginPlayback(order)
 
   const current = queue[idx] ?? null
   const doubleTap = useDoubleTap(useCallback(() => { if (current) onOpenModal?.(current) }, [current, onOpenModal]))
@@ -220,9 +238,54 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
         </div>
       )}
 
-      {/* ── Done state ────────────────────────────────────────────────────── */}
+      {/* ── Empty / Start / Done / Card ───────────────────────────────────── */}
       <AnimatePresence mode="wait">
-        {phase === 'done' ? (
+        {availableCount === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
+          >
+            <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">spatial_audio</span>
+            <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No cards yet</h2>
+            <p className="font-instrument text-[15px] text-[#F8FAFC]/30 px-4">
+              Add vocabulary words to start audio review.
+            </p>
+          </motion.div>
+        ) : !started ? (
+          <motion.div
+            key="start"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="flex flex-1 flex-col items-center justify-center gap-5 text-center"
+          >
+            <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">spatial_audio</span>
+            <div className="flex flex-col gap-1">
+              <h2 className="font-instrument text-[24px] font-semibold text-[#F8FAFC]/80">Audio review</h2>
+              <p className="font-instrument text-[15px] text-[#F8FAFC]/40">{availableCount} cards ready</p>
+            </div>
+            <GlassButton
+              onClick={() => beginPlayback('list')}
+              radius={28}
+              pane="bg-[#B4A0FF]/15"
+              className="mt-1 border border-[#B4A0FF]/25 px-7 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF]"
+            >
+              <span className="material-symbols-rounded text-[20px]">play_arrow</span>
+              Play through list
+            </GlassButton>
+            <GlassButton
+              onClick={() => beginPlayback('new-first')}
+              radius={24}
+              pane="bg-white/5"
+              className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/60"
+            >
+              <span className="material-symbols-rounded text-[16px]">fiber_new</span>
+              Play with new words first
+            </GlassButton>
+          </motion.div>
+        ) : phase === 'done' ? (
           <motion.div
             key="done"
             initial={{ opacity: 0, y: 16 }}
@@ -236,7 +299,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               You've listened to all {totalCount} cards.
             </p>
             <GlassButton
-              onClick={() => loadQueue(true)}
+              onClick={replay}
               radius={28}
               pane="bg-[#B4A0FF]/10"
               className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
@@ -245,7 +308,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               Listen again
             </GlassButton>
             <GlassButton
-              onClick={() => { resetAllReviews(); loadQueue(true) }}
+              onClick={() => { resetAllReviews(); replay() }}
               radius={28}
               pane="bg-white/5"
               className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
@@ -253,19 +316,6 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               <span className="material-symbols-rounded text-[16px]">refresh</span>
               Reset all progress
             </GlassButton>
-          </motion.div>
-        ) : totalCount === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
-          >
-            <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">spatial_audio</span>
-            <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No cards yet</h2>
-            <p className="font-instrument text-[15px] text-[#F8FAFC]/30 px-4">
-              Add vocabulary words to start audio review.
-            </p>
           </motion.div>
         ) : (
           <motion.div
