@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { MotionValue } from 'framer-motion'
 import { generateGlassMap, GLASS_OVERSCAN, type GlassMaps } from '../lib/generateGlassMap'
 import { getGlassMode } from '../lib/glassMode'
 import { registerPane } from '../webgl/glassStore'
@@ -100,7 +101,9 @@ export function upsertFilter(id: string, maps: GlassMaps, w: number, h: number) 
   feImage.setAttribute('height', String(h + GLASS_OVERSCAN * 2))
 }
 
-export function useGlassFilter(borderRadius: number) {
+// `rotation` (degrees, a live MotionValue) lets a tilting pane — a swiped
+// card — tell the webgl renderer its angle so the glass rotates to match.
+export function useGlassFilter(borderRadius: number, rotation?: MotionValue<number>) {
   const elRef = useRef<HTMLElement | null>(null)
   const [filterId] = useState(() => `kube-glass-${++counter}`)
   const prevSize = useRef({ w: 0, h: 0 })
@@ -112,7 +115,10 @@ export function useGlassFilter(borderRadius: number) {
 
     // webgl mode: the canvas paints the glass; just expose the element.
     // css mode: plain backdrop blur from the stylesheet, nothing to do.
-    if (mode === 'webgl') return registerPane({ el, borderRadius })
+    if (mode === 'webgl') {
+      const getRotation = rotation ? () => (rotation.get() * Math.PI) / 180 : undefined
+      return registerPane({ el, borderRadius, getRotation })
+    }
     if (mode !== 'svg') return
 
     function update(w: number, h: number) {
@@ -147,7 +153,7 @@ export function useGlassFilter(borderRadius: number) {
       const defs = document.querySelector('#kube-glass-filters defs')
       defs?.querySelector(`#${filterId}`)?.remove()
     }
-  }, [filterId, borderRadius, mode])
+  }, [filterId, borderRadius, mode, rotation])
 
   // In non-svg modes the ::before must not reference a filter that never gets
   // created — GlassPane feeds this straight into --glass-filter.

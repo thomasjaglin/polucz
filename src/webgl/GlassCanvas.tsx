@@ -106,8 +106,9 @@ uniform sampler2D uBg;
 uniform vec2 uResCss;
 uniform float uDpr;
 uniform int uPaneCount;
-uniform vec4 uPane[${MAX_PANES}];        // x, y, w, h (css px, top-left)
+uniform vec4 uPane[${MAX_PANES}];        // x, y, w, h (css px, top-left, un-rotated)
 uniform float uPaneRadius[${MAX_PANES}];
+uniform float uPaneAngle[${MAX_PANES}];  // z-rotation, radians (tilted cards)
 uniform float uBezel;
 uniform float uThick;
 uniform float uN2;
@@ -143,6 +144,16 @@ out vec4 outColor;
 float sdRoundRect(vec2 p, vec2 halfSize, float r) {
   vec2 q = abs(p) - halfSize + r;
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+// Rotate a center-relative point into the pane's un-rotated (local) frame:
+// rotate by -angle. ca/sa are cos/sin of the pane's angle.
+vec2 toLocal(vec2 p, float ca, float sa) {
+  return vec2(p.x * ca + p.y * sa, -p.x * sa + p.y * ca);
+}
+// Inverse: local vector -> screen frame (rotate by +angle).
+vec2 toScreen(vec2 p, float ca, float sa) {
+  return vec2(p.x * ca - p.y * sa, p.x * sa + p.y * ca);
 }
 
 // smoothstep with descending edges is undefined behavior in GLSL
@@ -215,8 +226,10 @@ void main() {
   for (int i = 0; i < ${MAX_PANES}; i++) {
     if (i >= uPaneCount) break;
     vec4 r = uPane[i];
-    float d = sdRoundRect(css - r.xy - r.zw * 0.5, r.zw * 0.5,
-                          min(uPaneRadius[i], min(r.z, r.w) * 0.5));
+    float a = uPaneAngle[i];
+    vec2 lp = css - r.xy - r.zw * 0.5;               // relative to pane center
+    if (a != 0.0) lp = toLocal(lp, cos(a), sin(a));  // into the pane's un-rotated frame
+    float d = sdRoundRect(lp, r.zw * 0.5, min(uPaneRadius[i], min(r.z, r.w) * 0.5));
     float area = r.z * r.w;
     if (d < 1.0 && area < hitArea) { hit = i; hitD = d; hitArea = area; }
   }
@@ -234,7 +247,13 @@ void main() {
   vec4 r = uPane[hit];
   vec2 halfSize = r.zw * 0.5;
   float rad = min(uPaneRadius[hit], min(halfSize.x, halfSize.y));
+  float pa = uPaneAngle[hit];
+  float pca = cos(pa), psa = sin(pa);
+  // Work in the pane's un-rotated (local) frame; the SDF and its gradient are
+  // computed there, then the outward normal is rotated back to screen space
+  // so refraction offset + rim light stay correct on a tilted card.
   vec2 lp = css - r.xy - halfSize;
+  if (pa != 0.0) lp = toLocal(lp, pca, psa);
   float edgeDist = -hitD;
   float u = edgeDist / uBezel;
 
@@ -248,6 +267,7 @@ void main() {
       sdRoundRect(lp + vec2(0.0, e), halfSize, rad) - sdRoundRect(lp - vec2(0.0, e), halfSize, rad)
     ) / (2.0 * e);
     outward = normalize(grad);
+    if (pa != 0.0) outward = toScreen(outward, pca, psa); // local normal -> screen
     // Liquid wobble: slow noise perturbing the surface normal at the bezel
     if (uWobble > 0.001) {
       float ph = uTime * 1.8 + css.x * 0.10 + css.y * 0.13;
@@ -415,6 +435,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
 
     const paneRect = new Float32Array(MAX_PANES * 4)
     const paneRadius = new Float32Array(MAX_PANES)
+    const paneAngle = new Float32Array(MAX_PANES) // z-rotation, radians
 
     function markActive() {
       lastActivity = performance.now()
@@ -468,15 +489,15 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     // the main thread reads, so the un-predicted glass visibly trails its
     // element. Velocity is EMA-smoothed; jumps are treated as teleports.
     const rectHist = new WeakMap<object, { x: number; y: number; vx: number; vy: number; t: number }>()
-    function predictRect(key: object, r: DOMRect, now: number): { x: number; y: number } {
+    function predictPoint(key: object, px: number, py: number, now: number): { x: number; y: number } {
       const h = rectHist.get(key)
       let vx = 0
       let vy = 0
       if (h) {
         const dt = now - h.t
         if (dt > 0 && dt < 100) {
-          const ix = (r.left - h.x) / dt
-          const iy = (r.top - h.y) / dt
+          const ix = (px - h.x) / dt
+          const iy = (py - h.y) / dt
           // >5px/ms is a teleport (page switch, remount) — don't predict
           if (Math.abs(ix) < 5 && Math.abs(iy) < 5) {
             vx = h.vx * 0.4 + ix * 0.6
@@ -484,9 +505,9 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
           }
         }
       }
-      rectHist.set(key, { x: r.left, y: r.top, vx, vy, t: now })
+      rectHist.set(key, { x: px, y: py, vx, vy, t: now })
       const lead = fx.lead * 16.7
-      return { x: r.left + vx * lead, y: r.top + vy * lead }
+      return { x: px + vx * lead, y: py + vy * lead }
     }
 
     function readPanes(): { count: number; sig: number } {
@@ -503,13 +524,22 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         const r = p.el.getBoundingClientRect()
         if (r.width < 2 || r.height < 2) continue
         if (r.bottom < -M || r.top > vh + M || r.right < -M || r.left > vw + M) continue
-        const pr = predictRect(p, r, now)
-        paneRect[i * 4] = pr.x
-        paneRect[i * 4 + 1] = pr.y
-        paneRect[i * 4 + 2] = r.width
-        paneRect[i * 4 + 3] = r.height
+        // getBoundingClientRect gives the AXIS-ALIGNED bounding box, which for
+        // a tilted (rotated) card is larger and upright. Use the element's
+        // un-rotated layout size + the live angle so the shader can draw the
+        // glass rotated to match; the bbox center is the rotation center, so
+        // predict that. Non-rotated panes: angle 0, bbox == layout box.
+        const angle = p.getRotation ? p.getRotation() : 0
+        const w = angle !== 0 ? p.el.offsetWidth : r.width
+        const h = angle !== 0 ? p.el.offsetHeight : r.height
+        const pc = predictPoint(p, r.left + r.width / 2, r.top + r.height / 2, now)
+        paneRect[i * 4] = pc.x - w / 2
+        paneRect[i * 4 + 1] = pc.y - h / 2
+        paneRect[i * 4 + 2] = w
+        paneRect[i * 4 + 3] = h
         paneRadius[i] = p.borderRadius
-        hash(pr.x); hash(pr.y); hash(r.width); hash(r.height)
+        paneAngle[i] = angle
+        hash(pc.x); hash(pc.y); hash(w); hash(h); hash(angle * 100)
         i++
       }
 
@@ -549,6 +579,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1i(compU('uPaneCount'), count)
       gl.uniform4fv(compU('uPane'), paneRect)
       gl.uniform1fv(compU('uPaneRadius'), paneRadius)
+      gl.uniform1fv(compU('uPaneAngle'), paneAngle)
       gl.uniform1f(compU('uBezel'), BEZEL_WIDTH)
       gl.uniform1f(compU('uThick'), THICKNESS)
       gl.uniform1f(compU('uN2'), REFRACTIVE_INDEX)

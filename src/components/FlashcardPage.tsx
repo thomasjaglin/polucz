@@ -160,7 +160,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
       {/* Inner wrapper that rotates on hard-mode toggle */}
       <motion.div style={{ rotateY: rotateYVal }}>
         <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+          <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
 
           <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
             {/* Type badge + hard mode label */}

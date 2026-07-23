@@ -6,6 +6,11 @@
 export interface PaneRecord {
   el: HTMLElement
   borderRadius: number
+  // Live z-rotation in radians for panes that tilt (swiped cards). When set,
+  // the renderer uses the element's un-rotated layout size + this angle to
+  // draw the glass rotated to match, instead of the axis-aligned bounding box
+  // (which for a tilted card is larger and upright — a visible "ghost frame").
+  getRotation?: () => number
 }
 
 const panes = new Set<PaneRecord>()
