@@ -44,6 +44,13 @@ function Waveform({ active }: { active: boolean }) {
 
 // ─── Audio Playback Page ──────────────────────────────────────────────────────
 
+// Same meta line as the vocab list card: gender for nouns, aspect for verbs.
+function cardMeta(entry: VocabEntry): string | null {
+  if (entry.type === 'noun') return entry.gender || null
+  if (entry.type === 'verb') return entry.left || null
+  return null
+}
+
 export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
@@ -334,27 +341,11 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               onDragEnd={handleDragEnd}
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
-              className="relative w-full cursor-grab select-none rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
+              className="relative w-full cursor-grab select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
             >
               <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
-              <div className="relative z-10 flex flex-col items-center gap-5 px-8 py-10">
-
-                {/* Type badge */}
-                {current && (
-                  <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[14px] py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
-                    {typeGradient && (
-                      <div
-                        className="absolute inset-0 z-0 opacity-70 mix-blend-screen"
-                        dangerouslySetInnerHTML={{ __html: typeGradient }}
-                      />
-                    )}
-                    <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
-                      {current.type}
-                    </span>
-                  </div>
-                )}
-
-                {/* Polish word */}
+              {/* Same compact layout as the vocab list card (VocabCard) */}
+              <div className="relative z-10 p-[20px]">
                 <AnimatePresence mode="wait">
                   {current && (
                     <motion.div
@@ -363,33 +354,36 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
-                      className="flex flex-col items-center gap-2 text-center"
+                      className="flex items-start justify-between gap-3"
                     >
-                      <h1 className="font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
-                        {current.pl}
-                      </h1>
-                      {current.type === 'noun' && current.gender && (
-                        <span className="font-instrument text-[20px] italic text-[#e879f9]">{current.gender}</span>
-                      )}
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                          {current.pl}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
+                            {current.en}
+                          </span>
+                          {cardMeta(current) && (
+                            <>
+                              <span className="text-[#F8FAFC]/20">·</span>
+                              <span className="font-instrument text-[13px] italic text-[#F8FAFC]/40">{cardMeta(current)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[4px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                        {typeGradient && (
+                          <div
+                            className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                            dangerouslySetInnerHTML={{ __html: typeGradient }}
+                          />
+                        )}
+                        <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
+                          {current.type}
+                        </span>
+                      </GlassPane>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Divider */}
-                <div className="h-[1px] w-full bg-white/10" />
-
-                {/* EN translation */}
-                <AnimatePresence mode="wait">
-                  {current && (
-                    <motion.p
-                      key={current.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isActive ? 0.5 : 0.25 }}
-                      transition={{ duration: 0.3 }}
-                      className="font-instrument text-[22px] font-medium text-[#B4A0FF]"
-                    >
-                      {current.en}
-                    </motion.p>
                   )}
                 </AnimatePresence>
               </div>
