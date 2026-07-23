@@ -8,6 +8,7 @@ import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useTTS } from '../lib/useTTS'
 import { haptics } from '../lib/haptics'
+import { getGlassMode } from '../lib/glassMode'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const base = { ...entry, enriched: true }
@@ -265,6 +266,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
   const [confirmDelete, setConfirmDelete] = useState(false)
   const tts = useTTS()
   const backdropLastTap = useRef(0)
+  const glassMode = getGlassMode()
   // Temporary: mix-blend-screen(blob, black) is a no-op mathematically, so
   // if the canvas is correctly outputting black behind the blobs, the debug
   // rim-strength visualization (?debugpanes=2) would be invisible even
@@ -328,7 +330,17 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
         else backdropLastTap.current = now
       }}
     >
-      <GlassPane borderRadius={0} className="pointer-events-none absolute inset-0 z-0 bg-black/40 backdrop-blur-xl" />
+      {/* In webgl mode ALL glass is rendered on one shared canvas at z-0.
+          A full-screen backdrop-blur here would blur that canvas — including
+          the modal's OWN glass panes (card + buttons) which live on it —
+          smearing their crisp rim-light into flatness. The page content
+          behind the modal is already display:none'd while open, so the blur
+          buys nothing there; drop it in webgl. svg/css modes keep it: their
+          glass is per-element backdrop-filter, untouched by this scrim. */}
+      <GlassPane
+        borderRadius={0}
+        className={`pointer-events-none absolute inset-0 z-0 bg-black/40${glassMode === 'webgl' ? '' : ' backdrop-blur-xl'}`}
+      />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
             onClick={onClose}
