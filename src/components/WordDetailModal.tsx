@@ -330,15 +330,19 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
         else backdropLastTap.current = now
       }}
     >
-      {/* In webgl mode ALL glass is rendered on one shared canvas at z-0.
-          A full-screen backdrop-blur here would blur that canvas — including
-          the modal's OWN glass panes (card + buttons) which live on it —
-          smearing their crisp rim-light into flatness. The page content
-          behind the modal is already display:none'd while open, so the blur
-          buys nothing there; drop it in webgl. svg/css modes keep it: their
-          glass is per-element backdrop-filter, untouched by this scrim. */}
-      <GlassPane
-        borderRadius={0}
+      {/* Full-screen dimming scrim — a PLAIN div, deliberately NOT a GlassPane.
+          As a GlassPane it registered with the renderer, so the shader drew
+          its glass rim-light at its edges (= the viewport edges), painting a
+          glassy band around the whole screen — very visible once the
+          bezel/fresnel were boosted. Only the card + buttons should carry
+          glass; the scrim just dims.
+
+          webgl: flat tint only. A full-screen backdrop-blur here would blur
+          the shared glass canvas beneath it — including the modal's own card
+          + button glass — flattening them; and the page behind is already
+          display:none'd while open, so blur buys nothing. svg/css: keep the
+          blur (per-element backdrop-filter, unaffected by this scrim). */}
+      <div
         className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/20' : 'bg-black/40 backdrop-blur-xl'}`}
       />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
