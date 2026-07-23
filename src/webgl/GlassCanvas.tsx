@@ -624,6 +624,31 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
           profile.push({ distIn: d, rgba: [ebuf[0], ebuf[1], ebuf[2], ebuf[3]] })
         }
         glassDebug.edgeProfile = profile
+
+        // Same two readings (center + 2px in from top edge) for EVERY real
+        // pane, not just the smallest — lets a red-tinted button (e.g. the
+        // modal's delete) be compared directly against a white-tinted one
+        // (e.g. a homepage icon button) in a single capture. Note this only
+        // reads the WebGL canvas's own output — DOM-level tint colors
+        // (bg-red-400/5 etc.) are composited later by the browser and can't
+        // show up here; a difference in THIS data would mean the shader
+        // itself treats panes differently, not just their DOM tint.
+        const readPx = (cx: number, cy: number): [number, number, number, number] => {
+          const rx = Math.round(cx * dpr)
+          const ry = Math.round((vh - cy) * dpr)
+          const rbuf = new Uint8Array(4)
+          gl.readPixels(rx, ry, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rbuf)
+          return [rbuf[0], rbuf[1], rbuf[2], rbuf[3]]
+        }
+        glassDebug.allPaneSamples = glassDebug.lastPaneSample.map(p => {
+          const cx = p.x + p.w / 2
+          const cy = p.y + p.h / 2
+          return {
+            w: p.w, h: p.h, x: p.x, y: p.y,
+            center: readPx(cx, cy),
+            edge2px: readPx(cx, p.y + 2),
+          }
+        })
       }
     }
 

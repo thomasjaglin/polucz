@@ -29,4 +29,8 @@ export const glassDebug = {
   // the edge (low u). One sample can't tell "never activates" apart from
   // "activates, just not at dead center."
   edgeProfile: [] as { distIn: number; rgba: [number, number, number, number] }[],
+  // Center + near-edge sample for EVERY real pane (not just the smallest),
+  // so different panes (e.g. a red-tinted delete button vs a white-tinted
+  // icon button) can be compared directly in one shot.
+  allPaneSamples: [] as { w: number; h: number; x: number; y: number; center: [number, number, number, number]; edge2px: [number, number, number, number] }[],
 }

@@ -105,6 +105,8 @@ export default function DebugHud() {
           `\n\nreadPixels GROUND TRUTH @ ${glassDebug.readPixelAt}:\nRGBA = ${glassDebug.readPixel.join(', ')}\n` +
           `\nedge profile (distance in from top edge -> RGBA):\n` +
           glassDebug.edgeProfile.map(e => `${e.distIn}px in: ${e.rgba.join(',')}`).join('\n') +
+          `\n\nALL panes: center vs 2px-from-edge (canvas only, no DOM tint):\n` +
+          glassDebug.allPaneSamples.map((p, i) => `${i} (${p.w.toFixed(0)}x${p.h.toFixed(0)} @${p.x.toFixed(0)},${p.y.toFixed(0)}): center=${p.center.slice(0,3).join(',')} edge2px=${p.edge2px.slice(0,3).join(',')}`).join('\n') +
           `\n\nsmallest-first REAL panes (independently computed):\n` +
           sorted.slice(0, 10).map((o, i) => `${i}: ${Math.round(o.w)}x${Math.round(o.h)} @${Math.round(o.x)},${Math.round(o.y)} r${o.radius}`).join('\n') +
           `\n\nmasks (checked BEFORE panes, first 2 win):\n` +
