@@ -501,7 +501,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       />
 
       {/* ── Polish — fixed top section ─────────────────────────── */}
-      <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[13vh]">
+      <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[14vh]">
         <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">Polish</p>
         {srcTop ? inputBlock : (
           <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
@@ -528,7 +528,9 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassButton>
 
       {/* ── English — fixed bottom section ─────────────────────── */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[9.5vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
+      {/* pt reduced (9.5vh -> 6vh) so the English input + Translate button sit
+          higher and clear the floating bottom nav on shorter viewports. */}
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
         <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">English</p>
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
