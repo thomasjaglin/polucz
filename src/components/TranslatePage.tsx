@@ -528,9 +528,8 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassButton>
 
       {/* ── English — fixed bottom section ─────────────────────── */}
-      {/* pt reduced (9.5vh -> 6vh) so the English input + Translate button sit
-          higher and clear the floating bottom nav on shorter viewports. */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
+      {/* pt sets how far the English content sits below the boundary. */}
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[11vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
         <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">English</p>
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
