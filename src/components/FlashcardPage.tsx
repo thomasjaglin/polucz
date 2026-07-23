@@ -428,8 +428,8 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     <>
       {/* Swipe feedback glows — focal raised to ~40% so they align with the
           card (which sits above the viewport center) rather than mid-screen. */}
-      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left 40%, rgba(222,0,4,0.72) 0%, transparent 65%)' }} />
-      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.72) 0%, transparent 65%)' }} />
+      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left 40%, rgba(222,0,4,0.85) 0%, transparent 65%)' }} />
+      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.85) 0%, transparent 65%)' }} />
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
       {totalCount > 0 && (
         <ProgressBar done={doneCount} total={totalCount} />
