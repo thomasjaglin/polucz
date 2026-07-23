@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate, type MotionValue } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
+import { pokeRenderer } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -326,6 +327,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const x = useMotionValue(0)
   const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
   const rightOpacity = useTransform(x, [0, 100],  [0, 1])
+  // Keep the WebGL glass tracking the card while it's dragged/flung, so its
+  // glass doesn't lag behind and render as a ghost card.
+  useMotionValueEvent(x, 'change', pokeRenderer)
 
   useEffect(() => {
     const reviews = getAllReviews()

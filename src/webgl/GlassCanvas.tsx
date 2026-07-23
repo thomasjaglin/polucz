@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
-import { getPanes, onPanesChanged, getMaskPanes } from './glassStore'
+import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer } from './glassStore'
 import { glassDebug } from './debugState'
 import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
@@ -703,6 +703,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
 
     const unsubPanes = onPanesChanged(markActive)
     const unsubFx = onFxChange(markActive)
+    const unsubPoke = onPokeRenderer(markActive)
     const onScroll = () => markActive()
     const onResize = () => markActive()
     const onLost = (e: Event) => {
@@ -725,6 +726,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       cancelAnimationFrame(raf)
       unsubPanes()
       unsubFx()
+      unsubPoke()
       window.removeEventListener('scroll', onScroll, { capture: true })
       window.removeEventListener('resize', onResize)
       window.removeEventListener('deviceorientation', onTilt)

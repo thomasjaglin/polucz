@@ -29,6 +29,24 @@ export function onPanesChanged(cb: () => void): () => void {
   return () => listeners.delete(cb)
 }
 
+// Lightweight per-frame "something's moving, keep rendering" signal. Framer
+// drags/flings move the DOM on the compositor thread; GlassCanvas reads rects
+// on the main thread and, when it thinks it's idle, only polls every 6th
+// frame — too slow to track a fast swipe, so its glass renders where the card
+// *was* (a visible ghost offset from the card). Draggable cards call
+// pokeRenderer() on every x change so the canvas stays in its every-frame
+// active poll, where velocity extrapolation also engages.
+const pokeListeners = new Set<() => void>()
+
+export function pokeRenderer() {
+  pokeListeners.forEach(l => l())
+}
+
+export function onPokeRenderer(cb: () => void): () => void {
+  pokeListeners.add(cb)
+  return () => pokeListeners.delete(cb)
+}
+
 // Free-form glass shapes (logo letterforms, the gooey nav, the translate
 // page's background blob, ...): each one's displacement + specular map is
 // prebaked into a canvas (see generateMaskGlassCanvas) and sampled by the

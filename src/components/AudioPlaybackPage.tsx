@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
 import { getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
 import { applyEasy, applyHard, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
+import { pokeRenderer } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -55,6 +56,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Swipe motion for the card
   const x = useMotionValue(0)
   const rotate = useTransform(x, [-300, 0, 300], [-14, 0, 14])
+  // Keep the WebGL glass tracking the card during swipe so it doesn't ghost.
+  useMotionValueEvent(x, 'change', pokeRenderer)
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')

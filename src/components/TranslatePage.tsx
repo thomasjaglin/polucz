@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
@@ -7,7 +7,7 @@ import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
 import gradientUrl from '../assets/translate-gradient.svg'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
-import { registerMaskPane } from '../webgl/glassStore'
+import { registerMaskPane, pokeRenderer } from '../webgl/glassStore'
 import { getGlassMode } from '../lib/glassMode'
 
 type Direction = 'pl-en' | 'en-pl'
@@ -173,6 +173,8 @@ export default function TranslatePage({ onAddCard }: Props) {
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
   const clearOpacity = useTransform(x, [-80, 0], [1, 0])
+  // Keep the WebGL glass tracking the result card during swipe so it doesn't ghost.
+  useMotionValueEvent(x, 'change', pokeRenderer)
 
   const srcTop = direction === 'pl-en' // source = Polish (top) or English (bottom)
 
