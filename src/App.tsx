@@ -211,6 +211,19 @@ export default function App() {
           </div>
         </div>
 
+        {/* Fade the list into the background as it reaches the bottom nav, so
+            it disappears under the nav instead of showing through its
+            translucent glass. Must sit above BOTH the content (z-30) and the
+            shared WebGL glass canvas (z-0) — a card is mostly glass rendered
+            on that canvas, so a DOM-only mask wouldn't hide it — and below
+            the nav (z-60). Folder page only (the vocab list). */}
+        {activeId === 'folder' && (
+          <div
+            aria-hidden
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 h-[170px]"
+            style={{ background: 'linear-gradient(to top, #121212 0%, #121212 42%, transparent 100%)' }}
+          />
+        )}
         {showNav && <BottomNav activeId={activeId} onChangePage={changePage} />}
       </div>
 
