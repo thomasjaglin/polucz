@@ -7,7 +7,13 @@
 export const GLASS_OVERSCAN = 20
 
 // Refraction geometry (kube.io model: convex-squircle bezel + Snell's law)
-export const BEZEL_WIDTH = 20      // px of rim that refracts; flat glass beyond
+export const BEZEL_WIDTH = 26      // px of rim that refracts; flat glass beyond
+                                   // (widened from 20 so large panes like the
+                                   // word-detail card show a broader glass
+                                   // frame; a wider bezel is a gentler slope,
+                                   // so peak displacement actually drops —
+                                   // safe for GLASS_OVERSCAN, softer on small
+                                   // buttons, which fresnel/specular re-punch)
 export const THICKNESS = 30        // glass slab thickness in px
 export const REFRACTIVE_INDEX = 1.5 // n₂ of the glass; air n₁ = 1 implied
 
@@ -20,7 +26,8 @@ export const BACKDROP_SATURATION = 1.4
 const LIGHT_LEN = Math.hypot(0.45, 0.89)
 export const LIGHT_X = -0.45 / LIGHT_LEN
 export const LIGHT_Y = -0.89 / LIGHT_LEN
-export const SPECULAR_OPACITY = 0.5
+export const SPECULAR_OPACITY = 0.62  // rim highlight strength (up from 0.5 to
+                                      // make edges read more clearly as glass)
 export const COUNTER_LIGHT = 0.4   // relative strength of the opposite-rim highlight
 export const SPECULAR_EXPONENT = 3
 

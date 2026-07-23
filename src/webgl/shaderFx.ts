@@ -18,7 +18,10 @@ export interface ShaderFx {
 
 export const fx: ShaderFx = {
   chroma: 0.35,
-  fresnel: 0.3,
+  fresnel: 0.5,  // up from 0.3 — stronger edge reflection so the glass rim,
+                 // especially on large panes like the word-detail card, reads
+                 // more clearly as reflective glass
+
   wobble: 0,
   lightAngle: Math.atan2(LIGHT_Y, LIGHT_X),
   autoLight: false,

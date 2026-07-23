@@ -339,7 +339,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
           glass is per-element backdrop-filter, untouched by this scrim. */}
       <GlassPane
         borderRadius={0}
-        className={`pointer-events-none absolute inset-0 z-0 bg-black/40${glassMode === 'webgl' ? '' : ' backdrop-blur-xl'}`}
+        className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/20' : 'bg-black/40 backdrop-blur-xl'}`}
       />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
