@@ -15,7 +15,6 @@ import AudioPlaybackPage from './components/AudioPlaybackPage'
 import QuizPage from './components/QuizPage'
 import WordDetailModal from './components/WordDetailModal'
 import GlassLabPage from './components/GlassLabPage'
-import DebugHud from './components/DebugHud'
 import { pages } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
@@ -238,8 +237,6 @@ export default function App() {
           onDelete={handleDeleteCard}
         />
       )}
-
-      {new URLSearchParams(window.location.search).has('debug') && <DebugHud />}
     </div>
   )
 }

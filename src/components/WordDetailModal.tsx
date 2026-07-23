@@ -267,12 +267,6 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
   const tts = useTTS()
   const backdropLastTap = useRef(0)
   const glassMode = getGlassMode()
-  // Temporary: mix-blend-screen(blob, black) is a no-op mathematically, so
-  // if the canvas is correctly outputting black behind the blobs, the debug
-  // rim-strength visualization (?debugpanes=2) would be invisible even
-  // though the canvas is right — hide the blobs during that diagnostic to
-  // see the canvas's raw output in isolation. Safe to remove once resolved.
-  const hideBlobsForDebug = new URLSearchParams(window.location.search).has('debugpanes')
 
   function handleSpeaker() {
     haptics.ttsStart()
@@ -359,7 +353,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
           <div className="relative flex w-full flex-col rounded-[40px]">
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
-            {!hideBlobsForDebug && <div className="absolute inset-0 overflow-hidden rounded-[40px]">
+            <div className="absolute inset-0 overflow-hidden rounded-[40px]">
               {entry.type === 'verb' && (
                 <>
                   <div className="absolute left-[-5%] top-[-10%] h-[55%] w-[65%] rounded-full bg-[#8C3FA0]/80 blur-3xl mix-blend-screen" />
@@ -381,7 +375,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   <div className="absolute bottom-[-10%] left-[-5%] h-[45%] w-[50%] rounded-full bg-[#0C4A30]/80 blur-3xl mix-blend-screen" />
                 </>
               )}
-            </div>}
+            </div>
             <GlassPane borderRadius={40} className="absolute inset-0 z-0 rounded-[40px] bg-white/[0.02]" />
             <div className="relative z-10 flex flex-col p-[32px]">
 

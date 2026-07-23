@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
 import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer } from './glassStore'
-import { glassDebug } from './debugState'
 import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
@@ -135,10 +134,6 @@ uniform sampler2D uMask0;
 uniform sampler2D uMask1;
 uniform vec4 uMaskRect[${MAX_MASK_PANES}];   // overscanned rect, css px
 uniform float uMaskScale[${MAX_MASK_PANES}];
-// Temporary diagnostic (?debugpanes=1): paint matched panes a solid color
-// instead of applying the glass math, to check pane-matching in isolation
-// from the refraction/rim-light computation. Safe to remove once resolved.
-uniform int uDebugPanes;
 out vec4 outColor;
 
 float sdRoundRect(vec2 p, vec2 halfSize, float r) {
@@ -235,15 +230,6 @@ void main() {
   }
   if (hit < 0) { outColor = vec4(bg0.rgb, 1.0); return; }
 
-  if (uDebugPanes == 1) {
-    // Hue cycles by pane index so overlapping/adjacent panes are visually
-    // distinguishable; solid color proves pane-matching independent of the
-    // refraction/rim math below.
-    float t = float(hit) / 8.0;
-    outColor = vec4(1.0 - t, t, 0.2, 1.0);
-    return;
-  }
-
   vec4 r = uPane[hit];
   vec2 halfSize = r.zw * 0.5;
   float rad = min(uPaneRadius[hit], min(halfSize.x, halfSize.y));
@@ -277,14 +263,6 @@ void main() {
     float s = dispMag(u);
     rim = s / uMaxDisp;
     disp = -outward * s;  // inward — bends the backdrop in at the edges
-  }
-
-  if (uDebugPanes == 2) {
-    // Grayscale rim strength (0=black, 1=white) — isolates whether the
-    // bezel/rim math itself ever activates, independent of the specular
-    // blend or background sampling that follow.
-    outColor = vec4(rim, rim, rim, 1.0);
-    return;
   }
 
   // CSS blur(r) is a gaussian with σ = r/2; a mip texel footprint of ~2σ
@@ -380,14 +358,6 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     }
     const bgU = (n: string) => gl.getUniformLocation(bgProg, n)
     const compU = (n: string) => gl.getUniformLocation(compProg, n)
-    // ?debugpanes=1 → solid color per matched pane; ?debugpanes=2 → grayscale
-    // rim/bezel strength. See the two uDebugPanes branches in COMPOSITE_FRAG.
-    const debugPanesParam = new URLSearchParams(window.location.search).get('debugpanes')
-    const debugPanes = debugPanesParam === '2' ? 2 : debugPanesParam === '1' ? 1 : 0
-    // Ground-truth pixel sampling should run in NORMAL rendering too (not
-    // just the artificial debugpanes visualizations), so real vs. debug
-    // brightness can be compared directly — gate on the HUD flag instead.
-    const readbackEnabled = new URLSearchParams(window.location.search).has('debug')
 
     // Sampler-to-texture-unit assignment is fixed for the program's
     // lifetime — set once rather than every frame. uBg lives on unit 0.
@@ -586,19 +556,6 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1f(compU('uMaxDisp'), maxDisp)
       gl.uniform1f(compU('uBlurPx'), BACKDROP_BLUR_PX)
       gl.uniform1f(compU('uSaturation'), BACKDROP_SATURATION)
-      glassDebug.lastPaneSample = []
-      for (let i = 0; i < Math.min(count, 8); i++) {
-        glassDebug.lastPaneSample.push({
-          x: paneRect[i * 4], y: paneRect[i * 4 + 1],
-          w: paneRect[i * 4 + 2], h: paneRect[i * 4 + 3],
-          r: paneRadius[i],
-        })
-      }
-      glassDebug.uniforms = {
-        uBezel: BEZEL_WIDTH, uThick: THICKNESS, uN2: REFRACTIVE_INDEX, uMaxDisp: maxDisp,
-        uBlurPx: BACKDROP_BLUR_PX, uSaturation: BACKDROP_SATURATION,
-        uSpecOpacity: SPECULAR_OPACITY, uCounterLight: COUNTER_LIGHT, uSpecExponent: SPECULAR_EXPONENT,
-      }
       // Light direction: static default, slow drift, or device tilt
       let angle = fx.lightAngle
       if (fx.autoLight) angle += Math.sin(performance.now() / 1000 * 0.5) * 0.9
@@ -620,76 +577,16 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         gl.bindTexture(gl.TEXTURE_2D, maskTextures[i])
       }
       gl.uniform1i(compU('uMaskCount'), maskCount)
-      gl.uniform1i(compU('uDebugPanes'), debugPanes)
       gl.uniform4fv(compU('uMaskRect'), maskRects)
       gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
-      glassDebug.drawCalls++
-
-      if (readbackEnabled && glassDebug.lastPaneSample.length > 0) {
-        // Ground truth: read the actual GPU-written pixel at the center of
-        // the smallest real pane, bypassing DOM/compositing entirely.
-        const smallest = glassDebug.lastPaneSample.reduce((a, b) => (a.w * a.h < b.w * b.h ? a : b))
-        const ccx = smallest.x + smallest.w / 2
-        const ccy = smallest.y + smallest.h / 2
-        const px = Math.round(ccx * dpr)
-        const py = Math.round((vh - ccy) * dpr) // WebGL readPixels origin is bottom-left
-        const buf = new Uint8Array(4)
-        gl.readPixels(px, py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, buf)
-        glassDebug.readPixel = [buf[0], buf[1], buf[2], buf[3]]
-        glassDebug.readPixelAt = `${smallest.w.toFixed(0)}x${smallest.h.toFixed(0)} center css(${ccx.toFixed(0)},${ccy.toFixed(0)}) dev(${px},${py})`
-
-        // Sample straight down from the pane's top edge toward its center —
-        // the bezel profile can legitimately be near-zero at dead center
-        // (u near 1) while correctly peaking closer to the edge (low u).
-        const maxIn = smallest.h / 2
-        const distances = [1, 2, 4, 7, 11, 16].filter(d => d < maxIn)
-        const profile: typeof glassDebug.edgeProfile = []
-        for (const d of distances) {
-          const ex = ccx
-          const ey = smallest.y + d
-          const epx = Math.round(ex * dpr)
-          const epy = Math.round((vh - ey) * dpr)
-          const ebuf = new Uint8Array(4)
-          gl.readPixels(epx, epy, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, ebuf)
-          profile.push({ distIn: d, rgba: [ebuf[0], ebuf[1], ebuf[2], ebuf[3]] })
-        }
-        glassDebug.edgeProfile = profile
-
-        // Same two readings (center + 2px in from top edge) for EVERY real
-        // pane, not just the smallest — lets a red-tinted button (e.g. the
-        // modal's delete) be compared directly against a white-tinted one
-        // (e.g. a homepage icon button) in a single capture. Note this only
-        // reads the WebGL canvas's own output — DOM-level tint colors
-        // (bg-red-400/5 etc.) are composited later by the browser and can't
-        // show up here; a difference in THIS data would mean the shader
-        // itself treats panes differently, not just their DOM tint.
-        const readPx = (cx: number, cy: number): [number, number, number, number] => {
-          const rx = Math.round(cx * dpr)
-          const ry = Math.round((vh - cy) * dpr)
-          const rbuf = new Uint8Array(4)
-          gl.readPixels(rx, ry, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, rbuf)
-          return [rbuf[0], rbuf[1], rbuf[2], rbuf[3]]
-        }
-        glassDebug.allPaneSamples = glassDebug.lastPaneSample.map(p => {
-          const cx = p.x + p.w / 2
-          const cy = p.y + p.h / 2
-          return {
-            w: p.w, h: p.h, x: p.x, y: p.y,
-            center: readPx(cx, cy),
-            edge2px: readPx(cx, p.y + 2),
-          }
-        })
-      }
     }
 
     function tick() {
       if (dead) return
       raf = requestAnimationFrame(tick)
       frame++
-      glassDebug.frame = frame
 
-      try {
       if (resizeIfNeeded()) bgDirty = true
       if (bgDirty) {
         renderBg()
@@ -709,19 +606,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
           lastSig = sig
           renderComposite(count)
           sceneDirty = false
-          glassDebug.lastRenderFrame = frame
-          glassDebug.lastPaneCount = count
-          glassDebug.lastMaskCount = maskCount
-          glassDebug.lastSig = sig
         }
-      }
-      } catch (err) {
-        // Swallowed exception would otherwise silently freeze the canvas on
-        // this exact frame forever, since requestAnimationFrame(tick) at the
-        // top already scheduled the next call before this throws — capture
-        // it instead of losing it.
-        glassDebug.lastError = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err)
-        glassDebug.lastErrorFrame = frame
       }
     }
 
