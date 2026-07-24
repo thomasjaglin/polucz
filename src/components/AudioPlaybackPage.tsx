@@ -61,7 +61,7 @@ function arcSlot(d: number) {
   return {
     x: -(ad ** 1.15) * 14,
     y: d * 26,
-    rotate: -d * 5.6,
+    rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
   }
