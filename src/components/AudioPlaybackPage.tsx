@@ -65,10 +65,11 @@ function arcSlot(d: number) {
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
-    // Progressive frost: the immediate neighbours stay readable, the deeper
-    // stack diffuses — the "seen through glass" look, applied to the cards
+    // Progressive frost: even the immediate neighbours are clearly diffused
+    // so they don't compete with the current card, ramping to a heavy blur
+    // deeper in the stack — the "seen through glass" look applied to the cards
     // themselves since a fanned arc leaves nothing behind the front glass.
-    blur: Math.min(Math.max(0, ad - 1) * 1.8, 7),
+    blur: Math.min(1 + ad * 3.5, 13),
   }
 }
 
@@ -387,7 +388,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
               style={glassMode === 'webgl'
-                ? { backdropFilter: 'blur(8px) saturate(1.2)', WebkitBackdropFilter: 'blur(8px) saturate(1.2)' }
+                ? { backdropFilter: 'blur(12px) saturate(1.3)', WebkitBackdropFilter: 'blur(12px) saturate(1.3)' }
                 : undefined}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
