@@ -386,6 +386,18 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   )
                 })}
               </AnimatePresence>
+            {/* Focus scrim: a soft dark well behind the current card that dims
+                the peek stack around it and gives the glass text a cleaner
+                ground — legibility through contrast rather than heavy blur.
+                Sits above the peeks, below the card. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                transform: 'scale(1.7)',
+                background: 'radial-gradient(ellipse 68% 92% at 50% 50%, rgba(6,4,26,0.45) 0%, rgba(6,4,26,0.22) 46%, rgba(6,4,26,0) 72%)',
+              }}
+            />
             <motion.div
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
