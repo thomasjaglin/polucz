@@ -71,7 +71,7 @@ function arcSlot(d: number) {
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
-    blur: 2 + overlap * 16,
+    blur: 0.5 + overlap * 7,
   }
 }
 
@@ -390,7 +390,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
               style={glassMode === 'webgl'
-                ? { backdropFilter: 'blur(12px) saturate(1.3)', WebkitBackdropFilter: 'blur(12px) saturate(1.3)' }
+                ? { backdropFilter: 'blur(6px) saturate(1.2)', WebkitBackdropFilter: 'blur(6px) saturate(1.2)' }
                 : undefined}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
