@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
-import { pokeRenderer } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -50,6 +49,24 @@ function cardMeta(entry: VocabEntry): string | null {
   return null
 }
 
+// How many cards fan out on each side of the current one.
+const AROUND = 5
+
+// Position of a peek card at signed distance `d` from the current card
+// (d > 0 = upcoming, below; d < 0 = already played, above). Together the two
+// wings trace an arc bulging to the right, with the current card at its vertex:
+// farther cards sit lower/higher, further left, more rotated and more faded.
+function arcSlot(d: number) {
+  const ad = Math.abs(d)
+  return {
+    x: -(ad ** 1.15) * 14,
+    y: d * 26,
+    rotate: -d * 5.6,
+    scale: 1 - Math.min(ad * 0.045, 0.32),
+    opacity: Math.max(0.06, 0.6 - ad * 0.11),
+  }
+}
+
 export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
@@ -67,12 +84,6 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
 
   // Enriched cards available for review — drives the start / empty screens.
   const availableCount = cards.filter(c => c.enriched).length
-
-  // Swipe motion for the card
-  const x = useMotionValue(0)
-  const rotate = useTransform(x, [-300, 0, 300], [-14, 0, 14])
-  // Keep the WebGL glass tracking the card during swipe so it doesn't ghost.
-  useMotionValueEvent(x, 'change', pokeRenderer)
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
@@ -117,10 +128,14 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     }
   }, [phase, current?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prefetch next card while current is playing
+  // Pre-load the upcoming few cards' audio (cache is deduped) so advancing or
+  // skipping into them has no loading gap.
   useEffect(() => {
-    if (queue[idx + 1]) tts.prefetch(queue[idx + 1].pl, queue[idx + 1].en)
-  }, [queue[idx + 1]?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    for (let k = 1; k <= 3; k++) {
+      const c = queue[idx + k]
+      if (c) tts.prefetch(c.pl, c.en)
+    }
+  }, [idx, queue]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Detect natural sequence completion (playing → idle) ──────────────────
   useEffect(() => {
@@ -183,21 +198,6 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     if (idx < queue.length) skipTo(idx + 1)
   }
 
-  function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
-    const committed = Math.abs(info.offset.x) > window.innerWidth * 0.25 || Math.abs(info.velocity.x) > 400
-    if (committed && info.offset.x < 0 && idx < queue.length) {
-      // swipe left → next card
-      animate(x, -600, { duration: 0.22 })
-      setTimeout(() => { x.set(0); skipTo(idx + 1) }, 200)
-    } else if (committed && info.offset.x > 0 && idx > 0) {
-      // swipe right → previous card
-      animate(x, 600, { duration: 0.22 })
-      setTimeout(() => { x.set(0); skipTo(idx - 1) }, 200)
-    } else {
-      animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 })
-    }
-  }
-
   // ─── Derived UI values ────────────────────────────────────────────────────
 
   const doneCount     = Math.min(idx, totalCount)
@@ -205,8 +205,13 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const typeGradient  = current ? (tagGradients[current.type] ?? tagGradients['unknown']) : null
   const isActive      = phase === 'playing' || phase === 'waiting'
   const showControls  = phase !== 'done'
-  // Upcoming cards, fanned down-and-left behind the current one (peek stack).
-  const peekCards     = queue.slice(idx + 1, idx + 1 + 5)
+  // Cards fanned into an arc around the current one: upcoming below (d > 0),
+  // already-played above (d < 0). Nearer cards paint last (on top).
+  const peekCards = [
+    ...queue.slice(idx + 1, idx + 1 + AROUND).map((entry, i) => ({ entry, d: i + 1 })),
+    ...Array.from({ length: AROUND }, (_, k) => ({ entry: queue[idx - 1 - k], d: -(k + 1) }))
+      .filter((p): p is { entry: VocabEntry; d: number } => Boolean(p.entry)),
+  ].sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
 
   function statusText(): string {
     if (phase === 'idle')    return 'Ready to start'
@@ -329,37 +334,50 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             exit={{ opacity: 0 }}
             className="relative flex w-full flex-1 flex-col items-center justify-center gap-8"
           >
-            {/* Card + peek stack: upcoming cards cascade down-and-LEFT behind the
-                current one — each a little lower, further left and rotated
-                counter-clockwise — springing forward one slot as playback advances. */}
+            {/* Card + peek stack: cards fan into an arc around the current one —
+                upcoming curving down-left, already-played curving up-left — each
+                showing its word so you can preview what's coming and glance back
+                at what played. They spring one slot along the arc as playback
+                advances. */}
             <div className="relative w-full">
               <AnimatePresence>
-                {peekCards.map((entry, i) => {
-                  const n = i + 1
+                {peekCards.map(({ entry, d }) => {
+                  const s = arcSlot(d)
                   return (
                     <motion.div
                       key={entry.id}
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.03] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
-                      initial={{ opacity: 0, x: -n * 20, y: n * 24 + 16, rotate: -n * 5, scale: 1 - n * 0.055 }}
-                      animate={{ opacity: Math.max(0.05, 0.5 - i * 0.09), x: -n * 20, y: n * 24, rotate: -n * 5, scale: 1 - n * 0.055 }}
+                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
+                      initial={d < 0
+                        ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1 }
+                        : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale }}
+                      animate={{ opacity: s.opacity, x: s.x, y: s.y, rotate: s.rotate, scale: s.scale }}
                       exit={{ opacity: 0, transition: { duration: 0.15 } }}
                       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                    />
+                    >
+                      <div className="flex items-start justify-between gap-3 p-[20px]">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="truncate font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                            {entry.pl}
+                          </span>
+                          <span className="truncate font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
+                            {entry.en}
+                          </span>
+                        </div>
+                        <span className="mt-1 flex-shrink-0 rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[4px] font-instrument text-[10px] capitalize text-[#F8FAFC]">
+                          {entry.type}
+                        </span>
+                      </div>
+                    </motion.div>
                   )
                 })}
               </AnimatePresence>
             <motion.div
-              style={{ x, rotate }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.8}
-              onDragEnd={handleDragEnd}
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
-              className="relative w-full cursor-grab select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
+              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
-              <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+              <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}
               <div className="relative z-10 p-[20px]">
                 <AnimatePresence mode="wait">
