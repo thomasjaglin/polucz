@@ -59,8 +59,8 @@ const AROUND = 5
 function arcSlot(d: number) {
   const ad = Math.abs(d)
   return {
-    x: -(ad ** 1.15) * 14,
-    y: d * 26,
+    x: -(ad ** 1.15) * 18,
+    y: d * 40,
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
