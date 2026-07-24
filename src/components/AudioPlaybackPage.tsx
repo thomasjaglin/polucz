@@ -65,6 +65,10 @@ function arcSlot(d: number) {
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
+    // Progressive frost: the immediate neighbours stay readable, the deeper
+    // stack diffuses — the "seen through glass" look, applied to the cards
+    // themselves since a fanned arc leaves nothing behind the front glass.
+    blur: Math.min(Math.max(0, ad - 1) * 1.8, 7),
   }
 }
 
@@ -356,9 +360,9 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                       aria-hidden
                       className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
                       initial={d < 0
-                        ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1 }
-                        : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale }}
-                      animate={{ opacity: s.opacity, x: s.x, y: s.y, rotate: s.rotate, scale: s.scale }}
+                        ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1, filter: 'blur(0px)' }
+                        : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
+                      animate={{ opacity: s.opacity, x: s.x, y: s.y, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
                       exit={{ opacity: 0, transition: { duration: 0.15 } }}
                       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
                     >
@@ -383,7 +387,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
               style={glassMode === 'webgl'
-                ? { backdropFilter: 'blur(14px) saturate(1.4)', WebkitBackdropFilter: 'blur(14px) saturate(1.4)' }
+                ? { backdropFilter: 'blur(8px) saturate(1.2)', WebkitBackdropFilter: 'blur(8px) saturate(1.2)' }
                 : undefined}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
