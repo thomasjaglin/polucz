@@ -336,8 +336,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
         ) : (
           <motion.div
             key="card"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="relative flex w-full flex-1 flex-col items-center justify-center gap-8"
           >
@@ -383,7 +383,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
               style={glassMode === 'webgl'
-                ? { backdropFilter: 'blur(7px)', WebkitBackdropFilter: 'blur(7px)' }
+                ? { backdropFilter: 'blur(14px) saturate(1.4)', WebkitBackdropFilter: 'blur(14px) saturate(1.4)' }
                 : undefined}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
