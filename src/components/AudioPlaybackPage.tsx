@@ -4,6 +4,7 @@ import type { VocabEntry } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
+import { getGlassMode } from '../lib/glassMode'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -84,6 +85,12 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
 
   // Enriched cards available for review — drives the start / empty screens.
   const availableCount = cards.filter(c => c.enriched).length
+
+  // In webgl mode the shared canvas glass only refracts the procedural
+  // background, not the DOM peek cards stacked above it — so the front card
+  // gets a scoped backdrop-filter to actually blur/refract the cards behind it.
+  // svg/css mode already blurs the real DOM via the pane's ::before.
+  const glassMode = getGlassMode()
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
@@ -375,6 +382,9 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             <motion.div
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
+              style={glassMode === 'webgl'
+                ? { backdropFilter: 'blur(7px)', WebkitBackdropFilter: 'blur(7px)' }
+                : undefined}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
