@@ -60,18 +60,15 @@ const AROUND = 5
 function arcSlot(d: number) {
   const ad = Math.abs(d)
   const y = d * 50
-  // How much this card sits under the current one: same-size cards (~100px
-  // tall) offset vertically by y, so overlap fades to 0 as they fan apart.
-  // Cards tucked under the current card get a heavy frost so they don't
-  // distract; cards fanned clear of it stay legible.
-  const overlap = Math.max(0, 1 - Math.abs(y) / 100)
   return {
     x: -(ad ** 1.15) * 22,
     y,
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
-    blur: 0.3 + overlap * 3.5,
+    // Depth of field: nearer cards stay sharp, deeper cards in the stack blur
+    // out with distance.
+    blur: Math.min(ad * 1.3, 6),
   }
 }
 
