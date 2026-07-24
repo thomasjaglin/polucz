@@ -332,26 +332,28 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="flex w-full flex-1 flex-col items-center gap-6"
+            className="relative flex w-full flex-1 flex-col items-center gap-6 pb-[104px]"
           >
-            {/* Card + peek stack: upcoming cards fanned along an arc, lower-right */}
+            {/* Card + peek stack: upcoming cards cascade down-and-right behind the
+                current one — each a little lower, further right and more angled —
+                and spring forward one slot as playback advances. */}
             <div className="relative w-full">
-              {peekCards.map((entry, i) => {
-                const n = i + 1
-                const phi = (n * 11 * Math.PI) / 180
-                const R = 130 // arc radius — larger = wider fan
-                return (
-                  <div
-                    key={entry.id}
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.03] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
-                    style={{
-                      transform: `translate(${R * Math.sin(phi)}px, ${R * (1 - Math.cos(phi))}px) rotate(${n * 11}deg) scale(${1 - n * 0.05})`,
-                      opacity: Math.max(0, 0.55 - i * 0.2),
-                    }}
-                  />
-                )
-              })}
+              <AnimatePresence>
+                {peekCards.map((entry, i) => {
+                  const n = i + 1
+                  return (
+                    <motion.div
+                      key={entry.id}
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.03] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
+                      initial={{ opacity: 0, x: n * 18, y: n * 22 + 16, rotate: n * 5, scale: 1 - n * 0.05 }}
+                      animate={{ opacity: Math.max(0, 0.5 - i * 0.2), x: n * 18, y: n * 22, rotate: n * 5, scale: 1 - n * 0.05 }}
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                    />
+                  )
+                })}
+              </AnimatePresence>
             <motion.div
               style={{ x, rotate }}
               drag="x"
@@ -412,46 +414,47 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             {/* Waveform */}
             <Waveform active={isActive && tts.state === 'playing'} />
 
-            {/* Controls */}
+            {/* Controls — clustered bottom-right, in the thumb zone (Play on the
+                far right). Hard / Again sit to its left. */}
             {showControls && (
-              <div className="flex w-full items-center justify-between gap-3 pb-4">
+              <div className="absolute bottom-1 right-0 z-10 flex items-center gap-2.5">
                 {/* Hard */}
                 <GlassButton
                   onClick={() => rateAndAdvance('hard')}
                   disabled={phase !== 'playing'}
-                  radius={24}
+                  radius={22}
                   pane="bg-white/5"
-                  contentClassName="flex w-full items-center justify-center gap-1.5"
-                  className="flex-1 border border-white/10 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
+                  contentClassName="flex items-center justify-center gap-1.5"
+                  className="border border-white/10 px-4 py-2.5 font-instrument text-[13px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
                 >
                   <span className="material-symbols-rounded text-[16px]">thumb_down</span>
                   Hard
                 </GlassButton>
 
-                {/* Play / Pause */}
-                <button
-                  onClick={phase === 'idle' ? handleStart : (isActive ? handlePause : handleResume)}
-                  disabled={!current}
-                  className="relative flex h-[60px] w-[60px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
-                >
-                  <GlassPane borderRadius={30} className="absolute inset-0 z-0 rounded-full bg-[#B4A0FF]/15" />
-                  <span className="material-symbols-rounded relative z-10 text-[28px] text-[#B4A0FF]">
-                    {isActive ? 'pause' : 'play_arrow'}
-                  </span>
-                </button>
-
                 {/* Again */}
                 <GlassButton
                   onClick={() => rateAndAdvance('lapse')}
                   disabled={phase !== 'playing'}
-                  radius={24}
+                  radius={22}
                   pane="bg-white/5"
-                  contentClassName="flex w-full items-center justify-center gap-1.5"
-                  className="flex-1 border border-white/10 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
+                  contentClassName="flex items-center justify-center gap-1.5"
+                  className="border border-white/10 px-4 py-2.5 font-instrument text-[13px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
                 >
                   Again
                   <span className="material-symbols-rounded text-[16px]">replay</span>
                 </GlassButton>
+
+                {/* Play / Pause — primary, far right */}
+                <button
+                  onClick={phase === 'idle' ? handleStart : (isActive ? handlePause : handleResume)}
+                  disabled={!current}
+                  className="relative flex h-[64px] w-[64px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
+                >
+                  <GlassPane borderRadius={32} className="absolute inset-0 z-0 rounded-full bg-[#B4A0FF]/15" />
+                  <span className="material-symbols-rounded relative z-10 text-[30px] text-[#B4A0FF]">
+                    {isActive ? 'pause' : 'play_arrow'}
+                  </span>
+                </button>
               </div>
             )}
           </motion.div>
