@@ -68,7 +68,7 @@ function arcSlot(d: number) {
     opacity: Math.max(0.06, 0.6 - ad * 0.11),
     // Depth of field: nearer cards stay sharp, deeper cards in the stack blur
     // out with distance.
-    blur: Math.min(ad * 1.3, 6),
+    blur: Math.min(ad * 0.8, 3.5),
   }
 }
 
@@ -400,7 +400,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-[36px]"
               style={{
-                background: 'linear-gradient(160deg, rgba(18,14,58,0.92) 0%, rgba(38,24,92,0.9) 60%, rgba(22,16,70,0.92) 100%)',
+                background: 'linear-gradient(160deg, rgba(18,14,58,0.78) 0%, rgba(38,24,92,0.74) 60%, rgba(22,16,70,0.78) 100%)',
               }}
             />
             <motion.div
