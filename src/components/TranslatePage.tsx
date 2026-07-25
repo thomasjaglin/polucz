@@ -155,6 +155,13 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
 
 export default function TranslatePage({ onAddCard }: Props) {
   const glassMode = getGlassMode()
+  // In webgl mode the shared canvas glass is hidden behind the gradient <img>,
+  // so the input/buttons show a flat tint. A scoped backdrop-filter frosts the
+  // real DOM gradient directly behind them (no transformed ancestor here, so it
+  // works) — svg/css mode already frosts via the pane's ::before, so skip it.
+  const frostStyle = glassMode === 'webgl'
+    ? { backdropFilter: 'blur(8px) saturate(1.3)', WebkitBackdropFilter: 'blur(8px) saturate(1.3)' }
+    : undefined
   const circleRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
@@ -406,7 +413,10 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   const inputBlock = (
     <>
-      <div className="relative rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]">
+      <div
+        className="relative overflow-hidden rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]"
+        style={frostStyle}
+      >
         <GlassPane borderRadius={16} className="absolute inset-0 rounded-[16px] bg-white/[0.06]" />
         <textarea
           ref={textareaRef}
@@ -434,6 +444,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         disabled={!input.trim() || phase === 'loading'}
         radius={14}
         pane="bg-white/[0.07]"
+        style={frostStyle}
         className="mt-3 w-full border border-white/15 py-3 font-instrument text-[15px] font-medium text-white/75 disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
@@ -564,9 +575,9 @@ export default function TranslatePage({ onAddCard }: Props) {
         onClick={handleSwap}
         aria-label="Swap languages"
         radius={21}
-        pane="bg-[#181818]/80"
+        pane="bg-[#181818]/45"
         className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
-        style={{ top: `${BOUNDARY}vh` }}
+        style={{ top: `${BOUNDARY}vh`, ...frostStyle }}
       >
         <motion.span
           className="material-symbols-rounded text-[20px] text-white/60"
