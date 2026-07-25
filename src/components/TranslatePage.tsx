@@ -56,6 +56,16 @@ function buildBlobMask(w: number, h: number): { canvas: HTMLCanvasElement; scale
   return entry
 }
 
+// Pre-build the blob's glass map ahead of time (called during app idle) so the
+// first open of the translate page shows its refraction immediately rather than
+// a beat later — the build stays off every critical path. Idempotent (cached).
+export function warmBlobMask() {
+  if (getGlassMode() !== 'webgl') return
+  const w = Math.round(window.innerWidth * CIRCLE_W / 100)
+  const h = Math.round(window.innerHeight * CIRCLE_H / 100)
+  buildBlobMask(w, h)
+}
+
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
     return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: '', right: '', tags: ['verb'], type: 'verb', conjugations: null, otherForm: null }
