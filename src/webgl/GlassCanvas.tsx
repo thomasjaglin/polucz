@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
-import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer } from './glassStore'
+import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer, type PaneRecord } from './glassStore'
 import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
@@ -403,6 +403,13 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     let raf = 0
     let dead = false
 
+    // Cached viewport size + dpr — refreshed only when a resize actually fires,
+    // so the tick loop reads no layout properties (clientWidth/Height) at rest.
+    let cssW = 0
+    let cssH = 0
+    let cssDpr = 1
+    let resizeDirty = true
+
     const paneRect = new Float32Array(MAX_PANES * 4)
     const paneRadius = new Float32Array(MAX_PANES)
     const paneAngle = new Float32Array(MAX_PANES) // z-rotation, radians
@@ -412,10 +419,14 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       sceneDirty = true
     }
 
-    function resizeIfNeeded(): boolean {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      const w = Math.round(canvas.clientWidth * dpr)
-      const h = Math.round(canvas.clientHeight * dpr)
+    // Reads layout (clientWidth/Height) — called only when a resize actually
+    // happened, then caches the result so renders reuse it without re-reading.
+    function updateSize(): boolean {
+      cssDpr = Math.min(window.devicePixelRatio || 1, 2)
+      cssW = canvas.clientWidth
+      cssH = canvas.clientHeight
+      const w = Math.round(cssW * cssDpr)
+      const h = Math.round(cssH * cssDpr)
       if (w === canvas.width && h === canvas.height) return false
       canvas.width = w
       canvas.height = h
@@ -424,13 +435,8 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       return true
     }
 
-    function cssSize(): [number, number, number] {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      return [canvas.clientWidth, canvas.clientHeight, dpr]
-    }
-
     function renderBg() {
-      const [vw, vh, dpr] = cssSize()
+      const vw = cssW, vh = cssH, dpr = cssDpr
       const u = resolvePageUniforms(page, vw, vh)
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, bgTex, 0)
@@ -480,6 +486,43 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       return { x: px + vx * lead, y: py + vy * lead }
     }
 
+    // Only panes near the viewport are measured each frame: an
+    // IntersectionObserver tracks which registered panes are close enough to
+    // matter, so a long scrolling list doesn't pay a getBoundingClientRect per
+    // off-screen card. New panes start optimistically visible (measured once)
+    // until the observer reports on them.
+    const visiblePanes = new Set<PaneRecord>()
+    const observedEls = new Map<HTMLElement, PaneRecord>()
+    const io = new IntersectionObserver(
+      entries => {
+        for (const e of entries) {
+          const rec = observedEls.get(e.target as HTMLElement)
+          if (!rec) continue
+          if (e.isIntersecting) visiblePanes.add(rec)
+          else visiblePanes.delete(rec)
+        }
+        markActive()
+      },
+      { rootMargin: '200px' },
+    )
+    function syncPaneObservers() {
+      const current = getPanes()
+      for (const [el, rec] of observedEls) {
+        if (!current.has(rec)) {
+          io.unobserve(el)
+          observedEls.delete(el)
+          visiblePanes.delete(rec)
+        }
+      }
+      for (const rec of current) {
+        if (!observedEls.has(rec.el)) {
+          observedEls.set(rec.el, rec)
+          visiblePanes.add(rec)
+          io.observe(rec.el)
+        }
+      }
+    }
+
     function readPanes(): { count: number; sig: number } {
       let i = 0
       let sig = 7
@@ -489,7 +532,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       const vh = window.innerHeight
       const M = 40 // off-screen margin — panes partially entering keep glass
 
-      for (const p of getPanes()) {
+      for (const p of visiblePanes) {
         if (i >= MAX_PANES) break
         const r = p.el.getBoundingClientRect()
         if (r.width < 2 || r.height < 2) continue
@@ -538,7 +581,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     }
 
     function renderComposite(count: number) {
-      const [vw, vh, dpr] = cssSize()
+      const vw = cssW, vh = cssH, dpr = cssDpr
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.useProgram(compProg)
       gl.activeTexture(gl.TEXTURE0)
@@ -587,7 +630,10 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       raf = requestAnimationFrame(tick)
       frame++
 
-      if (resizeIfNeeded()) bgDirty = true
+      if (resizeDirty) {
+        resizeDirty = false
+        if (updateSize()) bgDirty = true
+      }
       if (bgDirty) {
         renderBg()
         bgDirty = false
@@ -597,10 +643,12 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       // Animated FX (wobble / moving light) need continuous re-rendering
       if (isAnimated()) sceneDirty = true
 
-      // While recently active poll rects every frame; when idle, every 6th —
-      // catches CSS transitions/animations we get no events for.
-      const active = performance.now() - lastActivity < 300
-      if (sceneDirty || active || frame % 6 === 0) {
+      // While recently active poll rects every frame (covers event-triggered
+      // animations — modal, page transitions — at full framerate); once idle,
+      // poll every 12th frame as a safety net for CSS transitions we get no
+      // events for. Recomposite only when the rect signature actually changes.
+      const active = performance.now() - lastActivity < 700
+      if (sceneDirty || active || frame % 12 === 0) {
         const { count, sig } = readPanes()
         if (sceneDirty || sig !== lastSig) {
           lastSig = sig
@@ -617,11 +665,11 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       markActive()
     }
 
-    const unsubPanes = onPanesChanged(markActive)
+    const unsubPanes = onPanesChanged(() => { syncPaneObservers(); markActive() })
     const unsubFx = onFxChange(markActive)
     const unsubPoke = onPokeRenderer(markActive)
     const onScroll = () => markActive()
-    const onResize = () => markActive()
+    const onResize = () => { resizeDirty = true; markActive() }
     const onLost = (e: Event) => {
       e.preventDefault()
       onFallback()
@@ -635,11 +683,13 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     window.addEventListener('deviceorientation', onTilt)
     canvas.addEventListener('webglcontextlost', onLost)
 
+    syncPaneObservers()
     raf = requestAnimationFrame(tick)
 
     return () => {
       dead = true
       cancelAnimationFrame(raf)
+      io.disconnect()
       unsubPanes()
       unsubFx()
       unsubPoke()
