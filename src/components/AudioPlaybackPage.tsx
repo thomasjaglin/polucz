@@ -384,15 +384,23 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 })}
               </AnimatePresence>
             {/* Focus scrim: a soft dark well behind the current card that dims
-                the peek stack around it and gives the glass text a cleaner
-                ground — legibility through contrast rather than heavy blur.
-                Sits above the peeks, below the card. */}
+                the peek stack around it. Sits above the peeks, below the card. */}
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0"
               style={{
                 transform: 'scale(1.7)',
                 background: 'radial-gradient(ellipse 68% 92% at 50% 50%, rgba(6,4,26,0.45) 0%, rgba(6,4,26,0.22) 46%, rgba(6,4,26,0) 72%)',
+              }}
+            />
+            {/* Opaque colour ground exactly under the active card — obscures the
+                peek cards that would otherwise bleed through its glass so the
+                current word stays clean. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[36px]"
+              style={{
+                background: 'linear-gradient(160deg, rgba(18,14,58,0.92) 0%, rgba(38,24,92,0.9) 60%, rgba(22,16,70,0.92) 100%)',
               }}
             />
             <motion.div
