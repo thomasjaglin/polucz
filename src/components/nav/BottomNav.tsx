@@ -40,10 +40,12 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
       className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-[60] -translate-x-1/2"
     >
       <nav
-        className="relative flex items-center gap-1 rounded-full border border-white/10 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.3)]"
+        className="relative flex items-center gap-1 rounded-full p-2 shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
         style={{ viewTransitionName: 'nav-bar' }}
       >
-        <GlassPane borderRadius={31} className="absolute inset-0 -z-10 rounded-full bg-white/[0.03]" />
+        {/* Same glass recipe as the cards: a GlassPane base the shared canvas
+            refracts, plus the inset white ring that reads the edge as glass. */}
+        <GlassPane borderRadius={31} className="absolute inset-0 rounded-full bg-white/[0.02]" />
         {pageOrder.map(id => {
           const active = id === activeId
           return (
@@ -51,7 +53,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
               key={id}
               onClick={() => onChangePage(id)}
               aria-label={pages[id].title}
-              className="relative flex h-[46px] w-[46px] items-center justify-center rounded-full"
+              className="relative z-10 flex h-[46px] w-[46px] items-center justify-center rounded-full"
             >
               {active && (
                 <motion.span
