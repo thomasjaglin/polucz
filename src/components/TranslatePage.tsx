@@ -37,6 +37,25 @@ function drawCircleMask(w: number, h: number) {
   }
 }
 
+// The blob's displacement map only depends on viewport size, but building it is
+// ~25M ops of blocking JS (getImageData + two box-blur passes over a ~425K-px
+// canvas). Cache it per dimension so navigating back to the page never rebuilds
+// it, and defer the first build off the page-open critical path.
+const blobMaskCache = new Map<string, { canvas: HTMLCanvasElement; scale: number }>()
+
+function buildBlobMask(w: number, h: number): { canvas: HTMLCanvasElement; scale: number } {
+  const key = `${w}x${h}`
+  let entry = blobMaskCache.get(key)
+  if (!entry) {
+    const { canvas, scale } = generateMaskGlassCanvas(w, h, drawCircleMask(w, h), {
+      blurRadius: 5, scale: 40, highlight: 0.5, shade: 0.15, coverageAlpha: true,
+    })
+    entry = { canvas, scale }
+    blobMaskCache.set(key, entry)
+  }
+  return entry
+}
+
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
     return { id: lemma, enriched: false, pl: lemma, en: canonicalEn, left: '', right: '', tags: ['verb'], type: 'verb', conjugations: null, otherForm: null }
@@ -149,24 +168,44 @@ export default function TranslatePage({ onAddCard }: Props) {
     const el = circleRef.current
     if (!el) return
 
-    function regenerate() {
-      const w = window.innerWidth * CIRCLE_W / 100
-      const h = window.innerHeight * CIRCLE_H / 100
-      const { canvas, scale } = generateMaskGlassCanvas(w, h, drawCircleMask(w, h), {
-        blurRadius: 5, scale: 40, highlight: 0.5, shade: 0.15, coverageAlpha: true,
-      })
-      return registerMaskPane({ el: el!, map: canvas, scale, overscan: GLASS_OVERSCAN })
+    let unregister: (() => void) | null = null
+    let idleHandle: number | null = null
+    let cancelled = false
+
+    function register() {
+      const w = Math.round(window.innerWidth * CIRCLE_W / 100)
+      const h = Math.round(window.innerHeight * CIRCLE_H / 100)
+      const { canvas, scale } = buildBlobMask(w, h)
+      if (cancelled) return
+      unregister = registerMaskPane({ el: el!, map: canvas, scale, overscan: GLASS_OVERSCAN })
     }
 
-    let unregister = regenerate()
+    // Cached map → register right away (cheap). First-time build → defer off the
+    // page-open critical path so navigating here never blocks on it; the blob
+    // shows its gradient meanwhile and gains the refraction rim a beat later.
+    const key = `${Math.round(window.innerWidth * CIRCLE_W / 100)}x${Math.round(window.innerHeight * CIRCLE_H / 100)}`
+    if (blobMaskCache.has(key)) {
+      register()
+    } else if (window.requestIdleCallback) {
+      idleHandle = window.requestIdleCallback(() => { idleHandle = null; register() }, { timeout: 500 })
+    } else {
+      idleHandle = window.setTimeout(() => { idleHandle = null; register() }, 0)
+    }
+
     function onResize() {
-      unregister()
-      unregister = regenerate()
+      unregister?.()
+      unregister = null
+      register()
     }
     window.addEventListener('resize', onResize)
     return () => {
+      cancelled = true
       window.removeEventListener('resize', onResize)
-      unregister()
+      if (idleHandle != null) {
+        if (window.cancelIdleCallback) window.cancelIdleCallback(idleHandle)
+        else clearTimeout(idleHandle)
+      }
+      unregister?.()
     }
   }, [glassMode])
 
