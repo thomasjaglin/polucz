@@ -96,7 +96,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
             )}
 
             {/* Total / filtered card count */}
-            <p className="font-instrument text-[13px] text-[#F8FAFC]/40">{countLabel}</p>
+            <p className="-mt-[7px] pl-1 font-instrument text-[13px] text-[#F8FAFC]/40">{countLabel}</p>
           </div>
         </div>
       </div>
