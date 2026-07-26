@@ -414,10 +414,10 @@ export default function TranslatePage({ onAddCard }: Props) {
   const inputBlock = (
     <>
       <div
-        className="relative overflow-hidden rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]"
+        className="relative overflow-hidden rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]"
         style={frostStyle}
       >
-        <GlassPane borderRadius={16} className="absolute inset-0 rounded-[16px] bg-white/[0.06]" />
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-white/[0.06]" />
         <textarea
           ref={textareaRef}
           value={input}
@@ -442,10 +442,10 @@ export default function TranslatePage({ onAddCard }: Props) {
       <GlassButton
         onClick={handleTranslate}
         disabled={!input.trim() || phase === 'loading'}
-        radius={14}
-        pane="bg-white/[0.07]"
+        radius={24}
+        pane="bg-[#B4A0FF]/15"
         style={frostStyle}
-        className="mt-3 w-full border border-white/15 py-3 font-instrument text-[15px] font-medium text-white/75 disabled:opacity-35"
+        className="mt-3 w-full border border-[#B4A0FF]/25 py-3.5 font-instrument text-[15px] font-medium text-[#B4A0FF] disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
       </GlassButton>
