@@ -52,6 +52,12 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
     return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
   })
 
+  // Count line under the filters: total normally, "X out of Y" while filtered.
+  const wordNoun = (n: number) => (n === 1 ? 'word' : 'words')
+  const countLabel = filtered.length === cards.length
+    ? `${cards.length} ${wordNoun(cards.length)}`
+    : `${filtered.length} ${wordNoun(filtered.length)} out of ${cards.length}`
+
   return (
     <div className="animate-fade-in flex w-full flex-col gap-[24px]">
       {/* Search + filter glass card */}
@@ -88,6 +94,9 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
             {searchOpen && (
               <SearchBar value={searchQuery} onChange={setSearchQuery} autoFocus />
             )}
+
+            {/* Total / filtered card count */}
+            <p className="font-instrument text-[13px] text-[#F8FAFC]/40">{countLabel}</p>
           </div>
         </div>
       </div>
