@@ -53,7 +53,7 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
   }
 
   function getPaneTint(opt: string): string {
-    if (chosen === null) return 'bg-[#F8FAFC]/[0.04]'
+    if (chosen === null) return 'bg-[#F8FAFC]/5'
     if (checkAnswer(opt, sentence.targetForm)) return 'bg-green-400/15'
     if (opt === chosen) return 'bg-red-400/15'
     return 'bg-[#F8FAFC]/[0.02]'

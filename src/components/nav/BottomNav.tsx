@@ -59,7 +59,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
                 <motion.span
                   layoutId="nav-active"
                   transition={SPRING}
-                  className="absolute inset-[5px] rounded-full bg-[#F8FAFC]/[0.12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.18)]"
+                  className="absolute inset-[5px] rounded-full bg-[#F8FAFC]/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.18)]"
                 />
               )}
               <span

@@ -3,7 +3,7 @@ import GlassPane from './GlassPane'
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   radius?: number
-  /** Tint classes for the glass pane behind the content, e.g. "bg-[#F8FAFC]/[0.04]" */
+  /** Tint classes for the glass pane behind the content, e.g. "bg-[#F8FAFC]/5" */
   pane?: string
   /** Layout of the content row; defaults to a centered flex row */
   contentClassName?: string
@@ -16,7 +16,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 // tint goes on `pane`.
 export default function GlassButton({
   radius = 16,
-  pane = 'bg-[#F8FAFC]/[0.04]',
+  pane = 'bg-[#F8FAFC]/5',
   contentClassName = 'flex w-full items-center justify-center gap-2',
   className = '',
   style,

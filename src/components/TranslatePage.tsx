@@ -417,7 +417,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         className="relative overflow-hidden rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]"
         style={frostStyle}
       >
-        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/[0.06]" />
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/5" />
         <textarea
           ref={textareaRef}
           value={input}
@@ -488,7 +488,7 @@ export default function TranslatePage({ onAddCard }: Props) {
 
           {result.isSingleWord && (
             <>
-              <div className="h-[1px] w-full bg-[#F8FAFC]/8" />
+              <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-3">
                   <span className="font-instrument text-[18px] font-medium text-[#F8FAFC]/80">

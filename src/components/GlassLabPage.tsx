@@ -184,7 +184,7 @@ export default function GlassLabPage() {
         <h1 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/80">Glass lab</h1>
         <button
           onClick={() => { window.location.href = window.location.pathname }}
-          className="flex items-center gap-1.5 rounded-full bg-[#F8FAFC]/[0.08] px-3.5 py-1.5 text-[13px] text-[#F8FAFC]/80"
+          className="flex items-center gap-1.5 rounded-full bg-[#F8FAFC]/10 px-3.5 py-1.5 text-[13px] text-[#F8FAFC]/80"
         >
           <span className="material-symbols-rounded text-[16px]">close</span>
           Exit
@@ -200,7 +200,7 @@ export default function GlassLabPage() {
 
       {/* WebGL shader FX — applies live to every glass pane on screen */}
       {glassMode === 'webgl' && (
-        <div className="flex flex-col gap-2 rounded-2xl bg-[#F8FAFC]/[0.04] p-4">
+        <div className="flex flex-col gap-2 rounded-2xl bg-[#F8FAFC]/5 p-4">
           <h2 className="mb-1 text-[13px] uppercase tracking-wide text-[#F8FAFC]/40">WebGL shader FX</h2>
           <Slider label="Chroma" min={0} max={1} step={0.05} value={fxState.chroma} onChange={v => setFxParam({ chroma: v })} />
           <Slider label="Fresnel" min={0} max={1} step={0.05} value={fxState.fresnel} onChange={v => setFxParam({ fresnel: v })} />
@@ -223,7 +223,7 @@ export default function GlassLabPage() {
       )}
 
       {/* Controls */}
-      <div className="flex flex-col gap-2 rounded-2xl bg-[#F8FAFC]/[0.04] p-4">
+      <div className="flex flex-col gap-2 rounded-2xl bg-[#F8FAFC]/5 p-4">
         <Slider label="Displacement" min={0} max={80} step={2} value={params.scale} onChange={v => set({ scale: v })} />
         <Slider label="Band radius" min={1} max={8} step={1} value={params.blurRadius} onChange={v => set({ blurRadius: v })} />
         <Slider label="Highlight" min={0} max={1} step={0.05} value={params.highlight} onChange={v => set({ highlight: v })} />
@@ -239,7 +239,7 @@ export default function GlassLabPage() {
           />
         </label>
         <button
-          className="mt-1 self-start rounded-lg bg-[#F8FAFC]/[0.08] px-3 py-1 text-[13px] text-[#F8FAFC]/80"
+          className="mt-1 self-start rounded-lg bg-[#F8FAFC]/10 px-3 py-1 text-[13px] text-[#F8FAFC]/80"
           onClick={() => setParams(DEFAULTS)}
         >
           Reset
@@ -269,7 +269,7 @@ export default function GlassLabPage() {
           <GlassButton radius={16} pane="bg-red-400/10" className="flex-1 border border-red-400/20 py-3 font-instrument text-[15px] font-medium text-red-400/80">
             Danger
           </GlassButton>
-          <GlassButton radius={16} pane="bg-[#F8FAFC]/[0.04]" className="flex-1 border border-[#F8FAFC]/10 py-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">
+          <GlassButton radius={16} pane="bg-[#F8FAFC]/5" className="flex-1 border border-[#F8FAFC]/10 py-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">
             Neutral
           </GlassButton>
         </div>

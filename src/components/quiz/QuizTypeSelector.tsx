@@ -23,7 +23,7 @@ export default function QuizTypeSelector({ sentenceCount, onStart }: Props) {
         onClick={() => onStart('declension')}
         disabled={!hasEnough}
         radius={24}
-        pane="bg-[#F8FAFC]/[0.03]"
+        pane="bg-[#F8FAFC]/[0.02]"
         contentClassName="block w-full text-left"
         className="w-full border border-[#F8FAFC]/10 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] disabled:opacity-35"
       >
@@ -43,7 +43,7 @@ export default function QuizTypeSelector({ sentenceCount, onStart }: Props) {
         onClick={() => onStart('conjugation')}
         disabled={!hasEnough}
         radius={24}
-        pane="bg-[#F8FAFC]/[0.03]"
+        pane="bg-[#F8FAFC]/[0.02]"
         contentClassName="block w-full text-left"
         className="w-full border border-[#F8FAFC]/10 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] disabled:opacity-35"
       >

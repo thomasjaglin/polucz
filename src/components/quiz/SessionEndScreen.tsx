@@ -41,7 +41,7 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
       <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/90">Session complete</h2>
 
       {/* Score card */}
-      <div className="rounded-[20px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.03] px-5 py-6 text-center">
+      <div className="rounded-[20px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.02] px-5 py-6 text-center">
         <div className="font-instrument text-[52px] font-bold leading-none text-[#F8FAFC]/90">
           {score}
           <span className="text-[30px] text-[#F8FAFC]/35">/{total}</span>
@@ -79,7 +79,7 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
         <GlassButton
           onClick={onBack}
           radius={16}
-          pane="bg-[#F8FAFC]/[0.03]"
+          pane="bg-[#F8FAFC]/[0.02]"
           className="w-full border border-[#F8FAFC]/10 py-3.5 font-instrument text-[16px] font-medium text-[#F8FAFC]/55"
         >
           Back to menu

@@ -80,7 +80,7 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
           disabled={locked}
           placeholder="Type the missing form…"
-          className={`w-full rounded-[16px] border bg-[#F8FAFC]/[0.04] px-4 py-3.5 font-instrument text-[17px] text-[#F8FAFC]/90 placeholder:text-[#F8FAFC]/25 outline-none transition-all ${borderClass} disabled:opacity-60`}
+          className={`w-full rounded-[16px] border bg-[#F8FAFC]/5 px-4 py-3.5 font-instrument text-[17px] text-[#F8FAFC]/90 placeholder:text-[#F8FAFC]/25 outline-none transition-all ${borderClass} disabled:opacity-60`}
         />
         <p className="font-instrument text-[11px] text-[#F8FAFC]/25">
           Enable Polish keyboard for ą ę ó ś ź ż ć ń ł
@@ -93,7 +93,7 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           <GlassButton
             onClick={handleTryAgain}
             radius={12}
-            pane="bg-[#F8FAFC]/[0.05]"
+            pane="bg-[#F8FAFC]/5"
             className="border border-[#F8FAFC]/10 px-3 py-1.5 font-instrument text-[13px] text-[#F8FAFC]/65"
           >
             Try again

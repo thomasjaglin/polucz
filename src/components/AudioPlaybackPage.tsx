@@ -248,7 +248,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
             )}
           </div>
-          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/[0.08]">
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/10">
             <motion.div
               className="h-full rounded-full bg-[#B4A0FF]/60"
               animate={{ width: `${progress * 100}%` }}
@@ -358,7 +358,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                     <motion.div
                       key={entry.id}
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
+                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/5 shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
                       initial={d < 0
                         ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1, filter: 'blur(0px)' }
                         : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
