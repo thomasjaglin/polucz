@@ -57,7 +57,7 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
   const borderClass =
     phase === 'correct' ? 'border-green-400/50 ring-1 ring-green-400/25' :
     phase === 'wrong-can-retry' || phase === 'wrong-final' ? 'border-red-400/50 ring-1 ring-red-400/25' :
-    'border-[#F8FAFC]/15'
+    'border-[#F8FAFC]/20'
 
   return (
     <div className="flex flex-col gap-5">

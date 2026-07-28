@@ -130,7 +130,7 @@ const TYPE_BADGE: Record<string, string> = {
 
 function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolean; onAdd: () => void }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[#F8FAFC]/[0.06] py-2.5 last:border-0">
+    <div className="flex items-center gap-2 border-b border-[#F8FAFC]/5 py-2.5 last:border-0">
       <span className={`shrink-0 rounded-full border px-2 py-0.5 font-instrument text-[10px] font-medium capitalize ${TYPE_BADGE[word.type] ?? TYPE_BADGE.unknown}`}>
         {word.type === 'adjective' ? 'adj' : word.type}
       </span>
@@ -143,7 +143,7 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
       ) : (
         <button
           onClick={onAdd}
-          className="relative shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-[#F8FAFC]/15 px-3 py-1 font-instrument text-[11px] text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
+          className="relative shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-[#F8FAFC]/20 px-3 py-1 font-instrument text-[11px] text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
         >
           <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
           <span className="relative z-10">+ Add card</span>
