@@ -162,6 +162,12 @@ export default function TranslatePage({ onAddCard }: Props) {
   const frostStyle = glassMode === 'webgl'
     ? { backdropFilter: 'blur(8px) saturate(1.3)', WebkitBackdropFilter: 'blur(8px) saturate(1.3)' }
     : undefined
+  // The input sits over the bright gradient blob where the canvas refraction is
+  // occluded, so it needs a stronger frost — more blur plus a brightness "lens"
+  // lift — to read as glass rather than a flat tint like the conjugation input.
+  const inputFrostStyle = glassMode === 'webgl'
+    ? { backdropFilter: 'blur(16px) saturate(1.4) brightness(1.08)', WebkitBackdropFilter: 'blur(16px) saturate(1.4) brightness(1.08)' }
+    : undefined
   const circleRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
@@ -415,9 +421,9 @@ export default function TranslatePage({ onAddCard }: Props) {
     <>
       <div
         className="relative rounded-[20px] border border-[#F8FAFC]/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]"
-        style={frostStyle}
+        style={inputFrostStyle}
       >
-        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/5" />
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/10" />
         <textarea
           ref={textareaRef}
           value={input}
