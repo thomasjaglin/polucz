@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { SentenceEntry } from '../../data/types'
 import { checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
+import { getGlassMode } from '../../lib/glassMode'
 import GlassPane from '../GlassPane'
 import GlassButton from '../GlassButton'
 
@@ -59,6 +60,12 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
     phase === 'wrong-can-retry' || phase === 'wrong-final' ? 'border-red-400/50 ring-1 ring-red-400/25' :
     'border-[#F8FAFC]/20'
 
+  // Same scoped frost as the translate input so webgl mode blurs the backdrop
+  // behind the field (the canvas glass sits behind the gradient there).
+  const frostStyle = getGlassMode() === 'webgl'
+    ? { backdropFilter: 'blur(8px) saturate(1.2)', WebkitBackdropFilter: 'blur(8px) saturate(1.2)' }
+    : undefined
+
   return (
     <div className="flex flex-col gap-5">
       <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
@@ -72,16 +79,22 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
       <p className="font-instrument text-[13px] text-[#F8FAFC]/45">{grammarPrompt(sentence)}</p>
 
       <div className="flex flex-col gap-1.5">
-        <input
-          ref={inputRef}
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
-          disabled={locked}
-          placeholder="Type the missing form…"
-          className={`w-full rounded-[16px] border bg-[#F8FAFC]/5 px-4 py-3.5 font-instrument text-[17px] text-[#F8FAFC]/90 placeholder:text-[#F8FAFC]/25 outline-none transition-all ${borderClass} disabled:opacity-60`}
-        />
+        <div
+          className={`relative rounded-[16px] border shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)] transition-all ${borderClass}`}
+          style={frostStyle}
+        >
+          <GlassPane borderRadius={16} className="absolute inset-0 z-0 rounded-[16px] bg-[#F8FAFC]/5" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
+            disabled={locked}
+            placeholder="Type the missing form…"
+            className="relative z-10 w-full bg-transparent px-4 py-3.5 font-instrument text-[17px] text-[#F8FAFC]/90 placeholder:text-[#F8FAFC]/25 outline-none disabled:opacity-60"
+          />
+        </div>
         <p className="font-instrument text-[11px] text-[#F8FAFC]/25">
           Enable Polish keyboard for ą ę ó ś ź ż ć ń ł
         </p>
