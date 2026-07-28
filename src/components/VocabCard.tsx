@@ -22,9 +22,9 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
     <div className="perspective w-full cursor-pointer" onClick={() => { haptics.tap(); onClick() }}>
       <div
         ref={ref}
-        className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
       >
-        <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-white/[0.02] p-[20px]">
+        <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex items-center gap-2">
@@ -36,7 +36,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
+                <span className="font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
                   {entry.en}
                 </span>
                 {meta && (
@@ -47,7 +47,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 )}
               </div>
             </div>
-            <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[4px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+            <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
               <div
                 className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                 dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] }}

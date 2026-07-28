@@ -1,11 +1,13 @@
-import { useState, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
-import gradientUrl from '../assets/translate-gradient.svg'
+import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
+import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
+import { getGlassMode } from '../lib/glassMode'
 
 type Direction = 'pl-en' | 'en-pl'
 
@@ -20,6 +22,46 @@ const CIRCLE_W = 135  // vw (557/412)
 const EDGE_OFFSET = 0 // vh — border ring aligned flush with the gradient circle clip
 
 const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
+
+// Vertical position (topFrac, fraction of viewport height) of the procedural
+// gradient blob in the WebGL background, for the two swap states. Derived from
+// the old DOM blob's animated top (BOUNDARY-CIRCLE_H / 100-BOUNDARY) plus the
+// SVG's -5%·CIRCLE_H internal offset. GlassCanvas reads the live value via the
+// glassStore and re-bakes the background as it slides.
+// The ring's top position for each swap state (fraction of viewport height).
+// The procedural blob, its elliptical clip, and the glass disc all share this
+// reference so they stay aligned as the circle slides.
+const BLOB_TOP_SRC = (BOUNDARY - CIRCLE_H) / 100 // source on top
+const BLOB_TOP_DST = (100 - BOUNDARY) / 100      // source on bottom
+
+// Elliptical glass mask for the circle: a filled ellipse matching its
+// rounded-[50%] box, so the circle reads as a glass disc (refraction + rim
+// following the true elliptical silhouette) over the procedural blob. Built
+// once per viewport size (the box is vw/vh); its live on-screen position is
+// read each frame by GlassCanvas, so the swap slide needs no rebuild.
+function drawCircleMask(w: number, h: number) {
+  return (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+const circleMaskCache = new Map<string, { canvas: HTMLCanvasElement; scale: number }>()
+
+function buildCircleMask(w: number, h: number): { canvas: HTMLCanvasElement; scale: number } {
+  const key = `${w}x${h}`
+  let entry = circleMaskCache.get(key)
+  if (!entry) {
+    const { canvas, scale } = generateMaskGlassCanvas(w, h, drawCircleMask(w, h), {
+      blurRadius: 5, scale: 26, highlight: 0.5, shade: 0.15, coverageAlpha: true,
+    })
+    entry = { canvas, scale }
+    circleMaskCache.set(key, entry)
+  }
+  return entry
+}
 
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
@@ -85,22 +127,23 @@ const TYPE_BADGE: Record<string, string> = {
 
 function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolean; onAdd: () => void }) {
   return (
-    <div className="flex items-center gap-2 border-b border-white/[0.06] py-2.5 last:border-0">
+    <div className="flex items-center gap-2 border-b border-[#F8FAFC]/5 py-2.5 last:border-0">
       <span className={`shrink-0 rounded-full border px-2 py-0.5 font-instrument text-[10px] font-medium capitalize ${TYPE_BADGE[word.type] ?? TYPE_BADGE.unknown}`}>
         {word.type === 'adjective' ? 'adj' : word.type}
       </span>
-      <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-white/90">{word.lemma}</span>
+      <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-[#F8FAFC]/90">{word.lemma}</span>
       {word.gender && <span className="shrink-0 font-instrument text-[13px] italic text-[#e879f9]">{word.gender}</span>}
-      <span className="shrink-0 text-white/20">·</span>
-      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] text-white/50">{word.english}</span>
+      <span className="shrink-0 text-[#F8FAFC]/20">·</span>
+      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] text-[#F8FAFC]/50">{word.english}</span>
       {isSaved ? (
-        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] text-white/25">✓ In vocabulary</span>
+        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] text-[#F8FAFC]/25">✓ In vocabulary</span>
       ) : (
         <button
           onClick={onAdd}
-          className="shrink-0 whitespace-nowrap rounded-full border border-white/15 bg-white/5 px-3 py-1 font-instrument text-[11px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          className="relative shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-[#F8FAFC]/20 px-3 py-1 font-instrument text-[11px] text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
         >
-          + Add card
+          <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+          <span className="relative z-10">+ Add card</span>
         </button>
       )}
     </div>
@@ -119,12 +162,64 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
   const [toast, setToast] = useState<string | null>(null)
   const translateIdRef = useRef(0)
+  const circleRef = useRef<HTMLDivElement>(null)
+
+  // Register the circle as an elliptical glass mask pane so it reads as a glass
+  // disc refracting the blob behind it. The map is size-only (rebuilt on
+  // resize); GlassCanvas reads the element's live rect each frame, so the swap
+  // slide needs no regeneration. Deferred off the first-open critical path.
+  useEffect(() => {
+    if (getGlassMode() !== 'webgl') return
+    const el = circleRef.current
+    if (!el) return
+    let unregister: (() => void) | null = null
+    let idleHandle: number | null = null
+    let cancelled = false
+
+    function register() {
+      const w = Math.round(window.innerWidth * CIRCLE_W / 100)
+      const h = Math.round(window.innerHeight * CIRCLE_H / 100)
+      const { canvas, scale } = buildCircleMask(w, h)
+      if (cancelled || !el) return
+      unregister = registerMaskPane({ el, map: canvas, scale, overscan: GLASS_OVERSCAN })
+    }
+
+    const key = `${Math.round(window.innerWidth * CIRCLE_W / 100)}x${Math.round(window.innerHeight * CIRCLE_H / 100)}`
+    if (circleMaskCache.has(key)) register()
+    else if (window.requestIdleCallback) idleHandle = window.requestIdleCallback(() => { idleHandle = null; register() }, { timeout: 500 })
+    else idleHandle = window.setTimeout(() => { idleHandle = null; register() }, 0)
+
+    function onResize() { unregister?.(); unregister = null; register() }
+    window.addEventListener('resize', onResize)
+    return () => {
+      cancelled = true
+      window.removeEventListener('resize', onResize)
+      if (idleHandle != null) { if (window.cancelIdleCallback) window.cancelIdleCallback(idleHandle); else clearTimeout(idleHandle) }
+      unregister?.()
+    }
+  }, [])
 
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
   const clearOpacity = useTransform(x, [-80, 0], [1, 0])
+  // Keep the WebGL glass tracking the result card during swipe so it doesn't ghost.
+  useMotionValueEvent(x, 'change', pokeRenderer)
 
   const srcTop = direction === 'pl-en' // source = Polish (top) or English (bottom)
+
+  // Drive the procedural gradient blob's vertical position in the WebGL
+  // background. A MotionValue springs between the two swap positions with the
+  // same feel as the DOM border ring, and pushes each frame into the glassStore
+  // so GlassCanvas re-bakes the background as the blob slides.
+  const blobTop = useMotionValue(BLOB_TOP_SRC)
+  useMotionValueEvent(blobTop, 'change', setBgBlobTop)
+  useEffect(() => {
+    // Force the store to the mounted position (module-level store may be stale
+    // from a previous visit; direction always resets to pl-en on remount).
+    setBgBlobTop(srcTop ? BLOB_TOP_SRC : BLOB_TOP_DST)
+    const controls = animate(blobTop, srcTop ? BLOB_TOP_SRC : BLOB_TOP_DST, SPRING)
+    return () => controls.stop()
+  }, [srcTop]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleTranslate() {
     const text = input.trim()
@@ -283,13 +378,13 @@ export default function TranslatePage({ onAddCard }: Props) {
   const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
 
   const wordListBlock = wordPhase === 'loading' ? (
-    <div className="flex items-center gap-2 pt-4 text-white/30">
+    <div className="flex items-center gap-2 pt-4 text-[#F8FAFC]/30">
       <span className="material-symbols-rounded animate-spin text-[16px]">progress_activity</span>
       <span className="font-instrument text-[13px]">Analysing words…</span>
     </div>
   ) : wordPhase === 'done' && words.length > 1 ? (
     <div className="pt-4">
-      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider text-white/25">
+      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider text-[#F8FAFC]/25">
         {srcTop ? 'Words in this sentence' : 'Words in the Polish translation'}
       </p>
       {words.map(word => (
@@ -305,8 +400,8 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   const inputBlock = (
     <>
-      <div className="relative rounded-[16px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]">
-        <GlassPane borderRadius={16} className="absolute inset-0 rounded-[16px] bg-white/[0.06]" />
+      <div className="relative rounded-[20px] border border-[#F8FAFC]/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/5" />
         <textarea
           ref={textareaRef}
           value={input}
@@ -314,25 +409,25 @@ export default function TranslatePage({ onAddCard }: Props) {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
           placeholder={srcTop ? 'pisz tutaj...' : 'Translate text…'}
           rows={2}
-          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-white/95 placeholder:text-white/40 outline-none"
+          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-[#F8FAFC]/95 placeholder:text-[#F8FAFC]/40 outline-none"
         />
         {!!input && (
           <button
             onClick={() => setInput('')}
             aria-label="Clear input"
-            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full bg-white/15 text-white/60 transition-colors hover:bg-white/25 hover:text-white"
+            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
           >
-            <span className="material-symbols-rounded text-[16px]">close</span>
+            <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/15" />
+            <span className="material-symbols-rounded relative z-10 text-[16px]">close</span>
           </button>
         )}
       </div>
 
       <GlassButton
+        variant="primary"
         onClick={handleTranslate}
         disabled={!input.trim() || phase === 'loading'}
-        radius={14}
-        pane="bg-white/[0.07]"
-        className="mt-3 w-full border border-white/15 py-3 font-instrument text-[15px] font-medium text-white/75 disabled:opacity-35"
+        className="mt-3 w-full py-3.5 font-instrument text-[15px] disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
       </GlassButton>
@@ -353,9 +448,9 @@ export default function TranslatePage({ onAddCard }: Props) {
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.8, right: canSwipe ? 0.8 : 0.08 }}
         onDragEnd={handleDragEnd}
-        className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
+        className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
       >
-        <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-white/[0.02]" />
+        <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#F8FAFC]/[0.02]" />
 
         {canSwipe && (
           <motion.div style={{ opacity: addOpacity }}
@@ -365,7 +460,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         )}
         <motion.div style={{ opacity: clearOpacity }}
           className="pointer-events-none absolute inset-0 z-10 flex items-center justify-start rounded-[24px] pl-6">
-          <span className="font-instrument text-[18px] font-semibold text-white/50">← Clear</span>
+          <span className="font-instrument text-[18px] font-semibold text-[#F8FAFC]/50">← Clear</span>
         </motion.div>
 
         <div className="relative z-20 flex flex-col gap-4 p-6">
@@ -375,10 +470,10 @@ export default function TranslatePage({ onAddCard }: Props) {
 
           {result.isSingleWord && (
             <>
-              <div className="h-[1px] w-full bg-white/8" />
+              <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-3">
-                  <span className="font-instrument text-[18px] font-medium text-white/80">
+                  <span className="font-instrument text-[18px] font-medium text-[#F8FAFC]/80">
                     {result.lemma}
                   </span>
                   {result.gender && (
@@ -386,7 +481,7 @@ export default function TranslatePage({ onAddCard }: Props) {
                       {result.gender}
                     </span>
                   )}
-                  <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                  <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                     <div
                       className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                       dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
@@ -397,7 +492,7 @@ export default function TranslatePage({ onAddCard }: Props) {
                   </div>
                 </div>
                 {result.canonicalEn && result.canonicalEn !== result.translation && (
-                  <span className="font-instrument text-[13px] text-white/35">{result.canonicalEn}</span>
+                  <span className="font-instrument text-[13px] text-[#F8FAFC]/35">{result.canonicalEn}</span>
                 )}
               </div>
 
@@ -405,14 +500,14 @@ export default function TranslatePage({ onAddCard }: Props) {
                 <p className="font-instrument text-[13px] text-emerald-400/80">Added to vocabulary</p>
               )}
               {!added && alreadySaved && (
-                <p className="font-instrument text-[13px] text-white/30">Already in your vocabulary</p>
+                <p className="font-instrument text-[13px] text-[#F8FAFC]/30">Already in your vocabulary</p>
               )}
             </>
           )}
         </div>
       </motion.div>
 
-      <p className="mt-4 font-instrument text-[11px] text-white/20">
+      <p className="mt-4 font-instrument text-[11px] text-[#F8FAFC]/20">
         {canSwipe ? 'swipe right to save · swipe left to clear' : 'swipe left to clear'}
       </p>
     </>
@@ -421,27 +516,17 @@ export default function TranslatePage({ onAddCard }: Props) {
   return (
     <div className="fixed inset-0 overflow-hidden">
 
-      {/* Gradient circle backing the source side (Figma 114-13508), sliding
-          between halves on language swap. The global dots background shows
-          through everywhere else. */}
-      <motion.div
-        className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 overflow-hidden rounded-[50%]"
-        style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
-        initial={false}
-        animate={{ top: srcTop ? `${BOUNDARY - CIRCLE_H}vh` : `${100 - BOUNDARY}vh` }}
-        transition={SPRING}
-      >
-        <img
-          src={gradientUrl}
-          alt=""
-          className="absolute max-w-none"
-          style={{ left: '-11.3%', top: '0%', width: '149.4%', height: '116%' }}
-        />
-      </motion.div>
+      {/* The gradient circle backing the source side (Figma 114-13508) is now
+          rendered procedurally into the WebGL background (see backgroundData.ts
+          `translate`) so the page's glass panes refract it natively; its
+          vertical slide on swap is driven via blobTop -> glassStore above. */}
 
-      {/* Doubled soft edge — the second circle 20px into the dark side */}
+      {/* Soft edge ring marking the source side, sliding with the blob. Also
+          the tracked box for the elliptical glass-disc mask pane (see the
+          circle-mask effect above). */}
       <motion.div
-        className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-[50%] border border-white/10"
+        ref={circleRef}
+        className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-[50%] border border-[#F8FAFC]/10"
         style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
         initial={false}
         animate={{ top: srcTop ? `${BOUNDARY - CIRCLE_H + EDGE_OFFSET}vh` : `${100 - BOUNDARY - EDGE_OFFSET}vh` }}
@@ -449,8 +534,8 @@ export default function TranslatePage({ onAddCard }: Props) {
       />
 
       {/* ── Polish — fixed top section ─────────────────────────── */}
-      <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[13vh]">
-        <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">Polish</p>
+      <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[14vh]">
+        <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">Polish</p>
         {srcTop ? inputBlock : (
           <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
         )}
@@ -460,13 +545,13 @@ export default function TranslatePage({ onAddCard }: Props) {
       <GlassButton
         onClick={handleSwap}
         aria-label="Swap languages"
-        radius={21}
-        pane="bg-[#181818]/80"
-        className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+        radius={20}
+        pane="bg-[#181818]/45"
+        className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-[#F8FAFC]/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
         style={{ top: `${BOUNDARY}vh` }}
       >
         <motion.span
-          className="material-symbols-rounded text-[20px] text-white/60"
+          className="material-symbols-rounded text-[20px] text-[#F8FAFC]/60"
           initial={false}
           animate={{ rotate: srcTop ? 0 : 90 }}
           transition={{ type: 'spring', stiffness: 280, damping: 22 }}
@@ -476,8 +561,10 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassButton>
 
       {/* ── English — fixed bottom section ─────────────────────── */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[9.5vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
-        <p className="mb-3 font-instrument text-[15px] font-medium text-white/70">English</p>
+      {/* pt reduced (9.5vh -> 6vh) so the English input + Translate button sit
+          higher and clear the floating bottom nav on shorter viewports. */}
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
+        <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">English</p>
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
 
@@ -488,9 +575,10 @@ export default function TranslatePage({ onAddCard }: Props) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
-            className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 rounded-full border border-white/10 bg-white/10 px-5 py-2 backdrop-blur-md"
+            className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 overflow-hidden rounded-full border border-[#F8FAFC]/10 px-5 py-2"
           >
-            <span className="whitespace-nowrap font-instrument text-[14px] text-white/80">{toast}</span>
+            <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
+            <span className="relative z-10 whitespace-nowrap font-instrument text-[14px] text-[#F8FAFC]/80">{toast}</span>
           </motion.div>
         )}
       </AnimatePresence>

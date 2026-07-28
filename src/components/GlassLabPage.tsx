@@ -3,6 +3,9 @@ import GlassPane from './GlassPane'
 import { generateMaskGlassMap, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { upsertFilter } from '../hooks/useGlassFilter'
 import { getGlassMode } from '../lib/glassMode'
+import { fx, setFx, type ShaderFx } from '../webgl/shaderFx'
+import GlassButton from './GlassButton'
+import IconButton from './IconButton'
 import { drawLogoMask, LETTER_PATHS, BAR, SX, SY, LOGO_W, LOGO_H } from './AppLogo'
 
 // Glass shader test bench (open with ?lab). Standard panes for reference on
@@ -149,7 +152,7 @@ function Slider({ label, min, max, step, value, onChange }: {
   value: number; onChange: (v: number) => void
 }) {
   return (
-    <label className="flex items-center gap-3 text-[13px] text-white/70">
+    <label className="flex items-center gap-3 text-[13px] text-[#F8FAFC]/70">
       <span className="w-28 shrink-0">{label}</span>
       <input
         type="range"
@@ -157,7 +160,7 @@ function Slider({ label, min, max, step, value, onChange }: {
         onChange={e => onChange(Number(e.target.value))}
         className="w-full accent-purple-300"
       />
-      <span className="w-10 shrink-0 text-right tabular-nums text-white/90">{value}</span>
+      <span className="w-10 shrink-0 text-right tabular-nums text-[#F8FAFC]/90">{value}</span>
     </label>
   )
 }
@@ -167,14 +170,21 @@ export default function GlassLabPage() {
   const set = (patch: Partial<LabParams>) => setParams(p => ({ ...p, ...patch }))
   const glassMode = getGlassMode()
 
+  // WebGL shader FX (mirrors the mutable shaderFx store)
+  const [fxState, setFxState] = useState<ShaderFx>({ ...fx })
+  const setFxParam = (patch: Partial<ShaderFx>) => {
+    setFx(patch)
+    setFxState(s => ({ ...s, ...patch }))
+  }
+
   return (
     <div className="animate-fade-in flex flex-col gap-8 pb-48">
       {/* ?lab overrides all page routing, so the lab needs its own way out */}
       <div className="flex items-center justify-between">
-        <h1 className="font-instrument text-[22px] font-semibold text-white/80">Glass lab</h1>
+        <h1 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/80">Glass lab</h1>
         <button
           onClick={() => { window.location.href = window.location.pathname }}
-          className="flex items-center gap-1.5 rounded-full bg-white/[0.08] px-3.5 py-1.5 text-[13px] text-white/80"
+          className="flex items-center gap-1.5 rounded-full bg-[#F8FAFC]/10 px-3.5 py-1.5 text-[13px] text-[#F8FAFC]/80"
         >
           <span className="material-symbols-rounded text-[16px]">close</span>
           Exit
@@ -188,14 +198,38 @@ export default function GlassLabPage() {
         </p>
       )}
 
+      {/* WebGL shader FX — applies live to every glass pane on screen */}
+      {glassMode === 'webgl' && (
+        <div className="flex flex-col gap-2 rounded-2xl bg-[#F8FAFC]/5 p-4">
+          <h2 className="mb-1 text-[13px] uppercase tracking-wide text-[#F8FAFC]/40">WebGL shader FX</h2>
+          <Slider label="Chroma" min={0} max={1} step={0.05} value={fxState.chroma} onChange={v => setFxParam({ chroma: v })} />
+          <Slider label="Fresnel" min={0} max={1} step={0.05} value={fxState.fresnel} onChange={v => setFxParam({ fresnel: v })} />
+          <Slider label="Wobble" min={0} max={1} step={0.05} value={fxState.wobble} onChange={v => setFxParam({ wobble: v })} />
+          <Slider label="Light angle" min={-180} max={180} step={5}
+            value={Math.round(fxState.lightAngle * 180 / Math.PI)}
+            onChange={v => setFxParam({ lightAngle: v * Math.PI / 180 })} />
+          <Slider label="Drag lead" min={0} max={3} step={0.1} value={fxState.lead} onChange={v => setFxParam({ lead: v })} />
+          <label className="flex items-center gap-3 text-[13px] text-[#F8FAFC]/70">
+            <span className="w-28 shrink-0">Auto light</span>
+            <input type="checkbox" checked={fxState.autoLight}
+              onChange={e => setFxParam({ autoLight: e.target.checked })} className="accent-purple-300" />
+          </label>
+          <label className="flex items-center gap-3 text-[13px] text-[#F8FAFC]/70">
+            <span className="w-28 shrink-0">Tilt light</span>
+            <input type="checkbox" checked={fxState.tiltLight}
+              onChange={e => setFxParam({ tiltLight: e.target.checked })} className="accent-purple-300" />
+          </label>
+        </div>
+      )}
+
       {/* Controls */}
-      <div className="flex flex-col gap-2 rounded-2xl bg-white/[0.04] p-4">
+      <div className="flex flex-col gap-2 rounded-2xl bg-[#F8FAFC]/5 p-4">
         <Slider label="Displacement" min={0} max={80} step={2} value={params.scale} onChange={v => set({ scale: v })} />
         <Slider label="Band radius" min={1} max={8} step={1} value={params.blurRadius} onChange={v => set({ blurRadius: v })} />
         <Slider label="Highlight" min={0} max={1} step={0.05} value={params.highlight} onChange={v => set({ highlight: v })} />
         <Slider label="Shade" min={0} max={1} step={0.05} value={params.shade} onChange={v => set({ shade: v })} />
         <Slider label="Backdrop blur" min={0} max={12} step={1} value={params.backdropBlur} onChange={v => set({ backdropBlur: v })} />
-        <label className="flex items-center gap-3 text-[13px] text-white/70">
+        <label className="flex items-center gap-3 text-[13px] text-[#F8FAFC]/70">
           <span className="w-28 shrink-0">Drop shadow</span>
           <input
             type="checkbox"
@@ -205,7 +239,7 @@ export default function GlassLabPage() {
           />
         </label>
         <button
-          className="mt-1 self-start rounded-lg bg-white/[0.08] px-3 py-1 text-[13px] text-white/80"
+          className="mt-1 self-start rounded-lg bg-[#F8FAFC]/10 px-3 py-1 text-[13px] text-[#F8FAFC]/80"
           onClick={() => setParams(DEFAULTS)}
         >
           Reset
@@ -214,26 +248,51 @@ export default function GlassLabPage() {
 
       {/* Reference: the standard pane glass (fixed params, for comparison) */}
       <div className="flex flex-col gap-3">
-        <h2 className="text-[13px] uppercase tracking-wide text-white/40">Reference panes (production params)</h2>
+        <h2 className="text-[13px] uppercase tracking-wide text-[#F8FAFC]/40">Reference panes (production params)</h2>
         <GlassPane borderRadius={24} className="rounded-[24px] p-5">
-          <span className="font-instrument text-[18px] font-semibold text-white/90">Card pane</span>
+          <span className="font-instrument text-[18px] font-semibold text-[#F8FAFC]/90">Card pane</span>
         </GlassPane>
         <div className="flex items-center gap-3">
-          <GlassPane borderRadius={18} className="rounded-[18px] px-4 py-2">
-            <span className="text-[14px] text-white/90">Pill</span>
+          <GlassPane borderRadius={20} className="rounded-[20px] px-4 py-2">
+            <span className="text-[14px] text-[#F8FAFC]/90">Pill</span>
           </GlassPane>
           <GlassPane borderRadius={12} className="rounded-[12px] px-2 py-1">
-            <span className="text-[12px] text-white/80">Tiny</span>
+            <span className="text-[12px] text-[#F8FAFC]/80">Tiny</span>
           </GlassPane>
+        </div>
+
+        {/* Button variants — the app's real GlassButton styles */}
+        <div className="flex items-center gap-3">
+          <GlassButton radius={16} pane="bg-[#B4A0FF]/10" className="flex-1 border border-[#B4A0FF]/20 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]">
+            Primary
+          </GlassButton>
+          <GlassButton radius={16} pane="bg-red-400/10" className="flex-1 border border-red-400/20 py-3 font-instrument text-[15px] font-medium text-red-400/80">
+            Danger
+          </GlassButton>
+          <GlassButton radius={16} pane="bg-[#F8FAFC]/5" className="flex-1 border border-[#F8FAFC]/10 py-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">
+            Neutral
+          </GlassButton>
+        </div>
+
+        {/* Icon buttons + play-style circle */}
+        <div className="flex items-center gap-3">
+          <IconButton icon="search" onClick={() => {}} />
+          <IconButton icon="settings" onClick={() => {}} />
+          <GlassButton radius={32} pane="bg-[#B4A0FF]/15" className="h-[60px] w-[60px] border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)]">
+            <span className="material-symbols-rounded text-[28px] text-[#B4A0FF]">play_arrow</span>
+          </GlassButton>
+          <GlassButton radius={20} pane="bg-[#F8FAFC]/5" className="h-[38px] w-[38px] border border-[#F8FAFC]/10 text-[#F8FAFC]/50">
+            <span className="material-symbols-rounded text-[20px]">refresh</span>
+          </GlassButton>
         </div>
       </div>
 
       {/* Mask shapes under test */}
       <div className="flex flex-col gap-5">
-        <h2 className="text-[13px] uppercase tracking-wide text-white/40">Mask shapes (live params)</h2>
+        <h2 className="text-[13px] uppercase tracking-wide text-[#F8FAFC]/40">Mask shapes (live params)</h2>
         {SHAPES.map(s => (
           <div key={s.name} className="flex flex-col gap-1.5">
-            <span className="text-[12px] text-white/40">{s.name}</span>
+            <span className="text-[12px] text-[#F8FAFC]/40">{s.name}</span>
             <TestShape shape={s} params={params} />
           </div>
         ))}

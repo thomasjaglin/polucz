@@ -151,13 +151,18 @@ export interface MaskGlassOptions {
   scale?: number
   highlight?: number // rim-light strength on light-facing edges (0..1)
   shade?: number     // rim-shadow strength on away-facing edges (0..1)
+  /** Encode the (crisp) shape coverage into the alpha channel — used by the
+   *  WebGL renderer to frost the whole silhouette interior. Must stay OFF
+   *  for maps destined for SVG filters: their pipeline premultiplies by
+   *  alpha, which would corrupt the R/G displacement values. */
+  coverageAlpha?: boolean
 }
 
 export function generateMaskGlassCanvas(
   width: number,
   height: number,
   drawMask: (ctx: CanvasRenderingContext2D) => void,
-  { blurRadius = 3, scale = 30, highlight = 0.9, shade = 0.6 }: MaskGlassOptions = {}
+  { blurRadius = 3, scale = 30, highlight = 0.9, shade = 0.6, coverageAlpha = false }: MaskGlassOptions = {}
 ): MaskGlassCanvas {
   const mapW = width + GLASS_OVERSCAN * 2
   const mapH = height + GLASS_OVERSCAN * 2
@@ -193,7 +198,7 @@ export function generateMaskGlassCanvas(
       const i = (y * mapW + x) * 4
       d[i]     = Math.round(128 + nx * 127)
       d[i + 1] = Math.round(128 + ny * 127)
-      d[i + 3] = 255
+      d[i + 3] = coverageAlpha ? src[i + 3] : 255
 
       // Signed relief: light-facing edges brighten, away-facing edges darken.
       // Thin strokes can't show much refraction, so this highlight/shadow

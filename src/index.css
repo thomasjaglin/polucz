@@ -117,6 +117,17 @@ body {
   display: none;
 }
 
+/* The base rule's translateZ(0) exists only so ::before (the backdrop blur
+   layer) paints below children regardless of z-index — irrelevant here
+   since ::before is display:none above. Left on, it force-promotes every
+   GlassPane to its own GPU compositing layer for no reason, and mobile GPUs
+   have a much smaller layer budget than desktop: once the page's existing
+   panes (cards, header buttons) have claimed it, layers created later
+   (a modal, a dropdown) can silently fail to composite correctly. */
+.glass-webgl .kube-glass-bg {
+  transform: none;
+}
+
 .kube-glass-bg::before {
   content: '';
   position: absolute;

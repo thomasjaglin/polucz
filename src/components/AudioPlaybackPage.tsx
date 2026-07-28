@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import type { VocabEntry } from '../data/types'
-import { getReview, saveReview, initReview, resetAllReviews } from '../lib/reviewStorage'
-import { applyEasy, applyHard, applyLapse } from '../lib/scheduler'
+import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
+import { getGlassMode } from '../lib/glassMode'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -43,6 +43,35 @@ function Waveform({ active }: { active: boolean }) {
 
 // ─── Audio Playback Page ──────────────────────────────────────────────────────
 
+// Same meta line as the vocab list card: gender for nouns, aspect for verbs.
+function cardMeta(entry: VocabEntry): string | null {
+  if (entry.type === 'noun') return entry.gender || null
+  if (entry.type === 'verb') return entry.left || null
+  return null
+}
+
+// How many cards fan out on each side of the current one.
+const AROUND = 5
+
+// Position of a peek card at signed distance `d` from the current card
+// (d > 0 = upcoming, below; d < 0 = already played, above). Together the two
+// wings trace an arc bulging to the right, with the current card at its vertex:
+// farther cards sit lower/higher, further left, more rotated and more faded.
+function arcSlot(d: number) {
+  const ad = Math.abs(d)
+  const y = d * 50
+  return {
+    x: -(ad ** 1.15) * 22,
+    y,
+    rotate: d * 5.6,
+    scale: 1 - Math.min(ad * 0.045, 0.32),
+    opacity: Math.max(0.06, 0.6 - ad * 0.11),
+    // Depth of field: nearer cards stay sharp, deeper cards in the stack blur
+    // out with distance.
+    blur: Math.min(ad * 0.8, 3.5),
+  }
+}
+
 export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
@@ -50,11 +79,22 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const [idx, setIdx]           = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [phase, setPhase]       = useState<Phase>('idle')
+  // Start screen: nothing plays until the user picks an order and taps play.
+  const [started, setStarted]   = useState(false)
+  const [order, setOrder]       = useState<'list' | 'new-first'>('list')
+  // Repeat toggle: when on, a card replays itself on natural completion
+  // instead of advancing to the next one.
+  const [repeatOne, setRepeatOne] = useState(false)
   const tts = useTTS()
 
-  // Swipe motion for the card
-  const x = useMotionValue(0)
-  const rotate = useTransform(x, [-300, 0, 300], [-14, 0, 14])
+  // Enriched cards available for review — drives the start / empty screens.
+  const availableCount = cards.filter(c => c.enriched).length
+
+  // In webgl mode the shared canvas glass only refracts the procedural
+  // background, not the DOM peek cards stacked above it — so the front card
+  // gets a scoped backdrop-filter to actually blur/refract the cards behind it.
+  // svg/css mode already blurs the real DOM via the pane's ::before.
+  const glassMode = getGlassMode()
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
@@ -62,19 +102,32 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // auto-easy-advance when the interrupted playback settles to idle
   const userRatedRef    = useRef(false)
 
-  // ─── Initialise / reset queue ──────────────────────────────────────────────
-  function loadQueue() {
-    const due = cards.filter(c => c.enriched).sort(() => Math.random() - 0.5)
+  // ─── Queue building / start ────────────────────────────────────────────────
+  // Order: 'list' plays the enriched cards in list order (newest first, as on
+  // the folder page); 'new-first' floats never-reviewed cards to the front.
+  function buildQueue(o: 'list' | 'new-first'): VocabEntry[] {
+    const due = [...cards].reverse().filter(c => c.enriched)
+    if (o === 'new-first') {
+      const reviews = getAllReviews()
+      const isNew = (c: VocabEntry) => { const r = reviews[c.id]; return !r || r.reviewCount === 0 }
+      return [...due.filter(isNew), ...due.filter(c => !isNew(c))]
+    }
+    return due
+  }
+
+  function beginPlayback(o: 'list' | 'new-first') {
+    setOrder(o)
+    const due = buildQueue(o)
     setQueue(due)
     setTotalCount(due.length)
     setIdx(0)
     tts.stop()
-    // Auto-start: no play tap needed. If the browser blocks autoplay the
-    // status shows an audio error and play/pause still works manually.
     setPhase(due.length > 0 ? 'playing' : 'idle')
+    setStarted(true)
   }
 
-  useEffect(() => { loadQueue() }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Replay from the done screen keeps whichever order was chosen.
+  const replay = () => beginPlayback(order)
 
   const current = queue[idx] ?? null
   const doubleTap = useDoubleTap(useCallback(() => { if (current) onOpenModal?.(current) }, [current, onOpenModal]))
@@ -86,10 +139,14 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     }
   }, [phase, current?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prefetch next card while current is playing
+  // Pre-load the upcoming few cards' audio (cache is deduped) so advancing or
+  // skipping into them has no loading gap.
   useEffect(() => {
-    if (queue[idx + 1]) tts.prefetch(queue[idx + 1].pl, queue[idx + 1].en)
-  }, [queue[idx + 1]?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    for (let k = 1; k <= 3; k++) {
+      const c = queue[idx + k]
+      if (c) tts.prefetch(c.pl, c.en)
+    }
+  }, [idx, queue]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── Detect natural sequence completion (playing → idle) ──────────────────
   useEffect(() => {
@@ -97,16 +154,13 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     prevTtsStateRef.current = tts.state
 
     if (prev === 'playing' && tts.state === 'idle' && phase === 'playing') {
-      const wasUserRated = userRatedRef.current
+      const wasUserSkipped = userRatedRef.current
       userRatedRef.current = false
-      if (wasUserRated) return // user already rated/skipped — idx change plays next card
+      if (wasUserSkipped) return // user already skipped — idx change plays next card
 
-      // Natural completion: advance as Easy, then wait 2 s before next card
-      if (current) {
-        const state = getReview(current.id) ?? initReview(current.id)
-        saveReview(current.id, applyEasy(state))
-      }
-      setIdx(i => i + 1)
+      // Pure player: no SRS rating. Repeat-one replays the same card; otherwise
+      // advance. Either way a 2 s gap ('waiting') precedes the next play.
+      if (!repeatOne) setIdx(i => i + 1)
       setPhase('waiting')
     }
   }, [tts.state, phase]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -140,18 +194,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     setPhase('playing')
   }
 
-  function rateAndAdvance(outcome: 'hard' | 'lapse') {
-    if (!current) return
-    // Only suppress the auto-advance if TTS is currently playing
-    if (tts.state === 'playing') userRatedRef.current = true
-    tts.stop()
-    const state = getReview(current.id) ?? initReview(current.id)
-    saveReview(current.id, outcome === 'hard' ? applyHard(state) : applyLapse(state))
-    setIdx(i => i + 1)
-    // phase stays 'playing' → effect fires on current?.id change → plays next card
-  }
-
-  // Manual navigation (swipe) — no rating, just moves through the queue
+  // Manual navigation (swipe / skip button) — a neutral move through the
+  // queue with no effect on SRS scheduling.
   function skipTo(newIdx: number) {
     if (tts.state === 'playing') userRatedRef.current = true
     tts.stop()
@@ -159,19 +203,10 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     setPhase('playing')
   }
 
-  function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
-    const committed = Math.abs(info.offset.x) > window.innerWidth * 0.25 || Math.abs(info.velocity.x) > 400
-    if (committed && info.offset.x < 0 && idx < queue.length) {
-      // swipe left → next card
-      animate(x, -600, { duration: 0.22 })
-      setTimeout(() => { x.set(0); skipTo(idx + 1) }, 200)
-    } else if (committed && info.offset.x > 0 && idx > 0) {
-      // swipe right → previous card
-      animate(x, 600, { duration: 0.22 })
-      setTimeout(() => { x.set(0); skipTo(idx - 1) }, 200)
-    } else {
-      animate(x, 0, { type: 'spring', stiffness: 300, damping: 25 })
-    }
+  // Skip-next control: advance one card (neutral). Skipping past the last
+  // card lets the all-done effect surface the finished screen.
+  function handleSkipNext() {
+    if (idx < queue.length) skipTo(idx + 1)
   }
 
   // ─── Derived UI values ────────────────────────────────────────────────────
@@ -181,10 +216,17 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const typeGradient  = current ? (tagGradients[current.type] ?? tagGradients['unknown']) : null
   const isActive      = phase === 'playing' || phase === 'waiting'
   const showControls  = phase !== 'done'
+  // Cards fanned into an arc around the current one: upcoming below (d > 0),
+  // already-played above (d < 0). Nearer cards paint last (on top).
+  const peekCards = [
+    ...queue.slice(idx + 1, idx + 1 + AROUND).map((entry, i) => ({ entry, d: i + 1 })),
+    ...Array.from({ length: AROUND }, (_, k) => ({ entry: queue[idx - 1 - k], d: -(k + 1) }))
+      .filter((p): p is { entry: VocabEntry; d: number } => Boolean(p.entry)),
+  ].sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
 
   function statusText(): string {
     if (phase === 'idle')    return 'Ready to start'
-    if (phase === 'waiting') return 'Next card…'
+    if (phase === 'waiting') return repeatOne ? 'Repeating…' : 'Next card…'
     if (tts.state === 'loading') return 'Loading…'
     if (tts.state === 'error')   return 'Audio error'
     return 'Listening'
@@ -206,7 +248,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
             )}
           </div>
-          <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/[0.08]">
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/10">
             <motion.div
               className="h-full rounded-full bg-[#B4A0FF]/60"
               animate={{ width: `${progress * 100}%` }}
@@ -216,9 +258,52 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
         </div>
       )}
 
-      {/* ── Done state ────────────────────────────────────────────────────── */}
+      {/* ── Empty / Start / Done / Card ───────────────────────────────────── */}
       <AnimatePresence mode="wait">
-        {phase === 'done' ? (
+        {availableCount === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
+          >
+            <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">spatial_audio</span>
+            <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No cards yet</h2>
+            <p className="font-instrument text-[15px] text-[#F8FAFC]/30 px-4">
+              Add vocabulary words to start audio review.
+            </p>
+          </motion.div>
+        ) : !started ? (
+          <motion.div
+            key="start"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            className="flex flex-1 flex-col items-center justify-center gap-5 text-center"
+          >
+            <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">spatial_audio</span>
+            <div className="flex flex-col gap-1">
+              <h2 className="font-instrument text-[24px] font-semibold text-[#F8FAFC]/80">Audio review</h2>
+              <p className="font-instrument text-[15px] text-[#F8FAFC]/40">{availableCount} cards ready</p>
+            </div>
+            <GlassButton
+              variant="primary"
+              onClick={() => beginPlayback('list')}
+              className="mt-1 px-7 py-3.5 font-instrument text-[16px]"
+            >
+              <span className="material-symbols-rounded text-[20px]">play_arrow</span>
+              Play through list
+            </GlassButton>
+            <GlassButton
+              variant="secondary"
+              onClick={() => beginPlayback('new-first')}
+              className="px-5 py-2.5 font-instrument text-[14px]"
+            >
+              <span className="material-symbols-rounded text-[16px]">fiber_new</span>
+              Play with new words first
+            </GlassButton>
+          </motion.div>
+        ) : phase === 'done' ? (
           <motion.div
             key="done"
             initial={{ opacity: 0, y: 16 }}
@@ -232,75 +317,99 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               You've listened to all {totalCount} cards.
             </p>
             <GlassButton
-              onClick={loadQueue}
-              radius={28}
-              pane="bg-[#B4A0FF]/10"
-              className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
+              variant="primary"
+              onClick={replay}
+              className="mt-2 px-6 py-3 font-instrument text-[15px]"
             >
               <span className="material-symbols-rounded text-[18px]">replay</span>
               Listen again
             </GlassButton>
             <GlassButton
-              onClick={() => { resetAllReviews(); loadQueue() }}
-              radius={28}
-              pane="bg-white/5"
-              className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
+              variant="secondary"
+              onClick={() => { resetAllReviews(); replay() }}
+              className="px-5 py-2.5 font-instrument text-[14px]"
             >
               <span className="material-symbols-rounded text-[16px]">refresh</span>
               Reset all progress
             </GlassButton>
           </motion.div>
-        ) : totalCount === 0 ? (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
-          >
-            <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">spatial_audio</span>
-            <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No cards yet</h2>
-            <p className="font-instrument text-[15px] text-[#F8FAFC]/30 px-4">
-              Add vocabulary words to start audio review.
-            </p>
-          </motion.div>
         ) : (
           <motion.div
             key="card"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex w-full flex-1 flex-col items-center gap-6"
+            className="relative flex w-full flex-1 flex-col items-center justify-center gap-8"
           >
-            {/* Card — swipe left for next, right for previous */}
+            {/* Card + peek stack: cards fan into an arc around the current one —
+                upcoming curving down-left, already-played curving up-left — each
+                showing its word so you can preview what's coming and glance back
+                at what played. They spring one slot along the arc as playback
+                advances. */}
+            <div className="relative w-full">
+              <AnimatePresence>
+                {peekCards.map(({ entry, d }) => {
+                  const s = arcSlot(d)
+                  return (
+                    <motion.div
+                      key={entry.id}
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/5 shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
+                      initial={d < 0
+                        ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1, filter: 'blur(0px)' }
+                        : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
+                      animate={{ opacity: s.opacity, x: s.x, y: s.y, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
+                      exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                    >
+                      <div className="flex items-start justify-between gap-3 p-5">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="truncate font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                            {entry.pl}
+                          </span>
+                          <span className="truncate font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
+                            {entry.en}
+                          </span>
+                        </div>
+                        <span className="mt-1 flex-shrink-0 rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 font-instrument text-[10px] capitalize text-[#F8FAFC]">
+                          {entry.type}
+                        </span>
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </AnimatePresence>
+            {/* Focus scrim: a soft dark well behind the current card that dims
+                the peek stack around it. Sits above the peeks, below the card. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0"
+              style={{
+                transform: 'scale(1.7)',
+                background: 'radial-gradient(ellipse 68% 92% at 50% 50%, rgba(6,4,26,0.45) 0%, rgba(6,4,26,0.22) 46%, rgba(6,4,26,0) 72%)',
+              }}
+            />
+            {/* Opaque colour ground exactly under the active card — obscures the
+                peek cards that would otherwise bleed through its glass so the
+                current word stays clean. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[36px]"
+              style={{
+                background: 'linear-gradient(160deg, rgba(18,14,58,0.78) 0%, rgba(38,24,92,0.74) 60%, rgba(22,16,70,0.78) 100%)',
+              }}
+            />
             <motion.div
-              style={{ x, rotate }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.8}
-              onDragEnd={handleDragEnd}
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
-              className="relative w-full cursor-grab select-none rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
+              style={glassMode === 'webgl'
+                ? { backdropFilter: 'blur(3px) saturate(1.15)', WebkitBackdropFilter: 'blur(3px) saturate(1.15)' }
+                : undefined}
+              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
-              <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
-              <div className="relative z-10 flex flex-col items-center gap-5 px-8 py-10">
-
-                {/* Type badge */}
-                {current && (
-                  <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[14px] py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
-                    {typeGradient && (
-                      <div
-                        className="absolute inset-0 z-0 opacity-70 mix-blend-screen"
-                        dangerouslySetInnerHTML={{ __html: typeGradient }}
-                      />
-                    )}
-                    <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
-                      {current.type}
-                    </span>
-                  </div>
-                )}
-
-                {/* Polish word */}
+              <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+              {/* Same compact layout as the vocab list card (VocabCard) */}
+              <div className="relative z-10 p-5">
                 <AnimatePresence mode="wait">
                   {current && (
                     <motion.div
@@ -309,81 +418,82 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.2 }}
-                      className="flex flex-col items-center gap-2 text-center"
+                      className="flex items-start justify-between gap-3"
                     >
-                      <h1 className="font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
-                        {current.pl}
-                      </h1>
-                      {current.type === 'noun' && current.gender && (
-                        <span className="font-instrument text-[20px] italic text-[#e879f9]">{current.gender}</span>
-                      )}
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                          {current.pl}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
+                            {current.en}
+                          </span>
+                          {cardMeta(current) && (
+                            <>
+                              <span className="text-[#F8FAFC]/20">·</span>
+                              <span className="font-instrument text-[13px] italic text-[#F8FAFC]/40">{cardMeta(current)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                        {typeGradient && (
+                          <div
+                            className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                            dangerouslySetInnerHTML={{ __html: typeGradient }}
+                          />
+                        )}
+                        <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
+                          {current.type}
+                        </span>
+                      </GlassPane>
                     </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Divider */}
-                <div className="h-[1px] w-full bg-white/10" />
-
-                {/* EN translation */}
-                <AnimatePresence mode="wait">
-                  {current && (
-                    <motion.p
-                      key={current.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: isActive ? 0.5 : 0.25 }}
-                      transition={{ duration: 0.3 }}
-                      className="font-instrument text-[22px] font-medium text-[#B4A0FF]"
-                    >
-                      {current.en}
-                    </motion.p>
                   )}
                 </AnimatePresence>
               </div>
             </motion.div>
+            </div>
 
             {/* Waveform */}
             <Waveform active={isActive && tts.state === 'playing'} />
 
-            {/* Controls */}
+            {/* Controls — vertical column pinned to the right (thumb zone):
+                repeat-one (top), Play/Pause (large, middle), skip-next (bottom). */}
             {showControls && (
-              <div className="flex w-full items-center justify-between gap-3 pb-4">
-                {/* Hard */}
-                <GlassButton
-                  onClick={() => rateAndAdvance('hard')}
-                  disabled={phase !== 'playing'}
-                  radius={24}
-                  pane="bg-white/5"
-                  contentClassName="flex w-full items-center justify-center gap-1.5"
-                  className="flex-1 border border-white/10 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
+              <div className="absolute bottom-2 right-0 z-10 flex flex-col items-center gap-3.5">
+                {/* Repeat current card — toggle */}
+                <button
+                  onClick={() => setRepeatOne(r => !r)}
+                  aria-pressed={repeatOne}
+                  className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
                 >
-                  <span className="material-symbols-rounded text-[16px]">thumb_down</span>
-                  Hard
-                </GlassButton>
+                  <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
+                  <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/50'}`}>
+                    repeat_one
+                  </span>
+                </button>
 
-                {/* Play / Pause */}
+                {/* Play / Pause — primary, large */}
                 <button
                   onClick={phase === 'idle' ? handleStart : (isActive ? handlePause : handleResume)}
                   disabled={!current}
-                  className="relative flex h-[60px] w-[60px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
+                  className="relative flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
                 >
-                  <GlassPane borderRadius={30} className="absolute inset-0 z-0 rounded-full bg-[#B4A0FF]/15" />
-                  <span className="material-symbols-rounded relative z-10 text-[28px] text-[#B4A0FF]">
+                  <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-full bg-[#B4A0FF]/15" />
+                  <span className="material-symbols-rounded relative z-10 text-[34px] text-[#B4A0FF]">
                     {isActive ? 'pause' : 'play_arrow'}
                   </span>
                 </button>
 
-                {/* Again */}
-                <GlassButton
-                  onClick={() => rateAndAdvance('lapse')}
-                  disabled={phase !== 'playing'}
-                  radius={24}
-                  pane="bg-white/5"
-                  contentClassName="flex w-full items-center justify-center gap-1.5"
-                  className="flex-1 border border-white/10 py-3 font-instrument text-[14px] font-medium text-[#F8FAFC]/60 disabled:opacity-30"
+                {/* Skip to next card — neutral advance */}
+                <button
+                  onClick={handleSkipNext}
+                  disabled={!current || idx >= queue.length}
+                  className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                 >
-                  Again
-                  <span className="material-symbols-rounded text-[16px]">replay</span>
-                </GlassButton>
+                  <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                  <span className="material-symbols-rounded relative z-10 text-[22px] text-[#F8FAFC]/60">skip_next</span>
+                </button>
               </div>
             )}
           </motion.div>

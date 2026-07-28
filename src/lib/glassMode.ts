@@ -10,17 +10,23 @@ export type GlassMode = 'svg' | 'webgl' | 'css'
 
 let currentMode: GlassMode | null = null
 
+// Chromium reliably composites `filter: url(#…)` together with
+// backdrop-filter on the same element; Safari and Firefox do not.
+export function isChromium(): boolean {
+  return navigator.userAgent.includes('Chrome/') || 'chrome' in window
+}
+
 function detect(): GlassMode {
   const q = new URLSearchParams(window.location.search).get('glass')
   if (q === 'svg' || q === 'webgl' || q === 'css') return q
 
-  // Chromium reliably composites `filter: url(#…)` together with
-  // backdrop-filter on the same element; Safari and Firefox do not.
-  const isChromium = navigator.userAgent.includes('Chrome/') || 'chrome' in window
-  if (isChromium) return 'svg'
-
+  // EXPERIMENT (this branch): WebGL is the primary renderer wherever
+  // available — the point of the branch is judging the shader glass as the
+  // real experience. `?glass=svg` restores the SVG path for comparison.
   const canvas = document.createElement('canvas')
-  return canvas.getContext('webgl2') ? 'webgl' : 'css'
+  if (canvas.getContext('webgl2')) return 'webgl'
+
+  return isChromium() ? 'svg' : 'css'
 }
 
 export function getGlassMode(): GlassMode {

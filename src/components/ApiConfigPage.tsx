@@ -14,22 +14,22 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
 
   return (
-    <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
-      <GlassCard contentClassName="flex flex-col p-[24px]">
+    <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
+      <GlassCard contentClassName="flex flex-col p-6">
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">LLM Provider</h2>
 
         {/* Provider select */}
-        <div className="relative mb-6 w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-          <GlassPane borderRadius={32} className="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
+        <div className="relative mb-6 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
           <select
             value={provider}
             onChange={e => setProvider(e.target.value)}
-            className="relative z-10 w-full appearance-none bg-transparent px-[18px] py-[12px] font-instrument text-[16px] text-[#F8FAFC] outline-none cursor-pointer"
+            className="relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none cursor-pointer"
           >
             <option value="gemini" className="bg-[#1a1a1a] text-[#F8FAFC]">Google Gemini</option>
             <option value="claude" className="bg-[#1a1a1a] text-[#F8FAFC]">Anthropic Claude</option>
           </select>
-          <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-white/50">
+          <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
             expand_more
           </span>
         </div>
@@ -53,9 +53,9 @@ export default function ApiConfigPage({ onSave }: Props) {
               localStorage.setItem('polucz_haptics', next ? 'true' : 'false')
               if (next) haptics.tap()
             }}
-            className={`relative h-[28px] w-[48px] rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-white/10 bg-white/10'}`}
+            className={`relative h-[28px] w-[48px] rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-[#F8FAFC]/10 bg-[#F8FAFC]/10'}`}
           >
-            <span className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-white transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
+            <span className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-[#F8FAFC] transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
           </button>
         </div>
 
@@ -63,7 +63,7 @@ export default function ApiConfigPage({ onSave }: Props) {
           onClick={onSave}
           className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
         >
-          <GlassPane borderRadius={25} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+          <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
           <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save Configuration</span>
         </button>
       </GlassCard>

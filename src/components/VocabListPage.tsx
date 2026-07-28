@@ -52,16 +52,22 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
     return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
   })
 
+  // Count line under the filters: total normally, "X out of Y" while filtered.
+  const wordNoun = (n: number) => (n === 1 ? 'word' : 'words')
+  const countLabel = filtered.length === cards.length
+    ? `${cards.length} ${wordNoun(cards.length)}`
+    : `${filtered.length} ${wordNoun(filtered.length)} out of ${cards.length}`
+
   return (
-    <div className="animate-fade-in flex w-full flex-col gap-[24px]">
+    <div className="animate-fade-in flex w-full flex-col gap-6">
       {/* Search + filter glass card */}
-      <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-        <div className="relative flex w-full flex-col gap-[16px] rounded-[36px] p-[16px]">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
-          <div className="relative z-10 flex flex-col gap-[14px]">
+      <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <div className="relative flex w-full flex-col gap-4 rounded-[36px] p-4">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+          <div className="relative z-10 flex flex-col gap-3.5">
             {/* Filter tags + collapsed search toggle */}
-            <div className="flex items-center justify-between gap-[8px]">
-              <div className="flex flex-wrap items-center gap-[8px]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {FILTER_TAGS.map(f => (
                   <FilterTag
                     key={f.id}
@@ -77,7 +83,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                 aria-label={searchOpen ? 'Close search' : 'Open search'}
                 className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
               >
-                <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
+                <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
                 <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/70">
                   {searchOpen ? 'close' : 'search'}
                 </span>
@@ -88,12 +94,15 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
             {searchOpen && (
               <SearchBar value={searchQuery} onChange={setSearchQuery} autoFocus />
             )}
+
+            {/* Total / filtered card count */}
+            <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-[#F8FAFC]/40">{countLabel}</p>
           </div>
         </div>
       </div>
 
       {/* Vocab list */}
-      <div className="flex flex-col gap-[16px]">
+      <div className="flex flex-col gap-4">
         {filtered.length === 0 ? (
           <p className="mt-8 text-center font-instrument text-[16px] text-[#F8FAFC]/40">
             No cards match your search.

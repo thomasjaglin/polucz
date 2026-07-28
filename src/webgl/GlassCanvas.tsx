@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
-import { getPanes, onPanesChanged, getMaskPane } from './glassStore'
+import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer, getBgBlobTop, onBgChange, type PaneRecord } from './glassStore'
+import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
   BEZEL_WIDTH,
@@ -16,7 +17,11 @@ import {
   refractionProfile,
 } from '../lib/glassParams'
 
-const MAX_PANES = 24
+const MAX_PANES = 48
+// Free-form mask panes (logo letterforms, gooey nav, translate-page blob, ...)
+// each need their own prebaked texture, so the budget is small and fixed —
+// bump alongside the texture units wired up below if a third is ever needed.
+const MAX_MASK_PANES = 2
 
 // Fullscreen triangle from gl_VertexID — no vertex buffers needed.
 const VERT = `#version 300 es
@@ -25,7 +30,7 @@ void main() {
   gl_Position = vec4(pos * 2.0 - 1.0, 0.0, 1.0);
 }`
 
-// Pass 1 — the page background: base color, dot grid, vignette, then the
+// Pass 1 — the page background: base color, then the
 // per-page blurred ellipse stacks screen-blended on top (mirrors the DOM
 // layers in AppBackground.tsx / PageGradient.tsx).
 const BG_FRAG = `#version 300 es
@@ -37,10 +42,12 @@ uniform vec4 uEllGeo[${MAX_ELLIPSES}];   // cx, cy, rx, ry (css px)
 uniform vec4 uEllMisc[${MAX_ELLIPSES}];  // sinθ, cosθ, layerIndex, unused
 uniform vec3 uEllColor[${MAX_ELLIPSES}];
 uniform vec2 uLayerParams[${MAX_LAYERS}]; // opacity, blurPx
+// Optional elliptical clip (translate blob → circle disc): cx, cy, rx, ry in
+// css px. rx <= 0 disables it.
+uniform vec4 uClip;
 out vec4 outColor;
 
 const vec3 BASE = vec3(18.0 / 255.0);   // body #121212
-const vec3 DOT_COLOR = vec3(217.0 / 255.0);
 
 // smoothstep with descending edges is undefined behavior in GLSL —
 // this is the explicit, any-order-safe equivalent.
@@ -63,20 +70,15 @@ float ellipseDist(vec2 p, vec4 geo, vec2 sc) {
 
 void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
+  vec3 col = BASE;
 
-  // Dot grid: 10px tiles, 3px dots, #D9D9D9 @ 0.52
-  vec2 tile = mod(css, 10.0) - 5.0;
-  float dotA = fallStep(3.4, 2.6, length(tile)) * 0.52;
-  vec3 col = mix(BASE, DOT_COLOR, dotA);
-
-  // Vignette: radial-gradient(62% 67.44% at 47.57% 50.05%,
-  //   rgba(18,18,18,.99) 62.02%, rgba(18,18,18,.65) 100%)
-  vec2 vc = vec2(0.4757, 0.5005) * uResCss;
-  vec2 vr = vec2(0.62, 0.6744) * uResCss;
-  float t = length((css - vc) / vr);
-  // CSS gradients interpolate linearly between stops
-  float va = mix(0.99, 0.65, clamp((t - 0.6202) / (1.0 - 0.6202), 0.0, 1.0));
-  col = mix(col, BASE, va);
+  // Elliptical clip factor (1 inside, soft-edged to 0 outside). Confines the
+  // translate blob to the circle disc so it doesn't glow past the ellipse.
+  float clip = 1.0;
+  if (uClip.z > 0.0) {
+    vec2 dd = (css - uClip.xy) / uClip.zw;
+    clip = 1.0 - fallStep(0.9, 1.02, length(dd));
+  }
 
   // Ellipse stacks: src-over within a layer (premultiplied), screen-blend
   // each layer onto the base with its opacity.
@@ -88,7 +90,7 @@ void main() {
     int layer = int(uEllMisc[i].z + 0.5);
     if (layer != curLayer) {
       vec3 lc = acc / max(accA, 1e-4);
-      float a = accA * uLayerParams[curLayer].x;
+      float a = accA * uLayerParams[curLayer].x * clip;
       col = mix(col, 1.0 - (1.0 - col) * (1.0 - lc), a);
       acc = vec3(0.0); accA = 0.0; curLayer = layer;
     }
@@ -100,7 +102,7 @@ void main() {
     accA = mix(accA, 1.0, m);
   }
   vec3 lc = acc / max(accA, 1e-4);
-  float a = accA * uLayerParams[curLayer].x;
+  float a = accA * uLayerParams[curLayer].x * clip;
   col = mix(col, 1.0 - (1.0 - col) * (1.0 - lc), a);
 
   outColor = vec4(col, 1.0);
@@ -114,8 +116,9 @@ uniform sampler2D uBg;
 uniform vec2 uResCss;
 uniform float uDpr;
 uniform int uPaneCount;
-uniform vec4 uPane[${MAX_PANES}];        // x, y, w, h (css px, top-left)
+uniform vec4 uPane[${MAX_PANES}];        // x, y, w, h (css px, top-left, un-rotated)
 uniform float uPaneRadius[${MAX_PANES}];
+uniform float uPaneAngle[${MAX_PANES}];  // z-rotation, radians (tilted cards)
 uniform float uBezel;
 uniform float uThick;
 uniform float uN2;
@@ -126,16 +129,37 @@ uniform vec2 uLight;
 uniform float uSpecOpacity;
 uniform float uCounterLight;
 uniform float uSpecExponent;
-// Free-form mask glass (logo letterforms): prebaked displacement/specular map
-uniform sampler2D uMask;
-uniform vec4 uMaskRect;   // overscanned rect, css px
-uniform float uMaskScale;
-uniform int uMaskEnabled;
+// Experimental FX (see shaderFx.ts / the glass lab)
+uniform float uChroma;
+uniform float uFresnel;
+uniform float uWobble;
+uniform float uTime;
+// Free-form mask glass (logo letterforms, gooey nav, translate blob, ...):
+// each registered shape gets its own prebaked displacement/specular map.
+// Two explicitly named samplers rather than a sampler2D[2] array — dynamic
+// (loop-variable) indexing of sampler arrays is technically legal GLSL ES
+// 3.00 but unreliable across real WebGL2 drivers (notably ANGLE/D3D11 on
+// Windows Chrome), so this avoids it entirely at the cost of a fixed cap.
+uniform int uMaskCount;
+uniform sampler2D uMask0;
+uniform sampler2D uMask1;
+uniform vec4 uMaskRect[${MAX_MASK_PANES}];   // overscanned rect, css px
+uniform float uMaskScale[${MAX_MASK_PANES}];
 out vec4 outColor;
 
 float sdRoundRect(vec2 p, vec2 halfSize, float r) {
   vec2 q = abs(p) - halfSize + r;
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+// Rotate a center-relative point into the pane's un-rotated (local) frame:
+// rotate by -angle. ca/sa are cos/sin of the pane's angle.
+vec2 toLocal(vec2 p, float ca, float sa) {
+  return vec2(p.x * ca + p.y * sa, -p.x * sa + p.y * ca);
+}
+// Inverse: local vector -> screen frame (rotate by +angle).
+vec2 toScreen(vec2 p, float ca, float sa) {
+  return vec2(p.x * ca - p.y * sa, p.x * sa + p.y * ca);
 }
 
 // smoothstep with descending edges is undefined behavior in GLSL
@@ -156,49 +180,80 @@ float dispMag(float u) {
   return uThick * y * tan(thetaI - thetaT);
 }
 
+// Mask glass (gooey nav, translate blob, ...): displacement + relief from a
+// registered shape's prebaked map, exactly like feDisplacementMap (offset =
+// scale · (C − 0.5); B is signed relief: above 0.5 = white highlight, below
+// = black shade). Blur + saturation match the rect panes, and the map is
+// neutral outside the silhouette so only the shape frosts. Returns false if
+// this pixel isn't covered by the shape.
+bool sampleMask(sampler2D tex, vec4 mr, float mscale, vec2 css, float blurPx, float dpr, vec2 resCss, float saturation, out vec3 outCol, out float outCov) {
+  if (css.x < mr.x || css.y < mr.y || css.x >= mr.x + mr.z || css.y >= mr.y + mr.w) return false;
+  vec2 muv = (css - mr.xy) / mr.zw;
+  vec4 m = texture(tex, muv);
+  float cov = m.a; // shape coverage (crisp, canvas-antialiased)
+  if (cov <= 0.01) return false;
+  float hl = max(2.0 * m.b - 1.0, 0.0);
+  float sh = max(1.0 - 2.0 * m.b, 0.0);
+  vec2 mcss = css + mscale * (m.rg - vec2(128.0 / 255.0));
+  vec2 muv2 = vec2(mcss.x / resCss.x, 1.0 - mcss.y / resCss.y);
+  float mlod = log2(max(blurPx * dpr, 2.0)) - 1.0;
+  vec3 mc = textureLod(uBg, muv2, mlod).rgb;
+  float mluma = dot(mc, vec3(0.2126, 0.7152, 0.0722));
+  mc = clamp(mix(vec3(mluma), mc, saturation), 0.0, 1.0);
+  mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
+  mc *= 1.0 - sh;                     // darken
+  outCol = mc;
+  outCov = cov;
+  return true;
+}
+
 void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
 
-  // Logo letterforms: displacement + relief from the prebaked map, exactly
-  // like feDisplacementMap (offset = scale · (C − 0.5); B is signed relief:
-  // above 0.5 = white highlight, below = black shade).
-  // No blur here — the DOM layer's clipped backdrop-filter blurs on top.
-  if (uMaskEnabled == 1 &&
-      css.x >= uMaskRect.x && css.y >= uMaskRect.y &&
-      css.x < uMaskRect.x + uMaskRect.z && css.y < uMaskRect.y + uMaskRect.w) {
-    vec2 muv = (css - uMaskRect.xy) / uMaskRect.zw;
-    vec4 m = texture(uMask, muv);
-    vec2 mcss = css + uMaskScale * (m.rg - vec2(128.0 / 255.0));
-    vec2 muv2 = vec2(mcss.x / uResCss.x, 1.0 - mcss.y / uResCss.y);
-    vec3 mc = textureLod(uBg, muv2, 0.0).rgb;
-    float hl = max(2.0 * m.b - 1.0, 0.0);
-    float sh = max(1.0 - 2.0 * m.b, 0.0);
-    mc = 1.0 - (1.0 - mc) * (1.0 - hl); // screen white
-    mc *= 1.0 - sh;                     // darken
-    outColor = vec4(mc, 1.0);
-    return;
-  }
-
-  // Smallest pane containing this pixel wins (inner pane over outer pane —
-  // e.g. tag pill sitting on a card).
+  // Smallest rect pane containing this pixel wins (inner pane over outer pane —
+  // e.g. tag pill sitting on a card). Rect panes are checked BEFORE mask shapes
+  // so small UI elements (the translate input/buttons) stay glassy on top of a
+  // large mask (the translate circle) they overlap.
   int hit = -1;
   float hitD = 0.0;
   float hitArea = 1e12;
   for (int i = 0; i < ${MAX_PANES}; i++) {
     if (i >= uPaneCount) break;
     vec4 r = uPane[i];
-    float d = sdRoundRect(css - r.xy - r.zw * 0.5, r.zw * 0.5,
-                          min(uPaneRadius[i], min(r.z, r.w) * 0.5));
+    float a = uPaneAngle[i];
+    vec2 lp = css - r.xy - r.zw * 0.5;               // relative to pane center
+    if (a != 0.0) lp = toLocal(lp, cos(a), sin(a));  // into the pane's un-rotated frame
+    float d = sdRoundRect(lp, r.zw * 0.5, min(uPaneRadius[i], min(r.z, r.w) * 0.5));
     float area = r.z * r.w;
     if (d < 1.0 && area < hitArea) { hit = i; hitD = d; hitArea = area; }
   }
-  if (hit < 0) { outColor = vec4(bg0.rgb, 1.0); return; }
+  // No rect pane here — fall back to mask shapes (logo letterforms, translate
+  // circle). First registered mask whose rect contains this pixel wins.
+  if (hit < 0) {
+    vec3 maskCol; float maskCov;
+    if (uMaskCount > 0 && sampleMask(uMask0, uMaskRect[0], uMaskScale[0], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
+      outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
+      return;
+    }
+    if (uMaskCount > 1 && sampleMask(uMask1, uMaskRect[1], uMaskScale[1], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
+      outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
+      return;
+    }
+    outColor = vec4(bg0.rgb, 1.0);
+    return;
+  }
 
   vec4 r = uPane[hit];
   vec2 halfSize = r.zw * 0.5;
   float rad = min(uPaneRadius[hit], min(halfSize.x, halfSize.y));
+  float pa = uPaneAngle[hit];
+  float pca = cos(pa), psa = sin(pa);
+  // Work in the pane's un-rotated (local) frame; the SDF and its gradient are
+  // computed there, then the outward normal is rotated back to screen space
+  // so refraction offset + rim light stay correct on a tilted card.
   vec2 lp = css - r.xy - halfSize;
+  if (pa != 0.0) lp = toLocal(lp, pca, psa);
   float edgeDist = -hitD;
   float u = edgeDist / uBezel;
 
@@ -212,20 +267,44 @@ void main() {
       sdRoundRect(lp + vec2(0.0, e), halfSize, rad) - sdRoundRect(lp - vec2(0.0, e), halfSize, rad)
     ) / (2.0 * e);
     outward = normalize(grad);
+    if (pa != 0.0) outward = toScreen(outward, pca, psa); // local normal -> screen
+    // Liquid wobble: slow noise perturbing the surface normal at the bezel
+    if (uWobble > 0.001) {
+      float ph = uTime * 1.8 + css.x * 0.10 + css.y * 0.13;
+      vec2 n2 = vec2(sin(ph), cos(ph * 0.83 + css.x * 0.05));
+      outward = normalize(outward + uWobble * 0.35 * n2);
+    }
     float s = dispMag(u);
     rim = s / uMaxDisp;
     disp = -outward * s;  // inward — bends the backdrop in at the edges
   }
 
-  vec2 sampleCss = css + disp;
-  vec2 uv = vec2(sampleCss.x / uResCss.x, 1.0 - sampleCss.y / uResCss.y);
   // CSS blur(r) is a gaussian with σ = r/2; a mip texel footprint of ~2σ
   // matches it best: lod = log2(blur · dpr) − 1
   float lod = log2(max(uBlurPx * uDpr, 2.0)) - 1.0;
-  vec3 c = textureLod(uBg, uv, lod).rgb;
+  vec2 sampleCss = css + disp;
+  vec2 uv = vec2(sampleCss.x / uResCss.x, 1.0 - sampleCss.y / uResCss.y);
+  vec3 c;
+  if (uChroma > 0.001 && rim > 0.0) {
+    // Chromatic aberration: red and blue refract slightly differently
+    vec2 cssR = css + disp * (1.0 + 0.14 * uChroma);
+    vec2 cssB = css + disp * (1.0 - 0.14 * uChroma);
+    vec2 uvR = vec2(cssR.x / uResCss.x, 1.0 - cssR.y / uResCss.y);
+    vec2 uvB = vec2(cssB.x / uResCss.x, 1.0 - cssB.y / uResCss.y);
+    c = vec3(textureLod(uBg, uvR, lod).r, textureLod(uBg, uv, lod).g, textureLod(uBg, uvB, lod).b);
+  } else {
+    c = textureLod(uBg, uv, lod).rgb;
+  }
 
   float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = clamp(mix(vec3(luma), c, uSaturation), 0.0, 1.0);
+
+  // Fresnel: edges reflect a fake environment (bright sky above, dark below)
+  if (uFresnel > 0.001) {
+    float fr = pow(1.0 - clamp(edgeDist / uBezel, 0.0, 1.0), 2.0);
+    vec3 env = mix(vec3(0.92, 0.95, 1.0), vec3(0.10, 0.10, 0.14), clamp(css.y / uResCss.y, 0.0, 1.0));
+    c = mix(c, env, uFresnel * fr * 0.45);
+  }
 
   if (rim > 0.0) {
     float dl = dot(outward, uLight);
@@ -273,9 +352,11 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     if (!canvasEl) return
     const canvas: HTMLCanvasElement = canvasEl
 
-    // preserveDrawingBuffer: renders are on-demand (not per-frame), so the
-    // buffer must survive compositing; also enables pixel-level debugging.
-    const glCtx = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: true })
+    // preserveDrawingBuffer stays OFF: it forces a framebuffer copy on every
+    // composited frame (a real cost on mobile). We always draw full frames,
+    // so the cleared-after-present drawing buffer is never visible. Flip to
+    // true temporarily when readPixels-based debugging is needed.
+    const glCtx = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: false })
     if (!glCtx) { onFallback(); return }
     const gl: WebGL2RenderingContext = glCtx
 
@@ -292,6 +373,13 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     const bgU = (n: string) => gl.getUniformLocation(bgProg, n)
     const compU = (n: string) => gl.getUniformLocation(compProg, n)
 
+    // Sampler-to-texture-unit assignment is fixed for the program's
+    // lifetime — set once rather than every frame. uBg lives on unit 0.
+    gl.useProgram(compProg)
+    gl.uniform1i(compU('uBg'), 0)
+    gl.uniform1i(compU('uMask0'), 1)
+    gl.uniform1i(compU('uMask1'), 2)
+
     const bgTex = gl.createTexture()!
     const fbo = gl.createFramebuffer()!
     gl.bindTexture(gl.TEXTURE_2D, bgTex)
@@ -302,39 +390,57 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
 
     const { max: maxDisp } = refractionProfile(BEZEL_WIDTH, THICKNESS, REFRACTIVE_INDEX)
 
-    // Mask glass (logo) texture — uploaded when the registered map changes
-    const maskTex = gl.createTexture()!
-    gl.bindTexture(gl.TEXTURE_2D, maskTex)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    let maskUploaded: HTMLCanvasElement | null = null
-    const maskRect = new Float32Array(4)
-    let maskScale = 0
-    let maskEnabled = 0
+    // Mask glass (nav, translate blob, ...) textures — each slot uploaded
+    // independently when its registered map changes
+    const maskTextures: WebGLTexture[] = []
+    for (let i = 0; i < MAX_MASK_PANES; i++) {
+      const tex = gl.createTexture()!
+      gl.bindTexture(gl.TEXTURE_2D, tex)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      maskTextures.push(tex)
+    }
+    const maskUploaded: (HTMLCanvasElement | null)[] = new Array(MAX_MASK_PANES).fill(null)
+    const maskRects = new Float32Array(MAX_MASK_PANES * 4)
+    const maskScales = new Float32Array(MAX_MASK_PANES)
+    let maskCount = 0
 
+    const tiltRef = { gamma: null as number | null, beta: null as number | null }
     let page: PageId = activeId
     let bgDirty = true
     let sceneDirty = true
     let lastActivity = performance.now()
-    let lastSig = ''
+    let lastSig = 0
     let frame = 0
     let raf = 0
     let dead = false
 
+    // Cached viewport size + dpr — refreshed only when a resize actually fires,
+    // so the tick loop reads no layout properties (clientWidth/Height) at rest.
+    let cssW = 0
+    let cssH = 0
+    let cssDpr = 1
+    let resizeDirty = true
+
     const paneRect = new Float32Array(MAX_PANES * 4)
     const paneRadius = new Float32Array(MAX_PANES)
+    const paneAngle = new Float32Array(MAX_PANES) // z-rotation, radians
 
     function markActive() {
       lastActivity = performance.now()
       sceneDirty = true
     }
 
-    function resizeIfNeeded(): boolean {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      const w = Math.round(canvas.clientWidth * dpr)
-      const h = Math.round(canvas.clientHeight * dpr)
+    // Reads layout (clientWidth/Height) — called only when a resize actually
+    // happened, then caches the result so renders reuse it without re-reading.
+    function updateSize(): boolean {
+      cssDpr = Math.min(window.devicePixelRatio || 1, 2)
+      cssW = canvas.clientWidth
+      cssH = canvas.clientHeight
+      const w = Math.round(cssW * cssDpr)
+      const h = Math.round(cssH * cssDpr)
       if (w === canvas.width && h === canvas.height) return false
       canvas.width = w
       canvas.height = h
@@ -343,14 +449,9 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       return true
     }
 
-    function cssSize(): [number, number, number] {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
-      return [canvas.clientWidth, canvas.clientHeight, dpr]
-    }
-
     function renderBg() {
-      const [vw, vh, dpr] = cssSize()
-      const u = resolvePageUniforms(page, vw, vh)
+      const vw = cssW, vh = cssH, dpr = cssDpr
+      const u = resolvePageUniforms(page, vw, vh, getBgBlobTop())
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, bgTex, 0)
       gl.viewport(0, 0, canvas.width, canvas.height)
@@ -362,54 +463,140 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform4fv(bgU('uEllMisc'), u.misc)
       gl.uniform3fv(bgU('uEllColor'), u.color)
       gl.uniform2fv(bgU('uLayerParams'), u.layerParams)
+      gl.uniform4fv(bgU('uClip'), u.clip)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.bindTexture(gl.TEXTURE_2D, bgTex)
       gl.generateMipmap(gl.TEXTURE_2D)
     }
 
-    // Reads live rects; returns a signature so the loop can skip
-    // recompositing when nothing moved.
-    function readPanes(): { count: number; sig: string } {
+    // Reads live rects; returns a numeric signature so the loop can skip
+    // recompositing when nothing moved. Panes fully outside the viewport are
+    // skipped, so long scrolling lists can't starve the visible ones out of
+    // the MAX_PANES uniform budget.
+    //
+    // Rects are extrapolated by fx.lead frames of their measured velocity:
+    // the DOM is moved by the compositor (touch scroll, drags) ahead of what
+    // the main thread reads, so the un-predicted glass visibly trails its
+    // element. Velocity is EMA-smoothed; jumps are treated as teleports.
+    const rectHist = new WeakMap<object, { x: number; y: number; vx: number; vy: number; t: number }>()
+    function predictPoint(key: object, px: number, py: number, now: number): { x: number; y: number } {
+      const h = rectHist.get(key)
+      let vx = 0
+      let vy = 0
+      if (h) {
+        const dt = now - h.t
+        if (dt > 0 && dt < 100) {
+          const ix = (px - h.x) / dt
+          const iy = (py - h.y) / dt
+          // >5px/ms is a teleport (page switch, remount) — don't predict
+          if (Math.abs(ix) < 5 && Math.abs(iy) < 5) {
+            vx = h.vx * 0.4 + ix * 0.6
+            vy = h.vy * 0.4 + iy * 0.6
+          }
+        }
+      }
+      rectHist.set(key, { x: px, y: py, vx, vy, t: now })
+      const lead = fx.lead * 16.7
+      return { x: px + vx * lead, y: py + vy * lead }
+    }
+
+    // Only panes near the viewport are measured each frame: an
+    // IntersectionObserver tracks which registered panes are close enough to
+    // matter, so a long scrolling list doesn't pay a getBoundingClientRect per
+    // off-screen card. New panes start optimistically visible (measured once)
+    // until the observer reports on them.
+    const visiblePanes = new Set<PaneRecord>()
+    const observedEls = new Map<HTMLElement, PaneRecord>()
+    const io = new IntersectionObserver(
+      entries => {
+        for (const e of entries) {
+          const rec = observedEls.get(e.target as HTMLElement)
+          if (!rec) continue
+          if (e.isIntersecting) visiblePanes.add(rec)
+          else visiblePanes.delete(rec)
+        }
+        markActive()
+      },
+      { rootMargin: '200px' },
+    )
+    function syncPaneObservers() {
+      const current = getPanes()
+      for (const [el, rec] of observedEls) {
+        if (!current.has(rec)) {
+          io.unobserve(el)
+          observedEls.delete(el)
+          visiblePanes.delete(rec)
+        }
+      }
+      for (const rec of current) {
+        if (!observedEls.has(rec.el)) {
+          observedEls.set(rec.el, rec)
+          visiblePanes.add(rec)
+          io.observe(rec.el)
+        }
+      }
+    }
+
+    function readPanes(): { count: number; sig: number } {
       let i = 0
-      let sig = ''
-      for (const p of getPanes()) {
+      let sig = 7
+      const hash = (v: number) => { sig = (sig * 31 + Math.round(v * 4)) | 0 }
+      const now = performance.now()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const M = 40 // off-screen margin — panes partially entering keep glass
+
+      for (const p of visiblePanes) {
         if (i >= MAX_PANES) break
         const r = p.el.getBoundingClientRect()
         if (r.width < 2 || r.height < 2) continue
-        paneRect[i * 4] = r.left
-        paneRect[i * 4 + 1] = r.top
-        paneRect[i * 4 + 2] = r.width
-        paneRect[i * 4 + 3] = r.height
+        if (r.bottom < -M || r.top > vh + M || r.right < -M || r.left > vw + M) continue
+        // getBoundingClientRect gives the AXIS-ALIGNED bounding box, which for
+        // a tilted (rotated) card is larger and upright. Use the element's
+        // un-rotated layout size + the live angle so the shader can draw the
+        // glass rotated to match; the bbox center is the rotation center, so
+        // predict that. Non-rotated panes: angle 0, bbox == layout box.
+        const angle = p.getRotation ? p.getRotation() : 0
+        const w = angle !== 0 ? p.el.offsetWidth : r.width
+        const h = angle !== 0 ? p.el.offsetHeight : r.height
+        const pc = predictPoint(p, r.left + r.width / 2, r.top + r.height / 2, now)
+        paneRect[i * 4] = pc.x - w / 2
+        paneRect[i * 4 + 1] = pc.y - h / 2
+        paneRect[i * 4 + 2] = w
+        paneRect[i * 4 + 3] = h
         paneRadius[i] = p.borderRadius
-        sig += `${r.left.toFixed(1)},${r.top.toFixed(1)},${r.width.toFixed(1)},${r.height.toFixed(1)};`
+        paneAngle[i] = angle
+        hash(pc.x); hash(pc.y); hash(w); hash(h); hash(angle * 100)
         i++
       }
 
-      const mp = getMaskPane()
-      if (mp) {
+      let m = 0
+      for (const mp of getMaskPanes()) {
+        if (m >= MAX_MASK_PANES) break
         const r = mp.el.getBoundingClientRect()
-        maskRect[0] = r.left - mp.overscan
-        maskRect[1] = r.top - mp.overscan
-        maskRect[2] = r.width + mp.overscan * 2
-        maskRect[3] = r.height + mp.overscan * 2
-        maskScale = mp.scale
-        maskEnabled = 1
-        sig += `M${maskRect[0].toFixed(1)},${maskRect[1].toFixed(1)};`
-        if (maskUploaded !== mp.map) {
-          gl.bindTexture(gl.TEXTURE_2D, maskTex)
+        if (r.width < 2 || r.height < 2) continue
+        maskRects[m * 4]     = r.left - mp.overscan
+        maskRects[m * 4 + 1] = r.top - mp.overscan
+        maskRects[m * 4 + 2] = r.width + mp.overscan * 2
+        maskRects[m * 4 + 3] = r.height + mp.overscan * 2
+        maskScales[m] = mp.scale
+        hash(maskRects[m * 4]); hash(maskRects[m * 4 + 1])
+        if (maskUploaded[m] !== mp.map) {
+          gl.bindTexture(gl.TEXTURE_2D, maskTextures[m])
           gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, mp.map)
-          maskUploaded = mp.map
+          maskUploaded[m] = mp.map
         }
-      } else {
-        maskEnabled = 0
+        m++
       }
+      maskCount = m
+      hash(maskCount)
 
       return { count: i, sig }
     }
 
     function renderComposite(count: number) {
-      const [vw, vh, dpr] = cssSize()
+      const vw = cssW, vh = cssH, dpr = cssDpr
       gl.viewport(0, 0, canvas.width, canvas.height)
       gl.useProgram(compProg)
       gl.activeTexture(gl.TEXTURE0)
@@ -420,22 +607,36 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform1i(compU('uPaneCount'), count)
       gl.uniform4fv(compU('uPane'), paneRect)
       gl.uniform1fv(compU('uPaneRadius'), paneRadius)
+      gl.uniform1fv(compU('uPaneAngle'), paneAngle)
       gl.uniform1f(compU('uBezel'), BEZEL_WIDTH)
       gl.uniform1f(compU('uThick'), THICKNESS)
       gl.uniform1f(compU('uN2'), REFRACTIVE_INDEX)
       gl.uniform1f(compU('uMaxDisp'), maxDisp)
       gl.uniform1f(compU('uBlurPx'), BACKDROP_BLUR_PX)
       gl.uniform1f(compU('uSaturation'), BACKDROP_SATURATION)
-      gl.uniform2f(compU('uLight'), LIGHT_X, LIGHT_Y)
+      // Light direction: static default, slow drift, or device tilt
+      let angle = fx.lightAngle
+      if (fx.autoLight) angle += Math.sin(performance.now() / 1000 * 0.5) * 0.9
+      if (fx.tiltLight && tiltRef.gamma !== null) {
+        const gx = Math.max(-1, Math.min(1, tiltRef.gamma / 45))
+        const gy = Math.max(-1, Math.min(1, ((tiltRef.beta ?? 45) - 45) / 45))
+        angle = Math.atan2(-1 + gy * 0.8, gx)
+      }
+      gl.uniform2f(compU('uLight'), Math.cos(angle), Math.sin(angle))
       gl.uniform1f(compU('uSpecOpacity'), SPECULAR_OPACITY)
       gl.uniform1f(compU('uCounterLight'), COUNTER_LIGHT)
       gl.uniform1f(compU('uSpecExponent'), SPECULAR_EXPONENT)
-      gl.activeTexture(gl.TEXTURE1)
-      gl.bindTexture(gl.TEXTURE_2D, maskTex)
-      gl.uniform1i(compU('uMask'), 1)
-      gl.uniform4fv(compU('uMaskRect'), maskRect)
-      gl.uniform1f(compU('uMaskScale'), maskScale)
-      gl.uniform1i(compU('uMaskEnabled'), maskEnabled)
+      gl.uniform1f(compU('uChroma'), fx.chroma)
+      gl.uniform1f(compU('uFresnel'), fx.fresnel)
+      gl.uniform1f(compU('uWobble'), fx.wobble)
+      gl.uniform1f(compU('uTime'), performance.now() / 1000)
+      for (let i = 0; i < MAX_MASK_PANES; i++) {
+        gl.activeTexture(gl.TEXTURE1 + i)
+        gl.bindTexture(gl.TEXTURE_2D, maskTextures[i])
+      }
+      gl.uniform1i(compU('uMaskCount'), maskCount)
+      gl.uniform4fv(compU('uMaskRect'), maskRects)
+      gl.uniform1fv(compU('uMaskScale'), maskScales)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 
@@ -444,17 +645,25 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       raf = requestAnimationFrame(tick)
       frame++
 
-      if (resizeIfNeeded()) bgDirty = true
+      if (resizeDirty) {
+        resizeDirty = false
+        if (updateSize()) bgDirty = true
+      }
       if (bgDirty) {
         renderBg()
         bgDirty = false
         sceneDirty = true
       }
 
-      // While recently active poll rects every frame; when idle, every 6th —
-      // catches CSS transitions/animations we get no events for.
-      const active = performance.now() - lastActivity < 300
-      if (sceneDirty || active || frame % 6 === 0) {
+      // Animated FX (wobble / moving light) need continuous re-rendering
+      if (isAnimated()) sceneDirty = true
+
+      // While recently active poll rects every frame (covers event-triggered
+      // animations — modal, page transitions — at full framerate); once idle,
+      // poll every 12th frame as a safety net for CSS transitions we get no
+      // events for. Recomposite only when the rect signature actually changes.
+      const active = performance.now() - lastActivity < 700
+      if (sceneDirty || active || frame % 12 === 0) {
         const { count, sig } = readPanes()
         if (sceneDirty || sig !== lastSig) {
           lastSig = sig
@@ -471,28 +680,43 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       markActive()
     }
 
-    const unsubPanes = onPanesChanged(markActive)
+    const unsubPanes = onPanesChanged(() => { syncPaneObservers(); markActive() })
+    const unsubFx = onFxChange(markActive)
+    const unsubPoke = onPokeRenderer(markActive)
+    // Translate blob slid to a new position — re-bake the background texture.
+    const unsubBg = onBgChange(() => { bgDirty = true; markActive() })
     const onScroll = () => markActive()
-    const onResize = () => markActive()
+    const onResize = () => { resizeDirty = true; markActive() }
     const onLost = (e: Event) => {
       e.preventDefault()
       onFallback()
     }
+    const onTilt = (e: DeviceOrientationEvent) => {
+      tiltRef.gamma = e.gamma
+      tiltRef.beta = e.beta
+    }
     window.addEventListener('scroll', onScroll, { capture: true, passive: true })
     window.addEventListener('resize', onResize)
+    window.addEventListener('deviceorientation', onTilt)
     canvas.addEventListener('webglcontextlost', onLost)
 
+    syncPaneObservers()
     raf = requestAnimationFrame(tick)
 
     return () => {
       dead = true
       cancelAnimationFrame(raf)
+      io.disconnect()
       unsubPanes()
+      unsubFx()
+      unsubPoke()
+      unsubBg()
       window.removeEventListener('scroll', onScroll, { capture: true })
       window.removeEventListener('resize', onResize)
+      window.removeEventListener('deviceorientation', onTilt)
       canvas.removeEventListener('webglcontextlost', onLost)
       gl.deleteTexture(bgTex)
-      gl.deleteTexture(maskTex)
+      maskTextures.forEach(t => gl.deleteTexture(t))
       gl.deleteFramebuffer(fbo)
       gl.deleteProgram(bgProg)
       gl.deleteProgram(compProg)
@@ -507,7 +731,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 z-0 h-full w-full"
+      className="pointer-events-none absolute inset-0 z-0 h-full w-full"
       aria-hidden
     />
   )

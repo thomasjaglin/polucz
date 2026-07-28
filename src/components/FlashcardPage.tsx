@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, animate, type MotionValue } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
+import { pokeRenderer } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -38,6 +39,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
   const cardRef = useRef<HTMLDivElement>(null)
+  const rotationJustFired = useRef(false)
   const rotateYVal = useMotionValue(0)
   // Lags behind hardMode by one animation cycle so content swaps at the midpoint
   const [displayHardMode, setDisplayHardMode] = useState(hardMode)
@@ -62,30 +64,47 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
     if (!el) return
 
     let startAngle: number | null = null
+    let startX: number | null = null
     let committed = false
 
     const getAngle = (t: TouchList) =>
       Math.atan2(t[1].clientY - t[0].clientY, t[1].clientX - t[0].clientX) * (180 / Math.PI)
+    const getX = (t: TouchList) => (t[0].clientX + t[1].clientX) / 2
 
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 2) return
       startAngle = getAngle(e.touches)
+      startX = getX(e.touches)
       committed = false
     }
 
     const onTouchMove = (e: TouchEvent) => {
-      if (e.touches.length !== 2 || startAngle === null || committed) return
+      if (e.touches.length !== 2 || startAngle === null || startX === null || committed) return
       e.preventDefault()
+      // A horizontal drag of the two fingers isn't a rotation intent — bail
+      // so this doesn't fight the swipe-to-rate gesture.
+      if (Math.abs(getX(e.touches) - startX) > 20) return
       const delta = getAngle(e.touches) - startAngle
       const norm = ((delta + 180) % 360) - 180
       if (Math.abs(norm) > 45) {
         committed = true
+        rotationJustFired.current = true
         haptics.swipeRight()
         onToggleHardMode()
       }
     }
 
-    const onTouchEnd = () => { startAngle = null; committed = false }
+    const onTouchEnd = () => {
+      startAngle = null
+      startX = null
+      if (committed) {
+        // The two lifted fingers each fire their own touchend, which would
+        // otherwise read as a double-tap and pop the modal right after
+        // rotating. Hold the guard past the double-tap window (300ms).
+        setTimeout(() => { rotationJustFired.current = false }, 400)
+      }
+      committed = false
+    }
 
     el.addEventListener('touchstart', onTouchStart, { passive: true })
     el.addEventListener('touchmove', onTouchMove, { passive: false })
@@ -123,8 +142,8 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
       onDragEnd={revealed ? handleDragEnd : undefined}
-      onTouchEnd={doubleTap.onTouchEnd}
-      onClick={e => { doubleTap.onClick(e); if (!revealed) onReveal() }}
+      onTouchEnd={e => { if (rotationJustFired.current) return; doubleTap.onTouchEnd(e) }}
+      onClick={e => { if (rotationJustFired.current) return; doubleTap.onClick(e); if (!revealed) onReveal() }}
       className={`relative w-full select-none ${revealed ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
       animate={isConquering ? { scale: [1, 1.04, 1], transition: { duration: 0.4 } } : {}}
     >
@@ -141,12 +160,12 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
       {/* Inner wrapper that rotates on hard-mode toggle */}
       <motion.div style={{ rotateY: rotateYVal }}>
         <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+          <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
 
           <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
             {/* Type badge + hard mode label */}
             <div className="flex items-center gap-2">
-              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[14px] py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3.5 py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
                   className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
@@ -178,7 +197,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                   exit={{ opacity: 0, transition: { duration: 0.1 } }}
                   className="flex w-full flex-col items-center gap-3"
                 >
-                  <div className="h-[1px] w-full bg-white/10" />
+                  <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
                   <p className="font-instrument text-[14px] text-[#F8FAFC]/30">tap to reveal</p>
                 </motion.div>
               ) : (
@@ -189,7 +208,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                   transition={{ duration: 0.25 }}
                   className="flex w-full flex-col items-center gap-3"
                 >
-                  <div className="h-[1px] w-full bg-white/10" />
+                  <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
                   <div className="flex w-full items-center justify-between gap-3">
                     {displayHardMode ? (
                       <div className="flex flex-col gap-1">
@@ -204,8 +223,8 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                     <GlassButton
                       onClick={e => { e.stopPropagation(); onReplay() }}
                       radius={16}
-                      pane="bg-white/5"
-                      className={`h-[32px] w-[32px] flex-shrink-0 border border-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
+                      pane="bg-[#F8FAFC]/5"
+                      className={`h-[32px] w-[32px] flex-shrink-0 border border-[#F8FAFC]/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/30 hover:text-[#F8FAFC]/70'}`}
                     >
                       <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
                         {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
@@ -231,10 +250,9 @@ function AllCaughtUp({ onReset }: { onReset: () => void }) {
       <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">All caught up</h2>
       <p className="font-instrument text-[16px] text-[#F8FAFC]/40">No cards due for review right now.</p>
       <GlassButton
+        variant="primary"
         onClick={onReset}
-        radius={28}
-        pane="bg-[#B4A0FF]/10"
-        className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
+        className="mt-2 px-6 py-3 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Review again
@@ -249,19 +267,17 @@ function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLa
   return (
     <div className="flex w-full gap-3">
       <GlassButton
+        variant="danger"
         onClick={onLapse}
-        radius={28}
-        pane="bg-red-400/10"
-        className="flex-1 border border-red-400/20 py-4 font-instrument text-[15px] font-medium text-red-400/80"
+        className="flex-1 py-4 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Again
       </GlassButton>
       <GlassButton
+        variant="primary"
         onClick={onConquered}
-        radius={28}
-        pane="bg-[#B4A0FF]/10"
-        className="flex-1 border border-[#B4A0FF]/20 py-4 font-instrument text-[15px] font-medium text-[#B4A0FF]"
+        className="flex-1 py-4 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">military_tech</span>
         Conquered
@@ -276,7 +292,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
   const pct = total === 0 ? 100 : Math.round((done / total) * 100)
   return (
     <div className="flex w-full items-center gap-3">
-      <div className="h-[4px] flex-1 overflow-hidden rounded-full bg-white/10">
+      <div className="h-[4px] flex-1 overflow-hidden rounded-full bg-[#F8FAFC]/10">
         <motion.div
           className="h-full rounded-full bg-[#B4A0FF]/60"
           initial={false}
@@ -284,7 +300,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
         />
       </div>
-      <span className="font-instrument text-[13px] tabular-nums text-white/30">
+      <span className="font-instrument text-[13px] tabular-nums text-[#F8FAFC]/30">
         {done}/{total}
       </span>
     </div>
@@ -308,6 +324,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const x = useMotionValue(0)
   const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
   const rightOpacity = useTransform(x, [0, 100],  [0, 1])
+  // Keep the WebGL glass tracking the card while it's dragged/flung, so its
+  // glass doesn't lag behind and render as a ghost card.
+  useMotionValueEvent(x, 'change', pokeRenderer)
 
   useEffect(() => {
     const reviews = getAllReviews()
@@ -404,9 +423,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   return (
     <>
-      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left center, rgba(222,0,4,0.55) 0%, transparent 65%)' }} />
-      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right center, rgba(39,209,178,0.55) 0%, transparent 65%)' }} />
-    <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
+      {/* Swipe feedback glows — focal raised to ~40% so they align with the
+          card (which sits above the viewport center) rather than mid-screen. */}
+      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left 40%, rgba(222,0,4,0.85) 0%, transparent 65%)' }} />
+      <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.85) 0%, transparent 65%)' }} />
+    <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
       {totalCount > 0 && (
         <ProgressBar done={doneCount} total={totalCount} />
       )}
