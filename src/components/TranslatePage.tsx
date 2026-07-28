@@ -414,7 +414,7 @@ export default function TranslatePage({ onAddCard }: Props) {
   const inputBlock = (
     <>
       <div
-        className="relative overflow-hidden rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.20),inset_0_0_0_1px_rgba(255,255,255,0.18)]"
+        className="relative overflow-hidden rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
         style={frostStyle}
       >
         <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/5" />
@@ -466,7 +466,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.8, right: canSwipe ? 0.8 : 0.08 }}
         onDragEnd={handleDragEnd}
-        className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
+        className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
       >
         <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#F8FAFC]/[0.02]" />
 

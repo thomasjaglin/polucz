@@ -358,7 +358,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                     <motion.div
                       key={entry.id}
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/5 shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
+                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/5 shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
                       initial={d < 0
                         ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1, filter: 'blur(0px)' }
                         : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
@@ -409,7 +409,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               style={glassMode === 'webgl'
                 ? { backdropFilter: 'blur(3px) saturate(1.15)', WebkitBackdropFilter: 'blur(3px) saturate(1.15)' }
                 : undefined}
-              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}

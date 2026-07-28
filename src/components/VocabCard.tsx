@@ -22,7 +22,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
     <div className="perspective w-full cursor-pointer" onClick={() => { haptics.tap(); onClick() }}>
       <div
         ref={ref}
-        className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
       >
         <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-[20px]">
           <div className="flex items-start justify-between gap-3">

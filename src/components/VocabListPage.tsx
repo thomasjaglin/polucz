@@ -61,7 +61,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   return (
     <div className="animate-fade-in flex w-full flex-col gap-[24px]">
       {/* Search + filter glass card */}
-      <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+      <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <div className="relative flex w-full flex-col gap-[16px] rounded-[36px] p-[16px]">
           <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
           <div className="relative z-10 flex flex-col gap-[14px]">

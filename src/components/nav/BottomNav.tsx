@@ -40,7 +40,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
       className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 z-[60] -translate-x-1/2"
     >
       <nav
-        className="relative flex items-center gap-1 rounded-full p-2 shadow-[0_8px_32px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+        className="relative flex items-center gap-1 rounded-full p-2 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
         style={{ viewTransitionName: 'nav-bar' }}
       >
         {/* Same glass recipe as the cards: a GlassPane base the shared canvas

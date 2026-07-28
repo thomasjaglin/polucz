@@ -63,7 +63,7 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+      <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-[#F8FAFC]/[0.02]" />
         <div className="relative z-10 p-5">
           <p className="font-instrument text-[20px] leading-relaxed text-[#F8FAFC]/90">{display}</p>
