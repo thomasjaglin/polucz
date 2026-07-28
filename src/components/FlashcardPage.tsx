@@ -250,10 +250,9 @@ function AllCaughtUp({ onReset }: { onReset: () => void }) {
       <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">All caught up</h2>
       <p className="font-instrument text-[16px] text-[#F8FAFC]/40">No cards due for review right now.</p>
       <GlassButton
+        variant="primary"
         onClick={onReset}
-        radius={24}
-        pane="bg-[#B4A0FF]/10"
-        className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
+        className="mt-2 px-6 py-3 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Review again
@@ -268,19 +267,17 @@ function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLa
   return (
     <div className="flex w-full gap-3">
       <GlassButton
+        variant="danger"
         onClick={onLapse}
-        radius={24}
-        pane="bg-red-400/10"
-        className="flex-1 border border-red-400/20 py-4 font-instrument text-[15px] font-medium text-red-400/80"
+        className="flex-1 py-4 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Again
       </GlassButton>
       <GlassButton
+        variant="primary"
         onClick={onConquered}
-        radius={24}
-        pane="bg-[#B4A0FF]/10"
-        className="flex-1 border border-[#B4A0FF]/20 py-4 font-instrument text-[15px] font-medium text-[#B4A0FF]"
+        className="flex-1 py-4 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">military_tech</span>
         Conquered

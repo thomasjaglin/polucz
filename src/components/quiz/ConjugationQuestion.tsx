@@ -116,11 +116,10 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
 
       {!locked && (
         <GlassButton
+          variant="primary"
           onClick={handleSubmit}
           disabled={!input.trim()}
-          radius={16}
-          pane="bg-[#B4A0FF]/10"
-          className="w-full border border-[#B4A0FF]/20 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF] disabled:opacity-35"
+          className="w-full py-3.5 font-instrument text-[16px] disabled:opacity-35"
         >
           Submit
         </GlassButton>

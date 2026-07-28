@@ -1,15 +1,16 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import GlassPane from './GlassPane'
 
-type Variant = 'primary' | 'secondary'
+type Variant = 'primary' | 'secondary' | 'danger'
 
-// Named button recipes so the two standard treatments aren't hand-copied at
-// every call site. A variant supplies the radius, pane tint and border+text
-// colour; the caller still owns sizing/padding/text-size via className, and can
-// override radius/pane explicitly when needed.
+// Named button recipes so the standard treatments aren't hand-copied at every
+// call site. A variant supplies the radius, pane tint and border+text colour;
+// the caller still owns sizing/padding/text-size via className, and can override
+// radius/pane explicitly when needed.
 const VARIANTS: Record<Variant, { radius: number; pane: string; classes: string }> = {
   primary:   { radius: 24, pane: 'bg-[#B4A0FF]/15', classes: 'border border-[#B4A0FF]/25 font-medium text-[#B4A0FF]' },
   secondary: { radius: 24, pane: 'bg-[#F8FAFC]/5',  classes: 'border border-[#F8FAFC]/10 text-[#F8FAFC]/60' },
+  danger:    { radius: 24, pane: 'bg-red-400/10',   classes: 'border border-red-400/25 font-medium text-red-400' },
 }
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {

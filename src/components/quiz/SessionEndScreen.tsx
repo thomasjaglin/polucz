@@ -69,18 +69,16 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
       {/* Actions */}
       <div className="flex flex-col gap-3">
         <GlassButton
+          variant="primary"
           onClick={onRetry}
-          radius={16}
-          pane="bg-[#B4A0FF]/10"
-          className="w-full border border-[#B4A0FF]/20 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF]"
+          className="w-full py-3.5 font-instrument text-[16px]"
         >
           Try again
         </GlassButton>
         <GlassButton
+          variant="secondary"
           onClick={onBack}
-          radius={16}
-          pane="bg-[#F8FAFC]/[0.02]"
-          className="w-full border border-[#F8FAFC]/10 py-3.5 font-instrument text-[16px] font-medium text-[#F8FAFC]/55"
+          className="w-full py-3.5 font-instrument text-[16px]"
         >
           Back to menu
         </GlassButton>
