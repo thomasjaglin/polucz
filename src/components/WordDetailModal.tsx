@@ -315,7 +315,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
   return (
     <div
-      className={`fixed inset-0 z-[100] flex cursor-pointer items-center justify-center p-6 transition-opacity duration-300 ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
+      className={`no-scrollbar fixed inset-0 z-[100] flex cursor-pointer items-start justify-center overflow-y-auto p-6 transition-opacity duration-300 ${overlayVisible ? 'opacity-100' : 'opacity-0'}`}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
       onTouchEnd={e => {
         if (e.target !== e.currentTarget) return
@@ -337,7 +337,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
           display:none'd while open, so blur buys nothing. svg/css: keep the
           blur (per-element backdrop-filter, unaffected by this scrim). */}
       <div
-        className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/20' : 'bg-black/40 backdrop-blur-xl'}`}
+        className={`pointer-events-none fixed inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/20' : 'bg-black/40 backdrop-blur-xl'}`}
       />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
