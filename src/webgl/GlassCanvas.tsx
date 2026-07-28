@@ -42,6 +42,9 @@ uniform vec4 uEllGeo[${MAX_ELLIPSES}];   // cx, cy, rx, ry (css px)
 uniform vec4 uEllMisc[${MAX_ELLIPSES}];  // sinθ, cosθ, layerIndex, unused
 uniform vec3 uEllColor[${MAX_ELLIPSES}];
 uniform vec2 uLayerParams[${MAX_LAYERS}]; // opacity, blurPx
+// Optional elliptical clip (translate blob → circle disc): cx, cy, rx, ry in
+// css px. rx <= 0 disables it.
+uniform vec4 uClip;
 out vec4 outColor;
 
 const vec3 BASE = vec3(18.0 / 255.0);   // body #121212
@@ -69,6 +72,14 @@ void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec3 col = BASE;
 
+  // Elliptical clip factor (1 inside, soft-edged to 0 outside). Confines the
+  // translate blob to the circle disc so it doesn't glow past the ellipse.
+  float clip = 1.0;
+  if (uClip.z > 0.0) {
+    vec2 dd = (css - uClip.xy) / uClip.zw;
+    clip = 1.0 - fallStep(0.9, 1.02, length(dd));
+  }
+
   // Ellipse stacks: src-over within a layer (premultiplied), screen-blend
   // each layer onto the base with its opacity.
   vec3 acc = vec3(0.0);
@@ -79,7 +90,7 @@ void main() {
     int layer = int(uEllMisc[i].z + 0.5);
     if (layer != curLayer) {
       vec3 lc = acc / max(accA, 1e-4);
-      float a = accA * uLayerParams[curLayer].x;
+      float a = accA * uLayerParams[curLayer].x * clip;
       col = mix(col, 1.0 - (1.0 - col) * (1.0 - lc), a);
       acc = vec3(0.0); accA = 0.0; curLayer = layer;
     }
@@ -91,7 +102,7 @@ void main() {
     accA = mix(accA, 1.0, m);
   }
   vec3 lc = acc / max(accA, 1e-4);
-  float a = accA * uLayerParams[curLayer].x;
+  float a = accA * uLayerParams[curLayer].x * clip;
   col = mix(col, 1.0 - (1.0 - col) * (1.0 - lc), a);
 
   outColor = vec4(col, 1.0);
@@ -452,6 +463,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform4fv(bgU('uEllMisc'), u.misc)
       gl.uniform3fv(bgU('uEllColor'), u.color)
       gl.uniform2fv(bgU('uLayerParams'), u.layerParams)
+      gl.uniform4fv(bgU('uClip'), u.clip)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.bindTexture(gl.TEXTURE_2D, bgTex)

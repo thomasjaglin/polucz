@@ -24,6 +24,9 @@ export interface BgLayer {
   rightFrac?: number       // CSS right as fraction of viewport width
   centered?: boolean       // horizontally centered (flex justify-center)
   dynamicTop?: boolean     // topFrac is driven at runtime (translate blob swap)
+  clipEllipse?: { widthFracVw: number; heightFracVh: number } // confine the
+                           // layer to a centered ellipse at its (dynamic) top
+
   rotDeg: number           // shared rotate(θ cx cy) of every ellipse
   opacity: number          // CSS opacity on the svg
   blurPx: number           // CSS blur() on the svg (post-scale pixels)
@@ -77,8 +80,12 @@ export const pageBackgrounds: Record<PageId, BgLayer[]> = {
     viewW: 959.4, viewH: 908.4,
     widthPx: 0, widthFracVw: 2.0169, heightFracVh: 0.8514,
     // leftFrac mirrors the old img: circle centered (-17.5vw) + its -11.3%
-    // internal offset of the 135vw circle → -0.32755·vw.
-    topFrac: -0.2567, dynamicTop: true, leftFrac: -0.32755, rotDeg: 0,
+    // internal offset of the 135vw circle → -0.32755·vw. topFrac is the ring's
+    // top so the blob, its clip, and the glass disc all share one reference.
+    topFrac: -0.22, dynamicTop: true, leftFrac: -0.32755, rotDeg: 0,
+    // Clip the (right-offset, oversized) gradient to the centered circle disc —
+    // the ring ellipse: 135vw × 73.4vh, centered, at the layer's (dynamic) top.
+    clipEllipse: { widthFracVw: 1.35, heightFracVh: 0.734 },
     opacity: 0.6, blurPx: 30,
     ellipses: [
       { cx: 336.2, cy: 586.7, rx: 247.5, ry: 210, color: '#D94C30' },
@@ -129,6 +136,7 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
   const misc = new Float32Array(MAX_ELLIPSES * 4)    // sinθ, cosθ, layerIndex, 0
   const color = new Float32Array(MAX_ELLIPSES * 3)
   const layerParams = new Float32Array(MAX_LAYERS * 2) // opacity, blurPx
+  const clip = new Float32Array(4) // cx, cy, rx, ry (rx<=0 disables)
   let n = 0
 
   layers.forEach((layer, li) => {
@@ -140,6 +148,14 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       : scaleX
     const topFrac = layer.dynamicTop && dynamicTopFrac !== undefined ? dynamicTopFrac : layer.topFrac
     const top = topFrac * vh
+    if (layer.clipEllipse) {
+      const cw = layer.clipEllipse.widthFracVw * vw
+      const ch = layer.clipEllipse.heightFracVh * vh
+      clip[0] = vw / 2               // centered
+      clip[1] = top + ch / 2         // centered on the ring box at this top
+      clip[2] = cw / 2
+      clip[3] = ch / 2
+    }
     const left = layer.centered
       ? (vw - widthPx) / 2
       : layer.leftFrac !== undefined
@@ -164,5 +180,5 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
     }
   })
 
-  return { geo, misc, color, layerParams, count: n }
+  return { geo, misc, color, layerParams, clip, count: n }
 }

@@ -69,7 +69,7 @@ export interface MaskPaneRecord {
 // translate page's procedural gradient blob. TranslatePage drives this as the
 // blob slides on language swap; GlassCanvas reads it when rendering the
 // translate background and re-bakes the bg texture whenever it changes.
-let bgBlobTop = -0.2567 // default: source-on-top position
+let bgBlobTop = -0.22 // default: source-on-top position (ring top)
 const bgListeners = new Set<() => void>()
 
 export function setBgBlobTop(v: number) {

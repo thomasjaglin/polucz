@@ -28,8 +28,11 @@ const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
 // the old DOM blob's animated top (BOUNDARY-CIRCLE_H / 100-BOUNDARY) plus the
 // SVG's -5%·CIRCLE_H internal offset. GlassCanvas reads the live value via the
 // glassStore and re-bakes the background as it slides.
-const BLOB_TOP_SRC = (BOUNDARY - CIRCLE_H - 0.05 * CIRCLE_H) / 100 // source on top
-const BLOB_TOP_DST = (100 - BOUNDARY - 0.05 * CIRCLE_H) / 100      // source on bottom
+// The ring's top position for each swap state (fraction of viewport height).
+// The procedural blob, its elliptical clip, and the glass disc all share this
+// reference so they stay aligned as the circle slides.
+const BLOB_TOP_SRC = (BOUNDARY - CIRCLE_H) / 100 // source on top
+const BLOB_TOP_DST = (100 - BOUNDARY) / 100      // source on bottom
 
 // Elliptical glass mask for the circle: a filled ellipse matching its
 // rounded-[50%] box, so the circle reads as a glass disc (refraction + rim
