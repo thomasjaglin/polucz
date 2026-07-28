@@ -200,21 +200,10 @@ void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec4 bg0 = texelFetch(uBg, ivec2(gl_FragCoord.xy), 0);
 
-  // First registered mask whose rect contains this pixel wins — the app
-  // keeps mask shapes spatially separate (nav at the bottom, blobs in
-  // content), so shapes aren't expected to overlap.
-  vec3 maskCol; float maskCov;
-  if (uMaskCount > 0 && sampleMask(uMask0, uMaskRect[0], uMaskScale[0], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
-    outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
-    return;
-  }
-  if (uMaskCount > 1 && sampleMask(uMask1, uMaskRect[1], uMaskScale[1], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
-    outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
-    return;
-  }
-
-  // Smallest pane containing this pixel wins (inner pane over outer pane —
-  // e.g. tag pill sitting on a card).
+  // Smallest rect pane containing this pixel wins (inner pane over outer pane —
+  // e.g. tag pill sitting on a card). Rect panes are checked BEFORE mask shapes
+  // so small UI elements (the translate input/buttons) stay glassy on top of a
+  // large mask (the translate circle) they overlap.
   int hit = -1;
   float hitD = 0.0;
   float hitArea = 1e12;
@@ -228,7 +217,21 @@ void main() {
     float area = r.z * r.w;
     if (d < 1.0 && area < hitArea) { hit = i; hitD = d; hitArea = area; }
   }
-  if (hit < 0) { outColor = vec4(bg0.rgb, 1.0); return; }
+  // No rect pane here — fall back to mask shapes (logo letterforms, translate
+  // circle). First registered mask whose rect contains this pixel wins.
+  if (hit < 0) {
+    vec3 maskCol; float maskCov;
+    if (uMaskCount > 0 && sampleMask(uMask0, uMaskRect[0], uMaskScale[0], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
+      outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
+      return;
+    }
+    if (uMaskCount > 1 && sampleMask(uMask1, uMaskRect[1], uMaskScale[1], css, uBlurPx, uDpr, uResCss, uSaturation, maskCol, maskCov)) {
+      outColor = vec4(mix(bg0.rgb, maskCol, maskCov), 1.0);
+      return;
+    }
+    outColor = vec4(bg0.rgb, 1.0);
+    return;
+  }
 
   vec4 r = uPane[hit];
   vec2 halfSize = r.zw * 0.5;

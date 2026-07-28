@@ -5,7 +5,9 @@ import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
-import { pokeRenderer, setBgBlobTop } from '../webgl/glassStore'
+import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
+import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
+import { getGlassMode } from '../lib/glassMode'
 
 type Direction = 'pl-en' | 'en-pl'
 
@@ -28,6 +30,35 @@ const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
 // glassStore and re-bakes the background as it slides.
 const BLOB_TOP_SRC = (BOUNDARY - CIRCLE_H - 0.05 * CIRCLE_H) / 100 // source on top
 const BLOB_TOP_DST = (100 - BOUNDARY - 0.05 * CIRCLE_H) / 100      // source on bottom
+
+// Elliptical glass mask for the circle: a filled ellipse matching its
+// rounded-[50%] box, so the circle reads as a glass disc (refraction + rim
+// following the true elliptical silhouette) over the procedural blob. Built
+// once per viewport size (the box is vw/vh); its live on-screen position is
+// read each frame by GlassCanvas, so the swap slide needs no rebuild.
+function drawCircleMask(w: number, h: number) {
+  return (ctx: CanvasRenderingContext2D) => {
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+}
+
+const circleMaskCache = new Map<string, { canvas: HTMLCanvasElement; scale: number }>()
+
+function buildCircleMask(w: number, h: number): { canvas: HTMLCanvasElement; scale: number } {
+  const key = `${w}x${h}`
+  let entry = circleMaskCache.get(key)
+  if (!entry) {
+    const { canvas, scale } = generateMaskGlassCanvas(w, h, drawCircleMask(w, h), {
+      blurRadius: 5, scale: 26, highlight: 0.5, shade: 0.15, coverageAlpha: true,
+    })
+    entry = { canvas, scale }
+    circleMaskCache.set(key, entry)
+  }
+  return entry
+}
 
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
@@ -128,6 +159,42 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
   const [toast, setToast] = useState<string | null>(null)
   const translateIdRef = useRef(0)
+  const circleRef = useRef<HTMLDivElement>(null)
+
+  // Register the circle as an elliptical glass mask pane so it reads as a glass
+  // disc refracting the blob behind it. The map is size-only (rebuilt on
+  // resize); GlassCanvas reads the element's live rect each frame, so the swap
+  // slide needs no regeneration. Deferred off the first-open critical path.
+  useEffect(() => {
+    if (getGlassMode() !== 'webgl') return
+    const el = circleRef.current
+    if (!el) return
+    let unregister: (() => void) | null = null
+    let idleHandle: number | null = null
+    let cancelled = false
+
+    function register() {
+      const w = Math.round(window.innerWidth * CIRCLE_W / 100)
+      const h = Math.round(window.innerHeight * CIRCLE_H / 100)
+      const { canvas, scale } = buildCircleMask(w, h)
+      if (cancelled || !el) return
+      unregister = registerMaskPane({ el, map: canvas, scale, overscan: GLASS_OVERSCAN })
+    }
+
+    const key = `${Math.round(window.innerWidth * CIRCLE_W / 100)}x${Math.round(window.innerHeight * CIRCLE_H / 100)}`
+    if (circleMaskCache.has(key)) register()
+    else if (window.requestIdleCallback) idleHandle = window.requestIdleCallback(() => { idleHandle = null; register() }, { timeout: 500 })
+    else idleHandle = window.setTimeout(() => { idleHandle = null; register() }, 0)
+
+    function onResize() { unregister?.(); unregister = null; register() }
+    window.addEventListener('resize', onResize)
+    return () => {
+      cancelled = true
+      window.removeEventListener('resize', onResize)
+      if (idleHandle != null) { if (window.cancelIdleCallback) window.cancelIdleCallback(idleHandle); else clearTimeout(idleHandle) }
+      unregister?.()
+    }
+  }, [])
 
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
@@ -451,8 +518,11 @@ export default function TranslatePage({ onAddCard }: Props) {
           `translate`) so the page's glass panes refract it natively; its
           vertical slide on swap is driven via blobTop -> glassStore above. */}
 
-      {/* Soft edge ring marking the source side, sliding with the blob */}
+      {/* Soft edge ring marking the source side, sliding with the blob. Also
+          the tracked box for the elliptical glass-disc mask pane (see the
+          circle-mask effect above). */}
       <motion.div
+        ref={circleRef}
         className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-[50%] border border-[#F8FAFC]/10"
         style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
         initial={false}
