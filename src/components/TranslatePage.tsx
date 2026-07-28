@@ -440,12 +440,11 @@ export default function TranslatePage({ onAddCard }: Props) {
       </div>
 
       <GlassButton
+        variant="primary"
         onClick={handleTranslate}
         disabled={!input.trim() || phase === 'loading'}
-        radius={24}
-        pane="bg-[#B4A0FF]/15"
         style={frostStyle}
-        className="mt-3 w-full border border-[#B4A0FF]/25 py-3.5 font-instrument text-[15px] font-medium text-[#B4A0FF] disabled:opacity-35"
+        className="mt-3 w-full py-3.5 font-instrument text-[15px] disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
       </GlassButton>

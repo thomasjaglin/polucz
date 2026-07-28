@@ -287,19 +287,17 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               <p className="font-instrument text-[15px] text-[#F8FAFC]/40">{availableCount} cards ready</p>
             </div>
             <GlassButton
+              variant="primary"
               onClick={() => beginPlayback('list')}
-              radius={24}
-              pane="bg-[#B4A0FF]/15"
-              className="mt-1 border border-[#B4A0FF]/25 px-7 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF]"
+              className="mt-1 px-7 py-3.5 font-instrument text-[16px]"
             >
               <span className="material-symbols-rounded text-[20px]">play_arrow</span>
               Play through list
             </GlassButton>
             <GlassButton
+              variant="secondary"
               onClick={() => beginPlayback('new-first')}
-              radius={24}
-              pane="bg-[#F8FAFC]/5"
-              className="border border-[#F8FAFC]/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/60"
+              className="px-5 py-2.5 font-instrument text-[14px]"
             >
               <span className="material-symbols-rounded text-[16px]">fiber_new</span>
               Play with new words first
@@ -319,19 +317,17 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               You've listened to all {totalCount} cards.
             </p>
             <GlassButton
+              variant="primary"
               onClick={replay}
-              radius={24}
-              pane="bg-[#B4A0FF]/10"
-              className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
+              className="mt-2 px-6 py-3 font-instrument text-[15px]"
             >
               <span className="material-symbols-rounded text-[18px]">replay</span>
               Listen again
             </GlassButton>
             <GlassButton
+              variant="secondary"
               onClick={() => { resetAllReviews(); replay() }}
-              radius={24}
-              pane="bg-[#F8FAFC]/5"
-              className="border border-[#F8FAFC]/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
+              className="px-5 py-2.5 font-instrument text-[14px]"
             >
               <span className="material-symbols-rounded text-[16px]">refresh</span>
               Reset all progress
