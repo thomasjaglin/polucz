@@ -574,7 +574,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       <GlassButton
         onClick={handleSwap}
         aria-label="Swap languages"
-        radius={21}
+        radius={20}
         pane="bg-[#181818]/45"
         className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-[#F8FAFC]/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
         style={{ top: `${BOUNDARY}vh`, ...frostStyle }}

@@ -83,7 +83,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                 aria-label={searchOpen ? 'Close search' : 'Open search'}
                 className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
               >
-                <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
+                <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
                 <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/70">
                   {searchOpen ? 'close' : 'search'}
                 </span>

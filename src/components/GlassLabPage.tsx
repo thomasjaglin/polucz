@@ -253,7 +253,7 @@ export default function GlassLabPage() {
           <span className="font-instrument text-[18px] font-semibold text-[#F8FAFC]/90">Card pane</span>
         </GlassPane>
         <div className="flex items-center gap-3">
-          <GlassPane borderRadius={18} className="rounded-[18px] px-4 py-2">
+          <GlassPane borderRadius={20} className="rounded-[20px] px-4 py-2">
             <span className="text-[14px] text-[#F8FAFC]/90">Pill</span>
           </GlassPane>
           <GlassPane borderRadius={12} className="rounded-[12px] px-2 py-1">
@@ -278,10 +278,10 @@ export default function GlassLabPage() {
         <div className="flex items-center gap-3">
           <IconButton icon="search" onClick={() => {}} />
           <IconButton icon="settings" onClick={() => {}} />
-          <GlassButton radius={30} pane="bg-[#B4A0FF]/15" className="h-[60px] w-[60px] border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)]">
+          <GlassButton radius={32} pane="bg-[#B4A0FF]/15" className="h-[60px] w-[60px] border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)]">
             <span className="material-symbols-rounded text-[28px] text-[#B4A0FF]">play_arrow</span>
           </GlassButton>
-          <GlassButton radius={19} pane="bg-[#F8FAFC]/5" className="h-[38px] w-[38px] border border-[#F8FAFC]/10 text-[#F8FAFC]/50">
+          <GlassButton radius={20} pane="bg-[#F8FAFC]/5" className="h-[38px] w-[38px] border border-[#F8FAFC]/10 text-[#F8FAFC]/50">
             <span className="material-symbols-rounded text-[20px]">refresh</span>
           </GlassButton>
         </div>

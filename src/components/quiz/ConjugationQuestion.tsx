@@ -92,7 +92,7 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           <p className="font-instrument text-[14px] text-red-400/75">Not quite — try again</p>
           <GlassButton
             onClick={handleTryAgain}
-            radius={10}
+            radius={12}
             pane="bg-[#F8FAFC]/[0.05]"
             className="border border-[#F8FAFC]/10 px-3 py-1.5 font-instrument text-[13px] text-[#F8FAFC]/65"
           >
@@ -102,14 +102,14 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
       )}
 
       {phase === 'wrong-final' && (
-        <div className="rounded-[14px] border border-red-400/20 bg-red-400/[0.06] px-4 py-3">
+        <div className="rounded-[16px] border border-red-400/20 bg-red-400/[0.06] px-4 py-3">
           <p className="font-instrument text-[12px] text-red-400/60">Correct answer</p>
           <p className="font-instrument text-[18px] font-medium text-red-300">{sentence.targetForm}</p>
         </div>
       )}
 
       {phase === 'correct' && (
-        <div className="rounded-[14px] border border-green-400/20 bg-green-400/[0.06] px-4 py-3">
+        <div className="rounded-[16px] border border-green-400/20 bg-green-400/[0.06] px-4 py-3">
           <p className="font-instrument text-[15px] text-green-400">Correct!</p>
         </div>
       )}

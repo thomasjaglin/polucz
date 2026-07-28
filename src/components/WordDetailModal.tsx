@@ -395,7 +395,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                 <div className="flex items-center gap-2">
                   <GlassButton
                     onClick={() => setConfirmDelete(false)}
-                    radius={19}
+                    radius={20}
                     pane="bg-[#F8FAFC]/5"
                     className="h-[38px] border border-[#F8FAFC]/10 px-4 font-instrument text-[13px] text-[#F8FAFC]/50 hover:text-[#F8FAFC]"
                   >
@@ -403,7 +403,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   </GlassButton>
                   <GlassButton
                     onClick={onDelete}
-                    radius={19}
+                    radius={20}
                     pane="bg-red-400/10"
                     contentClassName="flex w-full items-center justify-center gap-1.5"
                     className="h-[38px] border border-red-400/30 px-4 font-instrument text-[13px] text-red-400"
@@ -419,7 +419,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                     disabled={enriching}
                     className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#F8FAFC]/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
                   >
-                    <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                    <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                     <span className={`material-symbols-rounded relative z-10 text-[20px]${enriching ? ' animate-spin' : ''}`}>
                       {enrichError ? 'error' : 'refresh'}
                     </span>
@@ -428,7 +428,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                     onClick={() => { haptics.destructive(); setConfirmDelete(true) }}
                     className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-red-400/20 text-red-400/50 transition-all hover:scale-105 hover:text-red-400 active:scale-95"
                   >
-                    <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-red-400/5" />
+                    <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-red-400/5" />
                     <span className="material-symbols-rounded relative z-10 text-[20px]">delete</span>
                   </button>
                 </div>
@@ -449,7 +449,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   disabled={false}
                   className={`relative flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
                 >
-                  <GlassPane borderRadius={18} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                  <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className={`material-symbols-rounded relative z-10 text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>
                     {tts.state === 'loading' ? 'progress_activity' : tts.state === 'error' ? 'error' : 'volume_up'}
                   </span>

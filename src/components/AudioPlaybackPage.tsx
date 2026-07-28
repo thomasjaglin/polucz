@@ -471,7 +471,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   aria-pressed={repeatOne}
                   className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
                 >
-                  <GlassPane borderRadius={23} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
+                  <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
                   <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/50'}`}>
                     repeat_one
                   </span>
@@ -495,7 +495,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   disabled={!current || idx >= queue.length}
                   className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                 >
-                  <GlassPane borderRadius={23} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                  <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className="material-symbols-rounded relative z-10 text-[22px] text-[#F8FAFC]/60">skip_next</span>
                 </button>
               </div>
