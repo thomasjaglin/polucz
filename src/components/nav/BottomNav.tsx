@@ -45,7 +45,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
       >
         {/* Same glass recipe as the cards: a GlassPane base the shared canvas
             refracts, plus the inset white ring that reads the edge as glass. */}
-        <GlassPane borderRadius={32} className="absolute inset-0 rounded-full bg-[#F8FAFC]/[0.02]" />
+        <GlassPane borderRadius={36} className="absolute inset-0 rounded-full bg-[#F8FAFC]/[0.02]" />
         {pageOrder.map(id => {
           const active = id === activeId
           return (

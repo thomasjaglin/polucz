@@ -349,11 +349,11 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
           >
             <span className="material-symbols-rounded text-[28px]">close</span>
           </GlassButton>
-        <div className="relative w-full rounded-[40px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <div className="relative w-full rounded-[36px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
 
-          <div className="relative flex w-full flex-col rounded-[40px]">
+          <div className="relative flex w-full flex-col rounded-[36px]">
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
-            <div className="absolute inset-0 overflow-hidden rounded-[40px]">
+            <div className="absolute inset-0 overflow-hidden rounded-[36px]">
               {entry.type === 'verb' && (
                 <>
                   <div className="absolute left-[-5%] top-[-10%] h-[55%] w-[65%] rounded-full bg-[#8C3FA0]/80 blur-3xl mix-blend-screen" />
@@ -376,7 +376,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                 </>
               )}
             </div>
-            <GlassPane borderRadius={40} className="absolute inset-0 z-0 rounded-[40px] bg-[#F8FAFC]/[0.02]" />
+            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
             <div className="relative z-10 flex flex-col p-[32px]">
 
             {/* Top row: type tag + actions */}

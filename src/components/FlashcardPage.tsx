@@ -251,7 +251,7 @@ function AllCaughtUp({ onReset }: { onReset: () => void }) {
       <p className="font-instrument text-[16px] text-[#F8FAFC]/40">No cards due for review right now.</p>
       <GlassButton
         onClick={onReset}
-        radius={28}
+        radius={24}
         pane="bg-[#B4A0FF]/10"
         className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
       >
@@ -269,7 +269,7 @@ function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLa
     <div className="flex w-full gap-3">
       <GlassButton
         onClick={onLapse}
-        radius={28}
+        radius={24}
         pane="bg-red-400/10"
         className="flex-1 border border-red-400/20 py-4 font-instrument text-[15px] font-medium text-red-400/80"
       >
@@ -278,7 +278,7 @@ function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLa
       </GlassButton>
       <GlassButton
         onClick={onConquered}
-        radius={28}
+        radius={24}
         pane="bg-[#B4A0FF]/10"
         className="flex-1 border border-[#B4A0FF]/20 py-4 font-instrument text-[15px] font-medium text-[#B4A0FF]"
       >

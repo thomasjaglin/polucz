@@ -288,7 +288,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             </div>
             <GlassButton
               onClick={() => beginPlayback('list')}
-              radius={28}
+              radius={24}
               pane="bg-[#B4A0FF]/15"
               className="mt-1 border border-[#B4A0FF]/25 px-7 py-3.5 font-instrument text-[16px] font-medium text-[#B4A0FF]"
             >
@@ -320,7 +320,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             </p>
             <GlassButton
               onClick={replay}
-              radius={28}
+              radius={24}
               pane="bg-[#B4A0FF]/10"
               className="mt-2 border border-[#B4A0FF]/20 px-6 py-3 font-instrument text-[15px] font-medium text-[#B4A0FF]"
             >
@@ -329,7 +329,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             </GlassButton>
             <GlassButton
               onClick={() => { resetAllReviews(); replay() }}
-              radius={28}
+              radius={24}
               pane="bg-[#F8FAFC]/5"
               className="border border-[#F8FAFC]/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
             >

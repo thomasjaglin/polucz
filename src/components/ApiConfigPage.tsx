@@ -19,8 +19,8 @@ export default function ApiConfigPage({ onSave }: Props) {
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">LLM Provider</h2>
 
         {/* Provider select */}
-        <div className="relative mb-6 w-full rounded-[32px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-          <GlassPane borderRadius={32} className="absolute inset-0 z-0 rounded-[32px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
+        <div className="relative mb-6 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
           <select
             value={provider}
             onChange={e => setProvider(e.target.value)}
