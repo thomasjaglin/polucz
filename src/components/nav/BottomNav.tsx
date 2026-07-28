@@ -45,7 +45,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
       >
         {/* Same glass recipe as the cards: a GlassPane base the shared canvas
             refracts, plus the inset white ring that reads the edge as glass. */}
-        <GlassPane borderRadius={31} className="absolute inset-0 rounded-full bg-white/[0.02]" />
+        <GlassPane borderRadius={31} className="absolute inset-0 rounded-full bg-[#F8FAFC]/[0.02]" />
         {pageOrder.map(id => {
           const active = id === activeId
           return (
@@ -59,7 +59,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
                 <motion.span
                   layoutId="nav-active"
                   transition={SPRING}
-                  className="absolute inset-[5px] rounded-full bg-white/[0.12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.18)]"
+                  className="absolute inset-[5px] rounded-full bg-[#F8FAFC]/[0.12] shadow-[inset_0_1px_1px_rgba(255,255,255,0.18)]"
                 />
               )}
               <span

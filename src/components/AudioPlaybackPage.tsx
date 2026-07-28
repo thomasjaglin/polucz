@@ -248,7 +248,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
             )}
           </div>
-          <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/[0.08]">
+          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/[0.08]">
             <motion.div
               className="h-full rounded-full bg-[#B4A0FF]/60"
               animate={{ width: `${progress * 100}%` }}
@@ -298,8 +298,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             <GlassButton
               onClick={() => beginPlayback('new-first')}
               radius={24}
-              pane="bg-white/5"
-              className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/60"
+              pane="bg-[#F8FAFC]/5"
+              className="border border-[#F8FAFC]/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/60"
             >
               <span className="material-symbols-rounded text-[16px]">fiber_new</span>
               Play with new words first
@@ -330,8 +330,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             <GlassButton
               onClick={() => { resetAllReviews(); replay() }}
               radius={28}
-              pane="bg-white/5"
-              className="border border-white/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
+              pane="bg-[#F8FAFC]/5"
+              className="border border-[#F8FAFC]/10 px-5 py-2.5 font-instrument text-[14px] text-[#F8FAFC]/50"
             >
               <span className="material-symbols-rounded text-[16px]">refresh</span>
               Reset all progress
@@ -358,7 +358,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                     <motion.div
                       key={entry.id}
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-white/10 bg-white/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
+                      className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] shadow-[0_8px_32px_rgba(0,0,0,0.22)]"
                       initial={d < 0
                         ? { opacity: 0, x: 0, y: 0, rotate: 0, scale: 1, filter: 'blur(0px)' }
                         : { opacity: 0, x: s.x, y: s.y + 24, rotate: s.rotate, scale: s.scale, filter: `blur(${s.blur}px)` }}
@@ -371,7 +371,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                           <span className="truncate font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
                             {entry.pl}
                           </span>
-                          <span className="truncate font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
+                          <span className="truncate font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
                             {entry.en}
                           </span>
                         </div>
@@ -411,7 +411,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 : undefined}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
-              <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+              <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}
               <div className="relative z-10 p-[20px]">
                 <AnimatePresence mode="wait">
@@ -429,7 +429,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                           {current.pl}
                         </span>
                         <div className="flex items-center gap-1.5">
-                          <span className="font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
+                          <span className="font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
                             {current.en}
                           </span>
                           {cardMeta(current) && (
@@ -469,9 +469,9 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 <button
                   onClick={() => setRepeatOne(r => !r)}
                   aria-pressed={repeatOne}
-                  className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-[#B4A0FF]/40' : 'border-white/10'}`}
+                  className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
                 >
-                  <GlassPane borderRadius={23} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-[#B4A0FF]/15' : 'bg-white/5'}`} />
+                  <GlassPane borderRadius={23} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
                   <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/50'}`}>
                     repeat_one
                   </span>
@@ -493,9 +493,9 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 <button
                   onClick={handleSkipNext}
                   disabled={!current || idx >= queue.length}
-                  className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-white/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                  className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                 >
-                  <GlassPane borderRadius={23} className="absolute inset-0 z-0 rounded-full bg-white/5" />
+                  <GlassPane borderRadius={23} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className="material-symbols-rounded relative z-10 text-[22px] text-[#F8FAFC]/60">skip_next</span>
                 </button>
               </div>

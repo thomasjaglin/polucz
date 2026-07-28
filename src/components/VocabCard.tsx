@@ -24,7 +24,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
         ref={ref}
         className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
       >
-        <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-white/[0.02] p-[20px]">
+        <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-[20px]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex items-center gap-2">
@@ -36,7 +36,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-instrument text-[18px] font-medium leading-snug text-[rgba(152,149,231,0.8)]">
+                <span className="font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
                   {entry.en}
                 </span>
                 {meta && (

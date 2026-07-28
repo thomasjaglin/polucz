@@ -29,7 +29,7 @@ export default function GlassInput({ placeholder, type = 'text', icon, value, on
           <button
             onClick={() => onChange?.('')}
             aria-label="Clear input"
-            className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full bg-white/10 text-[#F8FAFC]/50 transition-colors hover:bg-white/20 hover:text-[#F8FAFC]"
+            className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full bg-[#F8FAFC]/10 text-[#F8FAFC]/50 transition-colors hover:bg-[#F8FAFC]/20 hover:text-[#F8FAFC]"
           >
             <span className="material-symbols-rounded text-[16px]">close</span>
           </button>

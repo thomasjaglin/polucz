@@ -43,7 +43,7 @@ const abbrev = (c: string) => CASE_ABBREV[c] ?? c
 
 function EnrichingSkeleton() {
   return (
-    <div className="mb-8 flex flex-col items-center gap-3 py-6 text-white/30">
+    <div className="mb-8 flex flex-col items-center gap-3 py-6 text-[#F8FAFC]/30">
       <span className="material-symbols-rounded animate-spin text-[28px]">progress_activity</span>
       <span className="font-instrument text-[14px]">Loading grammar…</span>
     </div>
@@ -57,31 +57,31 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
       <div className="mb-8 flex w-full flex-col">
         <div className="grid grid-cols-3 gap-2 [&>*]:min-w-0">
           <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-white/20">present</span>
+            <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">present</span>
             {entry.conjugations.present.map((c, i) => (
-              <span key={`pres-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
+              <span key={`pres-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-white/20">past m.</span>
+            <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">past m.</span>
             {entry.conjugations.past.map((c, i) => (
-              <span key={`past-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
+              <span key={`past-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-white/20">past f.</span>
+            <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">past f.</span>
             {entry.conjugations.past2.map((c, i) => (
-              <span key={`past2-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
+              <span key={`past2-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="my-6 h-[1px] w-full bg-white/10" />
+      <div className="my-6 h-[1px] w-full bg-[#F8FAFC]/10" />
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
-          <span className="font-instrument text-[15px] text-white/20">{entry.otherForm.label}</span>
+          <span className="font-instrument text-[15px] text-[#F8FAFC]/20">{entry.otherForm.label}</span>
           <span className="font-instrument text-[18px] italic text-[#B4A0FF]">{entry.otherForm.word}</span>
         </div>
       )}
@@ -95,21 +95,21 @@ function NounSection({ entry }: { entry: VocabNoun }) {
     <div className="mb-8 flex w-full flex-col">
       <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-2 [&>*]:min-w-0">
         <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-white/20">p.</span>
+          <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">p.</span>
           {entry.declensions.cases.map((c, i) => (
-            <span key={`case-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-tight text-white/40">{abbrev(c)}</span>
+            <span key={`case-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/40">{abbrev(c)}</span>
           ))}
         </div>
         <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-white/20">li. pojedyncza</span>
+          <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">li. pojedyncza</span>
           {entry.declensions.singular.map((c, i) => (
-            <span key={`sg-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
+            <span key={`sg-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
           ))}
         </div>
         <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-white/20">li. mnoga</span>
+          <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">li. mnoga</span>
           {entry.declensions.plural.map((c, i) => (
-            <span key={`pl-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-white/80">{c}</span>
+            <span key={`pl-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
           ))}
         </div>
       </div>
@@ -124,57 +124,57 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
     <div className="mb-8 flex w-full flex-col gap-6">
       {/* Singular: 4 columns — cases, m., f., n. */}
       <div className="flex flex-col">
-        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-white/20">li. pojedyncza</span>
+        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/20">li. pojedyncza</span>
         <div className="grid grid-cols-[0.5fr_1fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">p.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">p.</span>
             {cases.map((c, i) => (
-              <span key={`adj-case-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-white/40">{abbrev(c)}</span>
+              <span key={`adj-case-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/40">{abbrev(c)}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">m.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">m.</span>
             {masculine.map((c, i) => (
-              <span key={`adj-m-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
+              <span key={`adj-m-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">f.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">f.</span>
             {feminine.map((c, i) => (
-              <span key={`adj-f-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
+              <span key={`adj-f-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">n.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">n.</span>
             {neuter.map((c, i) => (
-              <span key={`adj-n-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
+              <span key={`adj-n-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="h-[1px] w-full bg-white/10" />
+      <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
 
       {/* Plural: 3 columns — cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
-        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-white/20">li. mnoga</span>
+        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/20">li. mnoga</span>
         <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">p.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">p.</span>
             {cases.map((c, i) => (
-              <span key={`adj-case2-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-white/40">{abbrev(c)}</span>
+              <span key={`adj-case2-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/40">{abbrev(c)}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">m.os.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">m.os.</span>
             {pluralMasc.map((c, i) => (
-              <span key={`adj-pm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
+              <span key={`adj-pm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
           <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-white/20">nm.os.</span>
+            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">nm.os.</span>
             {pluralNonMasc.map((c, i) => (
-              <span key={`adj-pnm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-white/80">{c}</span>
+              <span key={`adj-pnm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
             ))}
           </div>
         </div>
@@ -185,8 +185,8 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
 
 function FallbackSection({ entry }: { entry: VocabUnknown }) {
   return (
-    <div className="flex flex-col gap-4 rounded-[24px] border border-white/5 bg-white/5 p-5">
-      <p className="font-instrument text-[16px] text-white/80">
+    <div className="flex flex-col gap-4 rounded-[24px] border border-[#F8FAFC]/5 bg-[#F8FAFC]/5 p-5">
+      <p className="font-instrument text-[16px] text-[#F8FAFC]/80">
         {entry.info ?? 'No additional info available.'}
       </p>
     </div>
@@ -220,8 +220,8 @@ function ExamplesSection({ word }: { word: string }) {
 
   if (translation) {
     return (
-      <div className="mt-6 flex flex-col gap-4 border-t border-white/10 pt-6">
-        <span className="mb-2 font-instrument text-[14px] text-white/20">Translation</span>
+      <div className="mt-6 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-6">
+        <span className="mb-2 font-instrument text-[14px] text-[#F8FAFC]/20">Translation</span>
         <p className="font-instrument text-[20px] italic text-[#B4A0FF]">{translation}</p>
       </div>
     )
@@ -232,18 +232,18 @@ function ExamplesSection({ word }: { word: string }) {
       onClick={handleFind}
       disabled={loading}
       radius={24}
-      pane="bg-white/5"
+      pane="bg-[#F8FAFC]/5"
       className="mt-8 w-full py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
     >
       {loading ? (
-        <span className="material-symbols-rounded animate-spin text-white/40">progress_activity</span>
+        <span className="material-symbols-rounded animate-spin text-[#F8FAFC]/40">progress_activity</span>
       ) : error ? (
         <>
           <span className="material-symbols-rounded text-[16px] text-red-400/70">error</span>
-          <span className="text-white/30">Unavailable — tap to retry</span>
+          <span className="text-[#F8FAFC]/30">Unavailable — tap to retry</span>
         </>
       ) : (
-        <span className="text-white/40">Fetch examples</span>
+        <span className="text-[#F8FAFC]/40">Fetch examples</span>
       )}
     </GlassButton>
   )
@@ -344,8 +344,8 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
             onClick={onClose}
             aria-label="Close"
             radius={24}
-            pane="bg-white/10"
-            className="self-start mb-3 h-12 w-12 border border-white/10 text-white/70 hover:text-white"
+            pane="bg-[#F8FAFC]/10"
+            className="self-start mb-3 h-12 w-12 border border-[#F8FAFC]/10 text-[#F8FAFC]/70 hover:text-[#F8FAFC]"
           >
             <span className="material-symbols-rounded text-[28px]">close</span>
           </GlassButton>
@@ -376,7 +376,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                 </>
               )}
             </div>
-            <GlassPane borderRadius={40} className="absolute inset-0 z-0 rounded-[40px] bg-white/[0.02]" />
+            <GlassPane borderRadius={40} className="absolute inset-0 z-0 rounded-[40px] bg-[#F8FAFC]/[0.02]" />
             <div className="relative z-10 flex flex-col p-[32px]">
 
             {/* Top row: type tag + actions */}
@@ -396,8 +396,8 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   <GlassButton
                     onClick={() => setConfirmDelete(false)}
                     radius={19}
-                    pane="bg-white/5"
-                    className="h-[38px] border border-white/10 px-4 font-instrument text-[13px] text-white/50 hover:text-white"
+                    pane="bg-[#F8FAFC]/5"
+                    className="h-[38px] border border-[#F8FAFC]/10 px-4 font-instrument text-[13px] text-[#F8FAFC]/50 hover:text-[#F8FAFC]"
                   >
                     Cancel
                   </GlassButton>
@@ -417,9 +417,9 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   <button
                     onClick={doEnrich}
                     disabled={enriching}
-                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-white/50 hover:text-white'}`}
+                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#F8FAFC]/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
                   >
-                    <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-white/5" />
+                    <GlassPane borderRadius={19} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                     <span className={`material-symbols-rounded relative z-10 text-[20px]${enriching ? ' animate-spin' : ''}`}>
                       {enrichError ? 'error' : 'refresh'}
                     </span>
@@ -447,16 +447,16 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                 <button
                   onClick={handleSpeaker}
                   disabled={false}
-                  className={`relative flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-white/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-white/50 hover:text-white'}`}
+                  className={`relative flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
                 >
-                  <GlassPane borderRadius={18} className="absolute inset-0 z-0 rounded-full bg-white/5" />
+                  <GlassPane borderRadius={18} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className={`material-symbols-rounded relative z-10 text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>
                     {tts.state === 'loading' ? 'progress_activity' : tts.state === 'error' ? 'error' : 'volume_up'}
                   </span>
                 </button>
               </div>
               {entry.type === 'noun' && (
-                <h3 className="mb-1 mt-1 font-instrument text-[20px] leading-none text-white/40">{entry.plAlt}</h3>
+                <h3 className="mb-1 mt-1 font-instrument text-[20px] leading-none text-[#F8FAFC]/40">{entry.plAlt}</h3>
               )}
               <h2 className="mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF]">{entry.en}</h2>
             </div>

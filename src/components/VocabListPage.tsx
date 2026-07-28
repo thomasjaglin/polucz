@@ -63,7 +63,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
       {/* Search + filter glass card */}
       <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <div className="relative flex w-full flex-col gap-[16px] rounded-[36px] p-[16px]">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
           <div className="relative z-10 flex flex-col gap-[14px]">
             {/* Filter tags + collapsed search toggle */}
             <div className="flex items-center justify-between gap-[8px]">

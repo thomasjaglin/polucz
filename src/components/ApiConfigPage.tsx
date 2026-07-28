@@ -29,7 +29,7 @@ export default function ApiConfigPage({ onSave }: Props) {
             <option value="gemini" className="bg-[#1a1a1a] text-[#F8FAFC]">Google Gemini</option>
             <option value="claude" className="bg-[#1a1a1a] text-[#F8FAFC]">Anthropic Claude</option>
           </select>
-          <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-white/50">
+          <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
             expand_more
           </span>
         </div>
@@ -53,9 +53,9 @@ export default function ApiConfigPage({ onSave }: Props) {
               localStorage.setItem('polucz_haptics', next ? 'true' : 'false')
               if (next) haptics.tap()
             }}
-            className={`relative h-[28px] w-[48px] rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-white/10 bg-white/10'}`}
+            className={`relative h-[28px] w-[48px] rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-[#F8FAFC]/10 bg-[#F8FAFC]/10'}`}
           >
-            <span className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-white transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
+            <span className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-[#F8FAFC] transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
           </button>
         </div>
 

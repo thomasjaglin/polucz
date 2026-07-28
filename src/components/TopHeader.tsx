@@ -147,27 +147,27 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
             {settingsOpen && (
               <div
                 ref={dropdownRef}
-                className="absolute right-0 top-[50px] z-[100] w-[200px] overflow-hidden rounded-[24px] border border-white/10 shadow-2xl"
+                className="absolute right-0 top-[50px] z-[100] w-[200px] overflow-hidden rounded-[24px] border border-[#F8FAFC]/10 shadow-2xl"
               >
                 <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/60" />
                 <div className="relative z-10 flex flex-col">
                 <button
                   onClick={handleImportClick}
-                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/80 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]"
                 >
                   <span className="material-symbols-rounded text-[18px]">download</span>
                   Import JSON
                 </button>
                 <button
                   onClick={handleExport}
-                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/80 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]"
                 >
                   <span className="material-symbols-rounded text-[18px]">upload</span>
                   Export JSON
                 </button>
                 <button
                   onClick={handleCopyToClipboard}
-                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-white/10"
+                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-[#F8FAFC]/10"
                   style={{ color: copyLabel === 'copied' ? '#86efac' : copyLabel === 'error' ? '#f87171' : 'rgba(248,250,252,0.5)' }}
                 >
                   <span className="material-symbols-rounded text-[18px]">
@@ -178,7 +178,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
                 <button
                   onClick={handleSyncSentences}
                   disabled={syncState === 'loading'}
-                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-white/10 disabled:pointer-events-none"
+                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-[#F8FAFC]/10 disabled:pointer-events-none"
                   style={{ color: syncState === 'done' ? '#86efac' : syncState === 'error' ? '#f87171' : 'rgba(248,250,252,0.8)' }}
                 >
                   <span className={`material-symbols-rounded text-[18px]${syncState === 'loading' ? ' animate-spin' : ''}`}>
@@ -188,14 +188,14 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
                 </button>
                 <button
                   onClick={() => { onChangePage('api_config'); setSettingsOpen(false) }}
-                  className="flex w-full items-center gap-3 border-b border-white/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#B4A0FF] transition-colors hover:bg-[#B4A0FF]/10 hover:text-[#c4b5fd]"
+                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#B4A0FF] transition-colors hover:bg-[#B4A0FF]/10 hover:text-[#c4b5fd]"
                 >
                   <span className="material-symbols-rounded text-[18px]">api</span>
                   API config
                 </button>
                 <button
                   onClick={() => { window.location.href = '/?lab' }}
-                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-white/50 transition-colors hover:bg-white/10 hover:text-white/80"
+                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/50 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]/80"
                 >
                   <span className="material-symbols-rounded text-[18px]">science</span>
                   Glass lab

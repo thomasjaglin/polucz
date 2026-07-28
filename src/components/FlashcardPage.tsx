@@ -160,7 +160,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
       {/* Inner wrapper that rotates on hard-mode toggle */}
       <motion.div style={{ rotateY: rotateYVal }}>
         <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-white/[0.02]" />
+          <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
 
           <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
             {/* Type badge + hard mode label */}
@@ -197,7 +197,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                   exit={{ opacity: 0, transition: { duration: 0.1 } }}
                   className="flex w-full flex-col items-center gap-3"
                 >
-                  <div className="h-[1px] w-full bg-white/10" />
+                  <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
                   <p className="font-instrument text-[14px] text-[#F8FAFC]/30">tap to reveal</p>
                 </motion.div>
               ) : (
@@ -208,7 +208,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                   transition={{ duration: 0.25 }}
                   className="flex w-full flex-col items-center gap-3"
                 >
-                  <div className="h-[1px] w-full bg-white/10" />
+                  <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
                   <div className="flex w-full items-center justify-between gap-3">
                     {displayHardMode ? (
                       <div className="flex flex-col gap-1">
@@ -223,8 +223,8 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                     <GlassButton
                       onClick={e => { e.stopPropagation(); onReplay() }}
                       radius={16}
-                      pane="bg-white/5"
-                      className={`h-[32px] w-[32px] flex-shrink-0 border border-white/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-white/30 hover:text-white/70'}`}
+                      pane="bg-[#F8FAFC]/5"
+                      className={`h-[32px] w-[32px] flex-shrink-0 border border-[#F8FAFC]/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/30 hover:text-[#F8FAFC]/70'}`}
                     >
                       <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
                         {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
@@ -295,7 +295,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
   const pct = total === 0 ? 100 : Math.round((done / total) * 100)
   return (
     <div className="flex w-full items-center gap-3">
-      <div className="h-[4px] flex-1 overflow-hidden rounded-full bg-white/10">
+      <div className="h-[4px] flex-1 overflow-hidden rounded-full bg-[#F8FAFC]/10">
         <motion.div
           className="h-full rounded-full bg-[#B4A0FF]/60"
           initial={false}
@@ -303,7 +303,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
         />
       </div>
-      <span className="font-instrument text-[13px] tabular-nums text-white/30">
+      <span className="font-instrument text-[13px] tabular-nums text-[#F8FAFC]/30">
         {done}/{total}
       </span>
     </div>
