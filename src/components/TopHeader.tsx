@@ -112,7 +112,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
   if (activeId === 'add_page' || activeId === 'api_config') {
     return (
       <div
-        className="absolute left-6 z-50 flex items-center gap-[12px]"
+        className="absolute left-6 z-50 flex items-center gap-3"
         style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
       >
         <IconButton icon="arrow_back" onClick={() => onChangePage('folder')} />
@@ -134,7 +134,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
           back-button path above; ~20px clears them with breathing room. */}
       {activeId === 'folder' && (
         <div
-          className="absolute right-6 flex items-center gap-[12px]"
+          className="absolute right-6 flex items-center gap-3"
           style={{ top: 'calc(1.25rem + env(safe-area-inset-top))' }}
         >
           <IconButton icon="add" onClick={() => onChangePage('add_page')} />

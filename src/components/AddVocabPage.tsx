@@ -121,9 +121,9 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
   }
 
   return (
-    <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
+    <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
       {/* Google Sheets Import */}
-      <GlassCard contentClassName="flex flex-col p-[20px]">
+      <GlassCard contentClassName="flex flex-col p-5">
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">Google Sheets Import</h2>
         <GlassInput
           placeholder="Paste link..."
@@ -136,9 +136,9 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
       </GlassCard>
 
       {/* Manual Add */}
-      <GlassCard contentClassName="flex flex-col p-[20px]">
+      <GlassCard contentClassName="flex flex-col p-5">
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">Add Manually</h2>
-        <div className="mb-4 grid grid-cols-2 gap-[12px]">
+        <div className="mb-4 grid grid-cols-2 gap-3">
           <GlassInput placeholder="PL" value={pl} onChange={v => { setPl(v); if (phase !== 'idle') resetError() }} />
           <GlassInput placeholder="EN (optional)" value={en} onChange={setEn} />
         </div>

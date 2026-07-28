@@ -377,11 +377,11 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
               )}
             </div>
             <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
-            <div className="relative z-10 flex flex-col p-[32px]">
+            <div className="relative z-10 flex flex-col p-8">
 
             {/* Top row: type tag + actions */}
             <div className="mb-8 flex w-full items-center justify-between">
-              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[16px] py-[6px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
                   className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}

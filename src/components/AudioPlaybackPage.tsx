@@ -362,7 +362,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                       exit={{ opacity: 0, transition: { duration: 0.15 } }}
                       transition={{ type: 'spring', stiffness: 260, damping: 30 }}
                     >
-                      <div className="flex items-start justify-between gap-3 p-[20px]">
+                      <div className="flex items-start justify-between gap-3 p-5">
                         <div className="flex min-w-0 flex-col gap-1">
                           <span className="truncate font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
                             {entry.pl}
@@ -371,7 +371,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                             {entry.en}
                           </span>
                         </div>
-                        <span className="mt-1 flex-shrink-0 rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[4px] font-instrument text-[10px] capitalize text-[#F8FAFC]">
+                        <span className="mt-1 flex-shrink-0 rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 font-instrument text-[10px] capitalize text-[#F8FAFC]">
                           {entry.type}
                         </span>
                       </div>
@@ -409,7 +409,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}
-              <div className="relative z-10 p-[20px]">
+              <div className="relative z-10 p-5">
                 <AnimatePresence mode="wait">
                   {current && (
                     <motion.div
@@ -436,7 +436,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                           )}
                         </div>
                       </div>
-                      <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[12px] py-[4px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                      <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                         {typeGradient && (
                           <div
                             className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"

@@ -165,7 +165,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
           <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
             {/* Type badge + hard mode label */}
             <div className="flex items-center gap-2">
-              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-[14px] py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3.5 py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
                   className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
@@ -427,7 +427,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
           card (which sits above the viewport center) rather than mid-screen. */}
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left 40%, rgba(222,0,4,0.85) 0%, transparent 65%)' }} />
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.85) 0%, transparent 65%)' }} />
-    <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
+    <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
       {totalCount > 0 && (
         <ProgressBar done={doneCount} total={totalCount} />
       )}

@@ -14,8 +14,8 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
 
   return (
-    <div className="animate-fade-in flex w-full flex-col gap-6 pt-[24px]">
-      <GlassCard contentClassName="flex flex-col p-[24px]">
+    <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
+      <GlassCard contentClassName="flex flex-col p-6">
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">LLM Provider</h2>
 
         {/* Provider select */}
@@ -24,7 +24,7 @@ export default function ApiConfigPage({ onSave }: Props) {
           <select
             value={provider}
             onChange={e => setProvider(e.target.value)}
-            className="relative z-10 w-full appearance-none bg-transparent px-[18px] py-[12px] font-instrument text-[16px] text-[#F8FAFC] outline-none cursor-pointer"
+            className="relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none cursor-pointer"
           >
             <option value="gemini" className="bg-[#1a1a1a] text-[#F8FAFC]">Google Gemini</option>
             <option value="claude" className="bg-[#1a1a1a] text-[#F8FAFC]">Anthropic Claude</option>
