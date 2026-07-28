@@ -5,10 +5,7 @@ import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
-import gradientUrl from '../assets/translate-gradient.svg'
-import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
-import { registerMaskPane, pokeRenderer } from '../webgl/glassStore'
-import { getGlassMode } from '../lib/glassMode'
+import { pokeRenderer, setBgBlobTop } from '../webgl/glassStore'
 
 type Direction = 'pl-en' | 'en-pl'
 
@@ -24,47 +21,13 @@ const EDGE_OFFSET = 0 // vh — border ring aligned flush with the gradient circ
 
 const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
 
-// Free-form mask glass for the background blob (webgl mode only): an
-// ellipse matching its rounded-[50%] box, so refraction and rim light
-// follow the true elliptical silhouette instead of GlassPane's rounded-rect
-// approximation (which would read as a flat-sided pill on this aspect ratio).
-function drawCircleMask(w: number, h: number) {
-  return (ctx: CanvasRenderingContext2D) => {
-    ctx.fillStyle = '#fff'
-    ctx.beginPath()
-    ctx.ellipse(w / 2, h / 2, w / 2, h / 2, 0, 0, Math.PI * 2)
-    ctx.fill()
-  }
-}
-
-// The blob's displacement map only depends on viewport size, but building it is
-// ~25M ops of blocking JS (getImageData + two box-blur passes over a ~425K-px
-// canvas). Cache it per dimension so navigating back to the page never rebuilds
-// it, and defer the first build off the page-open critical path.
-const blobMaskCache = new Map<string, { canvas: HTMLCanvasElement; scale: number }>()
-
-function buildBlobMask(w: number, h: number): { canvas: HTMLCanvasElement; scale: number } {
-  const key = `${w}x${h}`
-  let entry = blobMaskCache.get(key)
-  if (!entry) {
-    const { canvas, scale } = generateMaskGlassCanvas(w, h, drawCircleMask(w, h), {
-      blurRadius: 5, scale: 40, highlight: 0.5, shade: 0.15, coverageAlpha: true,
-    })
-    entry = { canvas, scale }
-    blobMaskCache.set(key, entry)
-  }
-  return entry
-}
-
-// Pre-build the blob's glass map ahead of time (called during app idle) so the
-// first open of the translate page shows its refraction immediately rather than
-// a beat later — the build stays off every critical path. Idempotent (cached).
-export function warmBlobMask() {
-  if (getGlassMode() !== 'webgl') return
-  const w = Math.round(window.innerWidth * CIRCLE_W / 100)
-  const h = Math.round(window.innerHeight * CIRCLE_H / 100)
-  buildBlobMask(w, h)
-}
+// Vertical position (topFrac, fraction of viewport height) of the procedural
+// gradient blob in the WebGL background, for the two swap states. Derived from
+// the old DOM blob's animated top (BOUNDARY-CIRCLE_H / 100-BOUNDARY) plus the
+// SVG's -5%·CIRCLE_H internal offset. GlassCanvas reads the live value via the
+// glassStore and re-bakes the background as it slides.
+const BLOB_TOP_SRC = (BOUNDARY - CIRCLE_H - 0.05 * CIRCLE_H) / 100 // source on top
+const BLOB_TOP_DST = (100 - BOUNDARY - 0.05 * CIRCLE_H) / 100      // source on bottom
 
 function buildEntry(lemma: string, canonicalEn: string, type: WordType, gender: string): VocabEntry {
   if (type === 'verb') {
@@ -154,21 +117,6 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
 }
 
 export default function TranslatePage({ onAddCard }: Props) {
-  const glassMode = getGlassMode()
-  // In webgl mode the shared canvas glass is hidden behind the gradient <img>,
-  // so the input/buttons show a flat tint. A scoped backdrop-filter frosts the
-  // real DOM gradient directly behind them (no transformed ancestor here, so it
-  // works) — svg/css mode already frosts via the pane's ::before, so skip it.
-  const frostStyle = glassMode === 'webgl'
-    ? { backdropFilter: 'blur(8px) saturate(1.3)', WebkitBackdropFilter: 'blur(8px) saturate(1.3)' }
-    : undefined
-  // The input sits over the bright gradient blob where the canvas refraction is
-  // occluded, so it needs a stronger frost — more blur plus a brightness "lens"
-  // lift — to read as glass rather than a flat tint like the conjugation input.
-  const inputFrostStyle = glassMode === 'webgl'
-    ? { backdropFilter: 'blur(16px) saturate(1.4) brightness(1.08)', WebkitBackdropFilter: 'blur(16px) saturate(1.4) brightness(1.08)' }
-    : undefined
-  const circleRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<Result | null>(null)
@@ -181,57 +129,6 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [toast, setToast] = useState<string | null>(null)
   const translateIdRef = useRef(0)
 
-  // Register the background blob as a mask pane so it gets real refraction +
-  // rim light instead of just its pre-blurred image. Its box tracks the
-  // viewport (CIRCLE_W/H are vw/vh), so the map only needs rebuilding on
-  // resize — its on-screen position (swap animation) is read live every
-  // frame by GlassCanvas, no regeneration needed for that.
-  useEffect(() => {
-    if (glassMode !== 'webgl') return
-    const el = circleRef.current
-    if (!el) return
-
-    let unregister: (() => void) | null = null
-    let idleHandle: number | null = null
-    let cancelled = false
-
-    function register() {
-      const w = Math.round(window.innerWidth * CIRCLE_W / 100)
-      const h = Math.round(window.innerHeight * CIRCLE_H / 100)
-      const { canvas, scale } = buildBlobMask(w, h)
-      if (cancelled) return
-      unregister = registerMaskPane({ el: el!, map: canvas, scale, overscan: GLASS_OVERSCAN })
-    }
-
-    // Cached map → register right away (cheap). First-time build → defer off the
-    // page-open critical path so navigating here never blocks on it; the blob
-    // shows its gradient meanwhile and gains the refraction rim a beat later.
-    const key = `${Math.round(window.innerWidth * CIRCLE_W / 100)}x${Math.round(window.innerHeight * CIRCLE_H / 100)}`
-    if (blobMaskCache.has(key)) {
-      register()
-    } else if (window.requestIdleCallback) {
-      idleHandle = window.requestIdleCallback(() => { idleHandle = null; register() }, { timeout: 500 })
-    } else {
-      idleHandle = window.setTimeout(() => { idleHandle = null; register() }, 0)
-    }
-
-    function onResize() {
-      unregister?.()
-      unregister = null
-      register()
-    }
-    window.addEventListener('resize', onResize)
-    return () => {
-      cancelled = true
-      window.removeEventListener('resize', onResize)
-      if (idleHandle != null) {
-        if (window.cancelIdleCallback) window.cancelIdleCallback(idleHandle)
-        else clearTimeout(idleHandle)
-      }
-      unregister?.()
-    }
-  }, [glassMode])
-
   const x = useMotionValue(0)
   const addOpacity = useTransform(x, [0, 80], [0, 1])
   const clearOpacity = useTransform(x, [-80, 0], [1, 0])
@@ -239,6 +136,20 @@ export default function TranslatePage({ onAddCard }: Props) {
   useMotionValueEvent(x, 'change', pokeRenderer)
 
   const srcTop = direction === 'pl-en' // source = Polish (top) or English (bottom)
+
+  // Drive the procedural gradient blob's vertical position in the WebGL
+  // background. A MotionValue springs between the two swap positions with the
+  // same feel as the DOM border ring, and pushes each frame into the glassStore
+  // so GlassCanvas re-bakes the background as the blob slides.
+  const blobTop = useMotionValue(BLOB_TOP_SRC)
+  useMotionValueEvent(blobTop, 'change', setBgBlobTop)
+  useEffect(() => {
+    // Force the store to the mounted position (module-level store may be stale
+    // from a previous visit; direction always resets to pl-en on remount).
+    setBgBlobTop(srcTop ? BLOB_TOP_SRC : BLOB_TOP_DST)
+    const controls = animate(blobTop, srcTop ? BLOB_TOP_SRC : BLOB_TOP_DST, SPRING)
+    return () => controls.stop()
+  }, [srcTop]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleTranslate() {
     const text = input.trim()
@@ -419,11 +330,8 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   const inputBlock = (
     <>
-      <div
-        className="relative rounded-[20px] border border-[#F8FAFC]/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]"
-        style={inputFrostStyle}
-      >
-        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/10" />
+      <div className="relative rounded-[20px] border border-[#F8FAFC]/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/5" />
         <textarea
           ref={textareaRef}
           value={input}
@@ -449,7 +357,6 @@ export default function TranslatePage({ onAddCard }: Props) {
         variant="primary"
         onClick={handleTranslate}
         disabled={!input.trim() || phase === 'loading'}
-        style={frostStyle}
         className="mt-3 w-full py-3.5 font-instrument text-[15px] disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
@@ -539,26 +446,12 @@ export default function TranslatePage({ onAddCard }: Props) {
   return (
     <div className="fixed inset-0 overflow-hidden">
 
-      {/* Gradient circle backing the source side (Figma 114-13508), sliding
-          between halves on language swap. The global dots background shows
-          through everywhere else. */}
-      <motion.div
-        ref={circleRef}
-        className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 overflow-hidden rounded-[50%]"
-        style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
-        initial={false}
-        animate={{ top: srcTop ? `${BOUNDARY - CIRCLE_H}vh` : `${100 - BOUNDARY}vh` }}
-        transition={SPRING}
-      >
-        <img
-          src={gradientUrl}
-          alt=""
-          className={`absolute max-w-none ${glassMode === 'webgl' ? 'opacity-80' : ''}`}
-          style={{ left: '-11.3%', top: '-5%', width: '149.4%', height: '116%' }}
-        />
-      </motion.div>
+      {/* The gradient circle backing the source side (Figma 114-13508) is now
+          rendered procedurally into the WebGL background (see backgroundData.ts
+          `translate`) so the page's glass panes refract it natively; its
+          vertical slide on swap is driven via blobTop -> glassStore above. */}
 
-      {/* Doubled soft edge — the second circle 20px into the dark side */}
+      {/* Soft edge ring marking the source side, sliding with the blob */}
       <motion.div
         className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-[50%] border border-[#F8FAFC]/10"
         style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
@@ -582,7 +475,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         radius={20}
         pane="bg-[#181818]/45"
         className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-[#F8FAFC]/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
-        style={{ top: `${BOUNDARY}vh`, ...frostStyle }}
+        style={{ top: `${BOUNDARY}vh` }}
       >
         <motion.span
           className="material-symbols-rounded text-[20px] text-[#F8FAFC]/60"

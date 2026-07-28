@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import AppBackground from './components/AppBackground'
 import PageGradient from './components/PageGradient'
@@ -9,7 +9,7 @@ import BottomNav from './components/nav/BottomNav'
 import VocabListPage from './components/VocabListPage'
 import AddVocabPage from './components/AddVocabPage'
 import ApiConfigPage from './components/ApiConfigPage'
-import TranslatePage, { warmBlobMask } from './components/TranslatePage'
+import TranslatePage from './components/TranslatePage'
 import FlashcardPage from './components/FlashcardPage'
 import AudioPlaybackPage from './components/AudioPlaybackPage'
 import QuizPage from './components/QuizPage'
@@ -36,26 +36,6 @@ export default function App() {
     setGlassModeState(next)
   }
 
-  // Pre-build the translate page's background-blob glass map during idle after
-  // load, so opening that page is instant AND fully glassy from the first frame
-  // (its build is the one heavy mount-time cost in the app). Idempotent/cached.
-  useEffect(() => {
-    // Feature-detect via cast — older Safari lacks requestIdleCallback.
-    const rIC = (window as unknown as {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
-    }).requestIdleCallback
-    const cIC = (window as unknown as {
-      cancelIdleCallback?: (id: number) => void
-    }).cancelIdleCallback
-    let idle: number | undefined
-    let timer: ReturnType<typeof setTimeout> | undefined
-    if (rIC) idle = rIC(() => warmBlobMask(), { timeout: 3000 })
-    else timer = setTimeout(() => warmBlobMask(), 1200)
-    return () => {
-      if (idle !== undefined && cIC) cIC(idle)
-      if (timer !== undefined) clearTimeout(timer)
-    }
-  }, [])
 
   // Hide header on scroll down, reveal on scroll up
   const [headerHidden, setHeaderHidden] = useState(false)

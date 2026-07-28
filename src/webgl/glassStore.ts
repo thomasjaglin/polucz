@@ -65,6 +65,28 @@ export interface MaskPaneRecord {
   overscan: number       // map padding beyond the element, px per side
 }
 
+// Live vertical position (topFrac, fraction of viewport height) of the
+// translate page's procedural gradient blob. TranslatePage drives this as the
+// blob slides on language swap; GlassCanvas reads it when rendering the
+// translate background and re-bakes the bg texture whenever it changes.
+let bgBlobTop = -0.2567 // default: source-on-top position
+const bgListeners = new Set<() => void>()
+
+export function setBgBlobTop(v: number) {
+  if (v === bgBlobTop) return
+  bgBlobTop = v
+  bgListeners.forEach(l => l())
+}
+
+export function getBgBlobTop(): number {
+  return bgBlobTop
+}
+
+export function onBgChange(cb: () => void): () => void {
+  bgListeners.add(cb)
+  return () => bgListeners.delete(cb)
+}
+
 const maskPanes = new Set<MaskPaneRecord>()
 
 export function registerMaskPane(rec: MaskPaneRecord): () => void {

@@ -15,10 +15,15 @@ export interface BgLayer {
   viewW: number            // svg viewBox size
   viewH: number
   widthPx: number          // rendered CSS width (w-[…px])
+  widthFracVw?: number     // width as fraction of viewport width (overrides widthPx)
+  heightFracVh?: number    // height as fraction of viewport height — enables a
+                           // separate y-scale (non-uniform stretch); without it
+                           // the layer scales uniformly by the x-scale
   topFrac: number          // CSS top as fraction of viewport height
   leftFrac?: number        // CSS left as fraction of viewport width
   rightFrac?: number       // CSS right as fraction of viewport width
   centered?: boolean       // horizontally centered (flex justify-center)
+  dynamicTop?: boolean     // topFrac is driven at runtime (translate blob swap)
   rotDeg: number           // shared rotate(θ cx cy) of every ellipse
   opacity: number          // CSS opacity on the svg
   blurPx: number           // CSS blur() on the svg (post-scale pixels)
@@ -63,9 +68,25 @@ function sideLayer(colors: string[]): BgLayer {
 
 export const pageBackgrounds: Record<PageId, BgLayer[]> = {
   folder:        [mainLayer(['#4A0101', '#8B0909', '#C82A2A', '#F57D7D', '#FFFFFF'])],
-  // The translate page suppresses its page gradient in the DOM (it draws its
-  // own moving gradient circle instead) — plain dots background here too
-  translate:     [],
+  // The translate blob (translate-gradient.svg): a wide, viewport-relative
+  // gradient circle that slides between the top/bottom halves on language swap.
+  // Rendered procedurally so the page's glass panes refract it natively (the
+  // old DOM <img> sat above the canvas and occluded the glass). topFrac is
+  // driven at runtime (see setBgBlobTop); default is the source-on-top position.
+  translate: [{
+    viewW: 959.4, viewH: 908.4,
+    widthPx: 0, widthFracVw: 2.0169, heightFracVh: 0.8514,
+    // leftFrac mirrors the old img: circle centered (-17.5vw) + its -11.3%
+    // internal offset of the 135vw circle → -0.32755·vw.
+    topFrac: -0.2567, dynamicTop: true, leftFrac: -0.32755, rotDeg: 0,
+    opacity: 0.6, blurPx: 30,
+    ellipses: [
+      { cx: 336.2, cy: 586.7, rx: 247.5, ry: 210, color: '#D94C30' },
+      { cx: 648.2, cy: 634.7, rx: 247.5, ry: 210, color: '#EE9B3D' },
+      { cx: 311.2, cy: 273.7, rx: 247.5, ry: 210, color: '#FF15B5' },
+      { cx: 501.2, cy: 363.7, rx: 247.5, ry: 210, color: '#FC484B' },
+    ],
+  }],
   dynamic_feed:  [mainLayer(['#014A2D', '#098B42', '#2AC87C', '#B3F57D', '#FFFFFF'])],
   question_mark: [mainLayer(['#484A01', '#8B8009', '#C8AB2A', '#FFDEB3', '#FFFFFF'])],
   spatial_audio: [mainLayer(['#14014A', '#16098B', '#2A59C8', '#7DD1F5', '#FFFFFF'])],
@@ -100,7 +121,9 @@ export const MAX_ELLIPSES = 10
 export const MAX_LAYERS = 2
 
 // Flatten a page's layers into shader-ready arrays in viewport CSS pixels.
-export function resolvePageUniforms(page: PageId, vw: number, vh: number) {
+// `dynamicTopFrac` overrides topFrac for any layer flagged dynamicTop (the
+// translate blob, which slides on language swap).
+export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynamicTopFrac?: number) {
   const layers = pageBackgrounds[page] ?? []
   const geo = new Float32Array(MAX_ELLIPSES * 4)     // cx, cy, rx, ry
   const misc = new Float32Array(MAX_ELLIPSES * 4)    // sinθ, cosθ, layerIndex, 0
@@ -109,23 +132,29 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number) {
   let n = 0
 
   layers.forEach((layer, li) => {
-    const scale = layer.widthPx / layer.viewW
-    const top = layer.topFrac * vh
+    const widthPx = layer.widthFracVw !== undefined ? layer.widthFracVw * vw : layer.widthPx
+    const scaleX = widthPx / layer.viewW
+    // Separate y-scale for a non-uniform stretch (blob); default uniform.
+    const scaleY = layer.heightFracVh !== undefined
+      ? (layer.heightFracVh * vh) / layer.viewH
+      : scaleX
+    const topFrac = layer.dynamicTop && dynamicTopFrac !== undefined ? dynamicTopFrac : layer.topFrac
+    const top = topFrac * vh
     const left = layer.centered
-      ? (vw - layer.widthPx) / 2
+      ? (vw - widthPx) / 2
       : layer.leftFrac !== undefined
         ? layer.leftFrac * vw
-        : vw - layer.widthPx - (layer.rightFrac ?? 0) * vw
+        : vw - widthPx - (layer.rightFrac ?? 0) * vw
     const rot = (layer.rotDeg * Math.PI) / 180
     layerParams[li * 2] = layer.opacity
     layerParams[li * 2 + 1] = layer.blurPx
 
     for (const e of layer.ellipses) {
       if (n >= MAX_ELLIPSES) break
-      geo[n * 4] = left + scale * e.cx
-      geo[n * 4 + 1] = top + scale * e.cy
-      geo[n * 4 + 2] = scale * e.rx
-      geo[n * 4 + 3] = scale * e.ry
+      geo[n * 4] = left + scaleX * e.cx
+      geo[n * 4 + 1] = top + scaleY * e.cy
+      geo[n * 4 + 2] = scaleX * e.rx
+      geo[n * 4 + 3] = scaleY * e.ry
       misc[n * 4] = Math.sin(rot)
       misc[n * 4 + 1] = Math.cos(rot)
       misc[n * 4 + 2] = li
