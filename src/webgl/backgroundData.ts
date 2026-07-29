@@ -200,7 +200,7 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
     if (li < MAX_LAYERS) {
       const cols = AUDIO_BLOB_COLORS[audioCard.type] ?? AUDIO_BLOB_COLORS.unknown
       layerParams[li * 2] = 0.85     // opacity
-      layerParams[li * 2 + 1] = 30   // blurPx
+      layerParams[li * 2 + 1] = 55   // blurPx — soft enough that the blobs melt together
       const { cx, cy, rx, ry } = audioCard
       // Mask the glow to the card so it doesn't halo past it (like the translate
       // disc). Ellipse a touch larger than the card to cover its rounded corners.
