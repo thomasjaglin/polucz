@@ -202,9 +202,11 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       layerParams[li * 2] = 0.85     // opacity
       layerParams[li * 2 + 1] = 55   // blurPx — soft enough that the blobs melt together
       const { cx, cy, rx, ry } = audioCard
-      // Mask the glow to the card so it doesn't halo past it (like the translate
-      // disc). Ellipse a touch larger than the card to cover its rounded corners.
-      clip[0] = cx; clip[1] = cy; clip[2] = rx * 1.08; clip[3] = ry * 1.12
+      // Loose clip: sized well past the card so its soft falloff happens beyond
+      // the card edge rather than carving an ellipse into it — the colour stays
+      // full across the card and just fades out past it (as the translate blob
+      // does), letting the card's own glass rim define the visible shape.
+      clip[0] = cx; clip[1] = cy; clip[2] = rx * 1.3; clip[3] = ry * 1.5
       clipLayer = li
       // Round blobs (not eccentric ellipses, which pinch into a star at the
       // card's wide aspect) spread across the width; the clip above shapes the
