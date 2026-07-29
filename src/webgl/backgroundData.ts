@@ -4,6 +4,16 @@
 // If pages.ts gradients change, this table must be updated to match.
 
 import type { PageId } from '../data/types'
+import type { AudioCardBlob } from './glassStore'
+
+// Per-word-type colour glow baked behind the audio card so its transparent
+// glass refracts a coloured surface (mirrors the tagGradients palette).
+const AUDIO_BLOB_COLORS: Record<string, string[]> = {
+  noun:      ['#FF5D00', '#FDCF2D', '#FFE79E'],
+  verb:      ['#0099FF', '#CB9EFF', '#2DFD8E'],
+  adjective: ['#6AFF00', '#9BBD21', '#0C4A30'],
+  unknown:   ['#BF00FF', '#4821BD', '#8A2BE2'],
+}
 
 export interface BgEllipse {
   cx: number; cy: number   // viewBox units
@@ -130,7 +140,7 @@ export const MAX_LAYERS = 2
 // Flatten a page's layers into shader-ready arrays in viewport CSS pixels.
 // `dynamicTopFrac` overrides topFrac for any layer flagged dynamicTop (the
 // translate blob, which slides on language swap).
-export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynamicTopFrac?: number) {
+export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynamicTopFrac?: number, audioCard?: AudioCardBlob | null) {
   const layers = pageBackgrounds[page] ?? []
   const geo = new Float32Array(MAX_ELLIPSES * 4)     // cx, cy, rx, ry
   const misc = new Float32Array(MAX_ELLIPSES * 4)    // sinθ, cosθ, layerIndex, 0
@@ -179,6 +189,35 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       n++
     }
   })
+
+  // Audio card colour glow: a soft coloured blob at the current card's rect so
+  // the card's transparent glass refracts it (real rim light) with a per-word
+  // colour. Appended as the next layer (spatial_audio's main glow is layer 0).
+  if (page === 'spatial_audio' && audioCard) {
+    const li = layers.length
+    if (li < MAX_LAYERS) {
+      const cols = AUDIO_BLOB_COLORS[audioCard.type] ?? AUDIO_BLOB_COLORS.unknown
+      layerParams[li * 2] = 0.85     // opacity
+      layerParams[li * 2 + 1] = 44   // blurPx
+      const { cx, cy, rx, ry } = audioCard
+      const blob = [
+        { dx: -0.32, dy: -0.18, sx: 0.85, sy: 0.95, c: cols[0] },
+        { dx:  0.38, dy:  0.10, sx: 0.78, sy: 0.88, c: cols[1] },
+        { dx:  0.02, dy:  0.30, sx: 0.62, sy: 0.72, c: cols[2] ?? cols[0] },
+      ]
+      for (const e of blob) {
+        if (n >= MAX_ELLIPSES) break
+        geo[n * 4]     = cx + e.dx * rx
+        geo[n * 4 + 1] = cy + e.dy * ry
+        geo[n * 4 + 2] = rx * e.sx
+        geo[n * 4 + 3] = ry * e.sy
+        misc[n * 4] = 0; misc[n * 4 + 1] = 1; misc[n * 4 + 2] = li
+        const [r, g, b] = hexToRgb(e.c)
+        color[n * 3] = r; color[n * 3 + 1] = g; color[n * 3 + 2] = b
+        n++
+      }
+    }
+  }
 
   return { geo, misc, color, layerParams, clip, count: n }
 }

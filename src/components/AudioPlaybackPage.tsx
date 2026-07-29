@@ -5,6 +5,7 @@ import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import { getGlassMode } from '../lib/glassMode'
+import { setAudioCard } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -65,10 +66,10 @@ function arcSlot(d: number) {
     y,
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
-    opacity: Math.max(0.06, 0.6 - ad * 0.11),
-    // Depth of field: nearer cards stay sharp, deeper cards in the stack blur
-    // out with distance.
-    blur: Math.min(ad * 0.8, 3.5),
+    opacity: Math.max(0.05, 0.5 - ad * 0.1),
+    // Depth of field + a touch of extra softening so the nearest peeks, which
+    // overlap the now-transparent glass card, read as soft background.
+    blur: Math.min(1.5 + ad * 1.2, 5),
   }
 }
 
@@ -90,17 +91,14 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Enriched cards available for review — drives the start / empty screens.
   const availableCount = cards.filter(c => c.enriched).length
 
-  // In webgl mode the shared canvas glass only refracts the procedural
-  // background, not the DOM peek cards stacked above it — so the front card
-  // gets a scoped backdrop-filter to actually blur/refract the cards behind it.
-  // svg/css mode already blurs the real DOM via the pane's ::before.
-  const glassMode = getGlassMode()
-
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
   // true when the user manually rated/skipped a card — suppresses the
   // auto-easy-advance when the interrupted playback settles to idle
   const userRatedRef    = useRef(false)
+  // The front card element — its rect drives the per-word colour glow baked into
+  // the WebGL background so the card's transparent glass refracts it.
+  const cardRef = useRef<HTMLDivElement>(null)
 
   // ─── Queue building / start ────────────────────────────────────────────────
   // Order: 'list' plays the enriched cards in list order (newest first, as on
@@ -131,6 +129,27 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
 
   const current = queue[idx] ?? null
   const doubleTap = useDoubleTap(useCallback(() => { if (current) onOpenModal?.(current) }, [current, onOpenModal]))
+
+  // Feed the front card's rect + word type to the WebGL background so it bakes a
+  // per-word colour glow there; the card's transparent glass then refracts it.
+  useEffect(() => {
+    if (getGlassMode() !== 'webgl') return
+    if (!started || phase === 'done' || !current) { setAudioCard(null); return }
+    const type = current.type
+    function measure() {
+      const el = cardRef.current
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      if (r.width < 2 || r.height < 2) return
+      setAudioCard({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, rx: r.width / 2, ry: r.height / 2, type })
+    }
+    const raf = requestAnimationFrame(measure)
+    window.addEventListener('resize', measure)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
+  }, [current?.id, started, phase]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clear the glow when the page unmounts.
+  useEffect(() => () => setAudioCard(null), [])
 
   // ─── Start TTS when phase becomes 'playing' or the current card changes ────
   useEffect(() => {
@@ -379,28 +398,16 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   )
                 })}
               </AnimatePresence>
-            {/* Colour ground beneath the glass: the word's own type gradient,
-                giving the card a coloured glow the glass frosts and refracts —
-                the same treatment as the word-detail modal and the translate
-                blob. A dark base keeps the fanned peek cards from bleeding
-                through so the current word stays clean. */}
-            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]">
-              <div className="absolute inset-0 bg-[#0c0a1e]" />
-              {current && (
-                <div
-                  key={current.id}
-                  className="absolute inset-0 opacity-90 mix-blend-screen"
-                  dangerouslySetInnerHTML={{ __html: tagGradients[current.type] ?? tagGradients['unknown'] }}
-                />
-              )}
-            </div>
+            {/* Transparent glass, exactly like the vocab card: the per-word
+                colour glow now lives in the WebGL background (see the cardRef
+                effect + backgroundData audio blob), so the card's own GlassPane
+                refracts it with the renderer's real rim light — no opaque DOM
+                gradient in front of the canvas to hide the effect. */}
             <motion.div
+              ref={cardRef}
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
-              style={glassMode === 'webgl'
-                ? { backdropFilter: 'blur(6px) saturate(1.3)', WebkitBackdropFilter: 'blur(6px) saturate(1.3)' }
-                : undefined}
-              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_2px_2px_3px_-1px_rgba(255,255,255,0.5),inset_-1.5px_-1.5px_2px_-1px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.14)]"
+              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}

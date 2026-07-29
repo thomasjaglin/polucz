@@ -87,6 +87,28 @@ export function onBgChange(cb: () => void): () => void {
   return () => bgListeners.delete(cb)
 }
 
+// The audio playback page's current card: its screen rect (css px) + word type.
+// A coloured glow is baked into the WebGL background here so the card's
+// transparent glass refracts it (real rim/refraction) with a per-word colour,
+// instead of an opaque DOM gradient that would hide the renderer's glass.
+export interface AudioCardBlob { cx: number; cy: number; rx: number; ry: number; type: string }
+let audioCard: AudioCardBlob | null = null
+
+export function setAudioCard(b: AudioCardBlob | null) {
+  // Skip no-op updates (same rounded rect + type) to avoid needless re-bakes.
+  const a = audioCard
+  if (a === b) return
+  if (a && b && a.type === b.type &&
+      Math.round(a.cx) === Math.round(b.cx) && Math.round(a.cy) === Math.round(b.cy) &&
+      Math.round(a.rx) === Math.round(b.rx) && Math.round(a.ry) === Math.round(b.ry)) return
+  audioCard = b
+  bgListeners.forEach(l => l())
+}
+
+export function getAudioCard(): AudioCardBlob | null {
+  return audioCard
+}
+
 const maskPanes = new Set<MaskPaneRecord>()
 
 export function registerMaskPane(rec: MaskPaneRecord): () => void {
