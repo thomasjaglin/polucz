@@ -200,25 +200,25 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
     if (li < MAX_LAYERS) {
       const cols = AUDIO_BLOB_COLORS[audioCard.type] ?? AUDIO_BLOB_COLORS.unknown
       layerParams[li * 2] = 0.85     // opacity
-      layerParams[li * 2 + 1] = 44   // blurPx
+      layerParams[li * 2 + 1] = 30   // blurPx
       const { cx, cy, rx, ry } = audioCard
       // Mask the glow to the card so it doesn't halo past it (like the translate
       // disc). Ellipse a touch larger than the card to cover its rounded corners.
       clip[0] = cx; clip[1] = cy; clip[2] = rx * 1.08; clip[3] = ry * 1.12
       clipLayer = li
-      const blob = [
-        { dx: -0.32, dy: -0.18, sx: 0.85, sy: 0.95, c: cols[0] },
-        { dx:  0.38, dy:  0.10, sx: 0.78, sy: 0.88, c: cols[1] },
-        { dx:  0.02, dy:  0.30, sx: 0.62, sy: 0.72, c: cols[2] ?? cols[0] },
-      ]
-      for (const e of blob) {
+      // Round blobs (not eccentric ellipses, which pinch into a star at the
+      // card's wide aspect) spread across the width; the clip above shapes the
+      // combined glow to the card's elliptical outline.
+      const R = Math.max(ry * 1.5, rx * 0.34)
+      const spread = [-0.6, 0, 0.6]
+      for (let k = 0; k < spread.length; k++) {
         if (n >= MAX_ELLIPSES) break
-        geo[n * 4]     = cx + e.dx * rx
-        geo[n * 4 + 1] = cy + e.dy * ry
-        geo[n * 4 + 2] = rx * e.sx
-        geo[n * 4 + 3] = ry * e.sy
+        geo[n * 4]     = cx + spread[k] * rx
+        geo[n * 4 + 1] = cy
+        geo[n * 4 + 2] = R
+        geo[n * 4 + 3] = R
         misc[n * 4] = 0; misc[n * 4 + 1] = 1; misc[n * 4 + 2] = li
-        const [r, g, b] = hexToRgb(e.c)
+        const [r, g, b] = hexToRgb(cols[k] ?? cols[0])
         color[n * 3] = r; color[n * 3 + 1] = g; color[n * 3 + 2] = b
         n++
       }
