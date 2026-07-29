@@ -67,9 +67,8 @@ function arcSlot(d: number) {
     rotate: d * 5.6,
     scale: 1 - Math.min(ad * 0.045, 0.32),
     opacity: Math.max(0.05, 0.5 - ad * 0.1),
-    // Depth of field + a touch of extra softening so the nearest peeks, which
-    // overlap the now-transparent glass card, read as soft background.
-    blur: Math.min(1.5 + ad * 1.2, 5),
+    // Gentle depth-of-field — nearer cards stay fairly sharp, deeper ones soften.
+    blur: Math.min(ad * 0.8, 3),
   }
 }
 

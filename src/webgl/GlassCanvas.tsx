@@ -42,9 +42,12 @@ uniform vec4 uEllGeo[${MAX_ELLIPSES}];   // cx, cy, rx, ry (css px)
 uniform vec4 uEllMisc[${MAX_ELLIPSES}];  // sinθ, cosθ, layerIndex, unused
 uniform vec3 uEllColor[${MAX_ELLIPSES}];
 uniform vec2 uLayerParams[${MAX_LAYERS}]; // opacity, blurPx
-// Optional elliptical clip (translate blob → circle disc): cx, cy, rx, ry in
-// css px. rx <= 0 disables it.
+// Optional elliptical clip (translate blob → circle disc; audio blob → card):
+// cx, cy, rx, ry in css px. rx <= 0 disables it. uClipLayer limits the clip to
+// one layer index (-1 = all) so e.g. the audio card glow is masked but the
+// page's own background glow is not.
 uniform vec4 uClip;
+uniform int uClipLayer;
 out vec4 outColor;
 
 const vec3 BASE = vec3(18.0 / 255.0);   // body #121212
@@ -90,7 +93,8 @@ void main() {
     int layer = int(uEllMisc[i].z + 0.5);
     if (layer != curLayer) {
       vec3 lc = acc / max(accA, 1e-4);
-      float a = accA * uLayerParams[curLayer].x * clip;
+      float lclip = (uClipLayer < 0 || curLayer == uClipLayer) ? clip : 1.0;
+      float a = accA * uLayerParams[curLayer].x * lclip;
       col = mix(col, 1.0 - (1.0 - col) * (1.0 - lc), a);
       acc = vec3(0.0); accA = 0.0; curLayer = layer;
     }
@@ -102,7 +106,8 @@ void main() {
     accA = mix(accA, 1.0, m);
   }
   vec3 lc = acc / max(accA, 1e-4);
-  float a = accA * uLayerParams[curLayer].x * clip;
+  float lclipF = (uClipLayer < 0 || curLayer == uClipLayer) ? clip : 1.0;
+  float a = accA * uLayerParams[curLayer].x * lclipF;
   col = mix(col, 1.0 - (1.0 - col) * (1.0 - lc), a);
 
   outColor = vec4(col, 1.0);
@@ -464,6 +469,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform3fv(bgU('uEllColor'), u.color)
       gl.uniform2fv(bgU('uLayerParams'), u.layerParams)
       gl.uniform4fv(bgU('uClip'), u.clip)
+      gl.uniform1i(bgU('uClipLayer'), u.clipLayer)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.bindTexture(gl.TEXTURE_2D, bgTex)

@@ -147,6 +147,7 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
   const color = new Float32Array(MAX_ELLIPSES * 3)
   const layerParams = new Float32Array(MAX_LAYERS * 2) // opacity, blurPx
   const clip = new Float32Array(4) // cx, cy, rx, ry (rx<=0 disables)
+  let clipLayer = -1 // which layer index the clip applies to (-1 = all)
   let n = 0
 
   layers.forEach((layer, li) => {
@@ -165,6 +166,7 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       clip[1] = top + ch / 2         // centered on the ring box at this top
       clip[2] = cw / 2
       clip[3] = ch / 2
+      clipLayer = li
     }
     const left = layer.centered
       ? (vw - widthPx) / 2
@@ -200,6 +202,10 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       layerParams[li * 2] = 0.85     // opacity
       layerParams[li * 2 + 1] = 44   // blurPx
       const { cx, cy, rx, ry } = audioCard
+      // Mask the glow to the card so it doesn't halo past it (like the translate
+      // disc). Ellipse a touch larger than the card to cover its rounded corners.
+      clip[0] = cx; clip[1] = cy; clip[2] = rx * 1.08; clip[3] = ry * 1.12
+      clipLayer = li
       const blob = [
         { dx: -0.32, dy: -0.18, sx: 0.85, sy: 0.95, c: cols[0] },
         { dx:  0.38, dy:  0.10, sx: 0.78, sy: 0.88, c: cols[1] },
@@ -219,5 +225,5 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
     }
   }
 
-  return { geo, misc, color, layerParams, clip, count: n }
+  return { geo, misc, color, layerParams, clip, clipLayer, count: n }
 }
