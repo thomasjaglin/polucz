@@ -161,7 +161,7 @@ export default function App() {
   // screen edge navigates through pageOrder — that zone sits in the page
   // margins, so it never collides with the center-screen card drags
   // (flashcard/translate), vertical scroll, taps, or the two-finger rotation
-  // gesture (cancelled below). Swipe right → next page, left → previous.
+  // gesture (cancelled below). Swipe left → next page, right → previous.
   const SWIPE_EDGE = 30, SWIPE_MIN_X = 70, SWIPE_MAX_Y = 50
   const swipeStart = useRef<{ x: number; y: number } | null>(null)
 
@@ -187,7 +187,7 @@ export default function App() {
     if (Math.abs(dx) < SWIPE_MIN_X || Math.abs(dy) > SWIPE_MAX_Y) return
     const idx = pageOrder.indexOf(activeId)
     if (idx === -1) return // add/api pages aren't in the swipe flow
-    const next = idx + (dx > 0 ? 1 : -1)
+    const next = idx + (dx < 0 ? 1 : -1)
     if (next >= 0 && next < pageOrder.length) changePage(pageOrder[next])
   }
 
