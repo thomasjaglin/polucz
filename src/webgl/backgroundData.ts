@@ -146,8 +146,9 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
   const misc = new Float32Array(MAX_ELLIPSES * 4)    // sinθ, cosθ, layerIndex, 0
   const color = new Float32Array(MAX_ELLIPSES * 3)
   const layerParams = new Float32Array(MAX_LAYERS * 2) // opacity, blurPx
-  const clip = new Float32Array(4) // cx, cy, rx, ry (rx<=0 disables)
-  let clipLayer = -1 // which layer index the clip applies to (-1 = all)
+  const clip = new Float32Array(4) // cx, cy, rx/hw, ry/hh (rx<=0 disables)
+  let clipLayer = -1  // which layer index the clip applies to (-1 = all)
+  let clipRadius = 0  // > 0 → rounded-rect clip with this corner radius; else ellipse
   let n = 0
 
   layers.forEach((layer, li) => {
@@ -202,30 +203,32 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       layerParams[li * 2] = 0.85     // opacity
       layerParams[li * 2 + 1] = 55   // blurPx — soft enough that the blobs melt together
       const { cx, cy, rx, ry } = audioCard
-      // Loose clip: sized well past the card so its soft falloff happens beyond
-      // the card edge rather than carving an ellipse into it — the colour stays
-      // full across the card and just fades out past it (as the translate blob
-      // does), letting the card's own glass rim define the visible shape.
-      clip[0] = cx; clip[1] = cy; clip[2] = rx * 1.3; clip[3] = ry * 1.5
+      // Rounded-rect clip masked to the card's rounded-[36px] outline (soft
+      // edge), so the colour follows the card shape instead of an ellipse.
+      clip[0] = cx; clip[1] = cy; clip[2] = rx; clip[3] = ry
       clipLayer = li
-      // Round blobs (not eccentric ellipses, which pinch into a star at the
-      // card's wide aspect) spread across the width; the clip above shapes the
-      // combined glow to the card's elliptical outline.
+      clipRadius = 36
+      // Round blobs (round = no star at the card's wide aspect) at the original
+      // 2D arrangement so the colour has organic vertical + horizontal variety.
       const R = Math.max(ry * 1.5, rx * 0.34)
-      const spread = [-0.6, 0, 0.6]
-      for (let k = 0; k < spread.length; k++) {
+      const blob = [
+        { dx: -0.32, dy: -0.18, c: cols[0] },
+        { dx:  0.38, dy:  0.10, c: cols[1] },
+        { dx:  0.02, dy:  0.30, c: cols[2] ?? cols[0] },
+      ]
+      for (const e of blob) {
         if (n >= MAX_ELLIPSES) break
-        geo[n * 4]     = cx + spread[k] * rx
-        geo[n * 4 + 1] = cy
+        geo[n * 4]     = cx + e.dx * rx
+        geo[n * 4 + 1] = cy + e.dy * ry
         geo[n * 4 + 2] = R
         geo[n * 4 + 3] = R
         misc[n * 4] = 0; misc[n * 4 + 1] = 1; misc[n * 4 + 2] = li
-        const [r, g, b] = hexToRgb(cols[k] ?? cols[0])
+        const [r, g, b] = hexToRgb(e.c)
         color[n * 3] = r; color[n * 3 + 1] = g; color[n * 3 + 2] = b
         n++
       }
     }
   }
 
-  return { geo, misc, color, layerParams, clip, clipLayer, count: n }
+  return { geo, misc, color, layerParams, clip, clipLayer, clipRadius, count: n }
 }

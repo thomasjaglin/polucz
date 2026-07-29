@@ -48,9 +48,15 @@ uniform vec2 uLayerParams[${MAX_LAYERS}]; // opacity, blurPx
 // page's own background glow is not.
 uniform vec4 uClip;
 uniform int uClipLayer;
+uniform float uClipRadius; // > 0 → rounded-rect clip (uClip.zw = half extents); else ellipse
 out vec4 outColor;
 
 const vec3 BASE = vec3(18.0 / 255.0);   // body #121212
+
+float sdRoundRect(vec2 p, vec2 halfSize, float r) {
+  vec2 q = abs(p) - halfSize + r;
+  return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
 
 // smoothstep with descending edges is undefined behavior in GLSL —
 // this is the explicit, any-order-safe equivalent.
@@ -75,12 +81,18 @@ void main() {
   vec2 css = vec2(gl_FragCoord.x / uDpr, uResCss.y - gl_FragCoord.y / uDpr);
   vec3 col = BASE;
 
-  // Elliptical clip factor (1 inside, soft-edged to 0 outside). Confines the
-  // translate blob to the circle disc so it doesn't glow past the ellipse.
+  // Clip factor (1 inside, soft-edged to 0 outside). Rounded-rect (audio card,
+  // masks the colour to the card's rounded-[36px] outline) or ellipse (translate
+  // circle disc).
   float clip = 1.0;
   if (uClip.z > 0.0) {
-    vec2 dd = (css - uClip.xy) / uClip.zw;
-    clip = 1.0 - fallStep(0.9, 1.02, length(dd));
+    if (uClipRadius > 0.0) {
+      float d = sdRoundRect(css - uClip.xy, uClip.zw, uClipRadius);
+      clip = 1.0 - smoothstep(-6.0, 26.0, d);
+    } else {
+      vec2 dd = (css - uClip.xy) / uClip.zw;
+      clip = 1.0 - fallStep(0.9, 1.02, length(dd));
+    }
   }
 
   // Ellipse stacks: src-over within a layer (premultiplied), screen-blend
@@ -470,6 +482,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform2fv(bgU('uLayerParams'), u.layerParams)
       gl.uniform4fv(bgU('uClip'), u.clip)
       gl.uniform1i(bgU('uClipLayer'), u.clipLayer)
+      gl.uniform1f(bgU('uClipRadius'), u.clipRadius)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
       gl.bindTexture(gl.TEXTURE_2D, bgTex)
