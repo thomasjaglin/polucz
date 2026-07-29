@@ -15,7 +15,7 @@ import AudioPlaybackPage from './components/AudioPlaybackPage'
 import QuizPage from './components/QuizPage'
 import WordDetailModal from './components/WordDetailModal'
 import GlassLabPage from './components/GlassLabPage'
-import { pages } from './data/pages'
+import { pages, pageOrder } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
 import { vocabularyData } from './data/vocabulary'
@@ -156,6 +156,41 @@ export default function App() {
     }
   }
 
+  // ─── Edge-swipe page navigation ──────────────────────────────────────────
+  // A single-finger swipe that STARTS within SWIPE_EDGE px of the left/right
+  // screen edge navigates through pageOrder — that zone sits in the page
+  // margins, so it never collides with the center-screen card drags
+  // (flashcard/translate), vertical scroll, taps, or the two-finger rotation
+  // gesture (cancelled below). Swipe right → next page, left → previous.
+  const SWIPE_EDGE = 30, SWIPE_MIN_X = 70, SWIPE_MAX_Y = 50
+  const swipeStart = useRef<{ x: number; y: number } | null>(null)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    // Not while a modal is open, and single-touch only (protects two-finger gestures).
+    if (overlayMounted || e.touches.length !== 1) { swipeStart.current = null; return }
+    const t = e.touches[0]
+    const nearEdge = t.clientX <= SWIPE_EDGE || t.clientX >= window.innerWidth - SWIPE_EDGE
+    swipeStart.current = nearEdge ? { x: t.clientX, y: t.clientY } : null
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (e.touches.length > 1) swipeStart.current = null // a second finger → not a page swipe
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    const s = swipeStart.current
+    swipeStart.current = null
+    if (!s || e.changedTouches.length !== 1) return
+    const t = e.changedTouches[0]
+    const dx = t.clientX - s.x
+    const dy = t.clientY - s.y
+    if (Math.abs(dx) < SWIPE_MIN_X || Math.abs(dy) > SWIPE_MAX_Y) return
+    const idx = pageOrder.indexOf(activeId)
+    if (idx === -1) return // add/api pages aren't in the swipe flow
+    const next = idx + (dx > 0 ? 1 : -1)
+    if (next >= 0 && next < pageOrder.length) changePage(pageOrder[next])
+  }
+
   const showNav = activeId !== 'add_page' && activeId !== 'api_config'
   const page = pages[activeId]
 
@@ -179,7 +214,12 @@ export default function App() {
   }
 
   return (
-    <div className="relative h-screen w-full">
+    <div
+      className="relative h-screen w-full"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {glassMode === 'webgl' && <GlassCanvas activeId={activeId} onFallback={handleGlassFallback} />}
       <AppBackground />
       <PageGradient activeId={activeId} />
