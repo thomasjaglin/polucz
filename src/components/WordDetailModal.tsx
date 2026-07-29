@@ -193,24 +193,29 @@ function FallbackSection({ entry }: { entry: VocabUnknown }) {
   )
 }
 
+interface Example { pl: string; en: string }
+
 function ExamplesSection({ word }: { word: string }) {
   const [loading, setLoading] = useState(false)
-  const [translation, setTranslation] = useState<string | null>(null)
+  const [examples, setExamples] = useState<Example[] | null>(null)
+  const [source, setSource] = useState<'corpus' | 'generated' | null>(null)
   const [error, setError] = useState(false)
 
   async function handleFind() {
-    if (loading || translation) return
+    if (loading || examples) return
     setLoading(true)
     setError(false)
     try {
-      const res = await fetch('/api/translate', {
+      const res = await fetch('/api/examples', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: word }),
+        body: JSON.stringify({ word }),
       })
       const data = await res.json()
-      if (data.translation) setTranslation(data.translation)
-      else setError(true)
+      if (Array.isArray(data.examples) && data.examples.length > 0) {
+        setExamples(data.examples)
+        setSource(data.source ?? null)
+      } else setError(true)
     } catch {
       setError(true)
     } finally {
@@ -218,11 +223,20 @@ function ExamplesSection({ word }: { word: string }) {
     }
   }
 
-  if (translation) {
+  if (examples) {
     return (
       <div className="mt-6 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-6">
-        <span className="mb-2 font-instrument text-[14px] text-[#F8FAFC]/20">Translation</span>
-        <p className="font-instrument text-[20px] italic text-[#B4A0FF]">{translation}</p>
+        <span className="font-instrument text-[14px] text-[#F8FAFC]/20">
+          Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
+        </span>
+        <div className="flex flex-col gap-4">
+          {examples.map((ex, i) => (
+            <div key={i} className="flex flex-col gap-1">
+              <p className="font-instrument text-[17px] leading-snug text-[#F8FAFC]/90">{ex.pl}</p>
+              <p className="font-instrument text-[14px] italic leading-snug text-[#B4A0FF]/70">{ex.en}</p>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
