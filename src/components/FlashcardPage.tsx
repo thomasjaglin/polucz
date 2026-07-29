@@ -89,6 +89,12 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
       if (Math.abs(norm) > 45) {
         committed = true
         rotationJustFired.current = true
+        // Reset the guard on a timer HERE, not in onTouchEnd: onToggleHardMode
+        // re-renders and tears down/recreates these listeners mid-gesture, so
+        // the onTouchEnd closure that used to schedule this may never run —
+        // which left the guard stuck true and the card permanently unclickable.
+        // This timeout references the stable ref, so it survives the remount.
+        setTimeout(() => { rotationJustFired.current = false }, 600)
         haptics.swipeRight()
         onToggleHardMode()
       }
@@ -97,12 +103,6 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
     const onTouchEnd = () => {
       startAngle = null
       startX = null
-      if (committed) {
-        // The two lifted fingers each fire their own touchend, which would
-        // otherwise read as a double-tap and pop the modal right after
-        // rotating. Hold the guard past the double-tap window (300ms).
-        setTimeout(() => { rotationJustFired.current = false }, 400)
-      }
       committed = false
     }
 
