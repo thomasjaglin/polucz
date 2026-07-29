@@ -400,7 +400,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               style={glassMode === 'webgl'
                 ? { backdropFilter: 'blur(6px) saturate(1.3)', WebkitBackdropFilter: 'blur(6px) saturate(1.3)' }
                 : undefined}
-              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_2px_2px_3px_-1px_rgba(255,255,255,0.5),inset_-1.5px_-1.5px_2px_-1px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.14)]"
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}
