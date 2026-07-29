@@ -389,23 +389,28 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 background: 'radial-gradient(ellipse 68% 92% at 50% 50%, rgba(6,4,26,0.45) 0%, rgba(6,4,26,0.22) 46%, rgba(6,4,26,0) 72%)',
               }}
             />
-            {/* Opaque colour ground exactly under the active card — obscures the
-                peek cards that would otherwise bleed through its glass so the
-                current word stays clean. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 rounded-[36px]"
-              style={{
-                background: 'linear-gradient(160deg, rgba(18,14,58,0.78) 0%, rgba(38,24,92,0.74) 60%, rgba(22,16,70,0.78) 100%)',
-              }}
-            />
+            {/* Colour ground beneath the glass: the word's own type gradient,
+                giving the card a coloured glow the glass frosts and refracts —
+                the same treatment as the word-detail modal and the translate
+                blob. A dark base keeps the fanned peek cards from bleeding
+                through so the current word stays clean. */}
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-[36px]">
+              <div className="absolute inset-0 bg-[#0c0a1e]" />
+              {current && (
+                <div
+                  key={current.id}
+                  className="absolute inset-0 opacity-90 mix-blend-screen"
+                  dangerouslySetInnerHTML={{ __html: tagGradients[current.type] ?? tagGradients['unknown'] }}
+                />
+              )}
+            </div>
             <motion.div
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
               style={glassMode === 'webgl'
-                ? { backdropFilter: 'blur(3px) saturate(1.15)', WebkitBackdropFilter: 'blur(3px) saturate(1.15)' }
+                ? { backdropFilter: 'blur(6px) saturate(1.3)', WebkitBackdropFilter: 'blur(6px) saturate(1.3)' }
                 : undefined}
-              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
+              className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}
