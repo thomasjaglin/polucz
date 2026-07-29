@@ -379,16 +379,6 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   )
                 })}
               </AnimatePresence>
-            {/* Focus scrim: a soft dark well behind the current card that dims
-                the peek stack around it. Sits above the peeks, below the card. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-              style={{
-                transform: 'scale(1.7)',
-                background: 'radial-gradient(ellipse 68% 92% at 50% 50%, rgba(6,4,26,0.45) 0%, rgba(6,4,26,0.22) 46%, rgba(6,4,26,0) 72%)',
-              }}
-            />
             {/* Colour ground beneath the glass: the word's own type gradient,
                 giving the card a coloured glow the glass frosts and refracts —
                 the same treatment as the word-detail modal and the translate
