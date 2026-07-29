@@ -342,8 +342,12 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   function handleAdd() {
     if (!result) return
+    const lemma = result.lemma
     onAddCard(buildEntry(result.lemma, result.canonicalEn, result.type, result.gender))
-    setAdded(true)
+    pushToast(`${lemma} added to vocabulary`)
+    // Single-word card added → clear the page (this path is only reachable for
+    // single words; sentence translations aren't swipe-savable, so they stay).
+    handleDismiss()
   }
 
   function handleDismiss() {
@@ -464,12 +468,12 @@ export default function TranslatePage({ onAddCard }: Props) {
         {canSwipe && (
           <motion.div
             className="pointer-events-none absolute inset-0 z-[5] rounded-[24px]"
-            style={{ opacity: addOpacity, background: 'radial-gradient(ellipse at right, rgba(39,209,178,0.5) 0%, transparent 70%)' }}
+            style={{ opacity: addOpacity, background: 'radial-gradient(ellipse at right, rgba(39,209,178,0.5) 0%, transparent 88%)' }}
           />
         )}
         <motion.div
           className="pointer-events-none absolute inset-0 z-[5] rounded-[24px]"
-          style={{ opacity: clearOpacity, background: 'radial-gradient(ellipse at left, rgba(222,0,4,0.5) 0%, transparent 70%)' }}
+          style={{ opacity: clearOpacity, background: 'radial-gradient(ellipse at left, rgba(222,0,4,0.5) 0%, transparent 88%)' }}
         />
 
         {canSwipe && (
