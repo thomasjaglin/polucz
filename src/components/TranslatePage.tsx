@@ -160,9 +160,17 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [wordPhase, setWordPhase] = useState<'idle' | 'loading' | 'done'>('idle')
   const [words, setWords] = useState<AnalyzedWord[]>([])
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
-  const [toast, setToast] = useState<string | null>(null)
+  const [toasts, setToasts] = useState<{ id: number; text: string }[]>([])
+  const toastIdRef = useRef(0)
   const translateIdRef = useRef(0)
   const circleRef = useRef<HTMLDivElement>(null)
+
+  // Success messages stack at the top of the screen and auto-dismiss.
+  function pushToast(text: string) {
+    const id = ++toastIdRef.current
+    setToasts(t => [...t, { id, text }])
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2500)
+  }
 
   // Register the circle as an elliptical glass mask pane so it reads as a glass
   // disc refracting the blob behind it. The map is size-only (rebuilt on
@@ -354,8 +362,7 @@ export default function TranslatePage({ onAddCard }: Props) {
     saveCard(entry)
     onAddCard(entry)
     setSavedSet(prev => new Set([...prev, word.lemma.toLowerCase()]))
-    setToast(`${word.lemma} added to vocabulary`)
-    setTimeout(() => setToast(null), 2500)
+    pushToast(`${word.lemma} added to vocabulary`)
   }
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
@@ -451,6 +458,19 @@ export default function TranslatePage({ onAddCard }: Props) {
         className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
       >
         <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#F8FAFC]/[0.02]" />
+
+        {/* Swipe feedback wash, scaled to the card (mirrors the flashcard
+            glows): green on the right (save), red on the left (clear). */}
+        {canSwipe && (
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-[5] rounded-[24px]"
+            style={{ opacity: addOpacity, background: 'radial-gradient(ellipse at right, rgba(39,209,178,0.5) 0%, transparent 70%)' }}
+          />
+        )}
+        <motion.div
+          className="pointer-events-none absolute inset-0 z-[5] rounded-[24px]"
+          style={{ opacity: clearOpacity, background: 'radial-gradient(ellipse at left, rgba(222,0,4,0.5) 0%, transparent 70%)' }}
+        />
 
         {canSwipe && (
           <motion.div style={{ opacity: addOpacity }}
@@ -568,20 +588,27 @@ export default function TranslatePage({ onAddCard }: Props) {
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
 
-      {/* ── Success toast ───────────────────────────────────────── */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            className="fixed bottom-28 left-1/2 z-[80] -translate-x-1/2 overflow-hidden rounded-full border border-[#F8FAFC]/10 px-5 py-2"
-          >
-            <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
-            <span className="relative z-10 whitespace-nowrap font-instrument text-[14px] text-[#F8FAFC]/80">{toast}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Success toasts — stacked at the top of the screen ─────── */}
+      <div
+        className="pointer-events-none fixed inset-x-0 z-[80] flex flex-col items-center gap-2"
+        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+      >
+        <AnimatePresence>
+          {toasts.map(t => (
+            <motion.div
+              key={t.id}
+              layout
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="relative overflow-hidden rounded-full border border-[#F8FAFC]/10 px-5 py-2"
+            >
+              <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
+              <span className="relative z-10 whitespace-nowrap font-instrument text-[14px] text-[#F8FAFC]/80">{t.text}</span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
