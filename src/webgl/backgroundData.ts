@@ -208,13 +208,14 @@ export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynami
       clip[0] = cx; clip[1] = cy; clip[2] = rx; clip[3] = ry
       clipLayer = li
       clipRadius = 36
-      // Round blobs (round = no star at the card's wide aspect) at the original
-      // 2D arrangement so the colour has organic vertical + horizontal variety.
-      const R = Math.max(ry * 1.5, rx * 0.34)
+      // Round blobs (round = no star at the card's wide aspect), concentrated
+      // toward the left of the card so the colour pools there and the rest of
+      // the card stays cleaner for the text.
+      const R = Math.max(ry * 1.5, rx * 0.3)
       const blob = [
-        { dx: -0.32, dy: -0.18, c: cols[0] },
-        { dx:  0.38, dy:  0.10, c: cols[1] },
-        { dx:  0.02, dy:  0.30, c: cols[2] ?? cols[0] },
+        { dx: -0.62, dy: -0.16, c: cols[0] },
+        { dx: -0.30, dy:  0.18, c: cols[1] },
+        { dx: -0.58, dy:  0.26, c: cols[2] ?? cols[0] },
       ]
       for (const e of blob) {
         if (n >= MAX_ELLIPSES) break
