@@ -109,6 +109,19 @@ export function getAudioCard(): AudioCardBlob | null {
   return audioCard
 }
 
+// Flashcard hard mode: recolours the dynamic_feed background to reddish purple.
+let bgHardMode = false
+
+export function setBgHardMode(on: boolean) {
+  if (on === bgHardMode) return
+  bgHardMode = on
+  bgListeners.forEach(l => l())
+}
+
+export function getBgHardMode(): boolean {
+  return bgHardMode
+}
+
 const maskPanes = new Set<MaskPaneRecord>()
 
 export function registerMaskPane(rec: MaskPaneRecord): () => void {

@@ -140,8 +140,14 @@ export const MAX_LAYERS = 2
 // Flatten a page's layers into shader-ready arrays in viewport CSS pixels.
 // `dynamicTopFrac` overrides topFrac for any layer flagged dynamicTop (the
 // translate blob, which slides on language swap).
-export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynamicTopFrac?: number, audioCard?: AudioCardBlob | null) {
-  const layers = pageBackgrounds[page] ?? []
+// Flashcard hard mode recolours the dynamic_feed glow from green to a reddish
+// purple (dark plum → magenta-pink), signalling the harder recall drill.
+const DYNAMIC_FEED_HARD: BgLayer[] = [mainLayer(['#40012A', '#850950', '#C82A7A', '#F57DB5', '#FFFFFF'])]
+
+export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynamicTopFrac?: number, audioCard?: AudioCardBlob | null, hardMode?: boolean) {
+  const layers = (page === 'dynamic_feed' && hardMode)
+    ? DYNAMIC_FEED_HARD
+    : (pageBackgrounds[page] ?? [])
   const geo = new Float32Array(MAX_ELLIPSES * 4)     // cx, cy, rx, ry
   const misc = new Float32Array(MAX_ELLIPSES * 4)    // sinθ, cosθ, layerIndex, 0
   const color = new Float32Array(MAX_ELLIPSES * 3)

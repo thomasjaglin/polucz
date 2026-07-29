@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { PageId } from '../data/types'
-import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer, getBgBlobTop, getAudioCard, onBgChange, type PaneRecord } from './glassStore'
+import { getPanes, onPanesChanged, getMaskPanes, onPokeRenderer, getBgBlobTop, getAudioCard, getBgHardMode, onBgChange, type PaneRecord } from './glassStore'
 import { fx, onFxChange, isAnimated } from './shaderFx'
 import { resolvePageUniforms, MAX_ELLIPSES, MAX_LAYERS } from './backgroundData'
 import {
@@ -468,7 +468,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
 
     function renderBg() {
       const vw = cssW, vh = cssH, dpr = cssDpr
-      const u = resolvePageUniforms(page, vw, vh, getBgBlobTop(), getAudioCard())
+      const u = resolvePageUniforms(page, vw, vh, getBgBlobTop(), getAudioCard(), getBgHardMode())
       gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, bgTex, 0)
       gl.viewport(0, 0, canvas.width, canvas.height)

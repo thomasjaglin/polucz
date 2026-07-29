@@ -5,7 +5,7 @@ import type { VocabEntry } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
-import { pokeRenderer } from '../webgl/glassStore'
+import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -327,6 +327,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   // Keep the WebGL glass tracking the card while it's dragged/flung, so its
   // glass doesn't lag behind and render as a ghost card.
   useMotionValueEvent(x, 'change', pokeRenderer)
+
+  // Recolour the page background to reddish purple while in hard mode; clear it
+  // when leaving the flashcard page.
+  useEffect(() => { setBgHardMode(hardMode) }, [hardMode])
+  useEffect(() => () => setBgHardMode(false), [])
 
   useEffect(() => {
     const reviews = getAllReviews()
