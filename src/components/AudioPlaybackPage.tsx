@@ -421,7 +421,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                       className="flex items-start justify-between gap-3"
                     >
                       <div className="flex min-w-0 flex-col gap-1">
-                        <span className="font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                        <span lang="pl" className="hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
                           {current.pl}
                         </span>
                         <div className="flex items-center gap-1.5">

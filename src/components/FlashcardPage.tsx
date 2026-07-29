@@ -181,7 +181,7 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
 
             {/* Question word — pl in normal mode, en in hard mode */}
             <div className="flex flex-col items-center gap-2 text-center">
-              <h1 className="font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
+              <h1 lang={displayHardMode ? 'en' : 'pl'} className="hyphens-auto break-words font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
                 {displayHardMode ? entry.en : entry.pl}
               </h1>
               {!displayHardMode && entry.type === 'noun' && entry.gender && (

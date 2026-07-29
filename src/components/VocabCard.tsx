@@ -27,12 +27,12 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
         <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <span className="font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+              <div className="flex min-w-0 items-center gap-2">
+                <span lang="pl" className="hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
                   {entry.pl}
                 </span>
                 {mastered && (
-                  <span className="text-[14px] leading-none text-[#B4A0FF]">★</span>
+                  <span className="shrink-0 text-[14px] leading-none text-[#B4A0FF]">★</span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
