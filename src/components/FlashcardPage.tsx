@@ -439,27 +439,6 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
       {current ? (
         <>
-          <div className="relative">
-            {/* Upcoming cards peeking below the current one — a simple vertical
-                deck (no fanning, no played cards above). Blank card shapes so
-                the next word isn't spoiled; they just show the queue depth. */}
-            {queue.slice(1, 13).map((entry, i) => {
-              const n = i + 1
-              return (
-                <div
-                  key={entry.id}
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.03] shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
-                  style={{
-                    // Full height + straight-down translate so the bottom edge
-                    // always trails below the current card; only the width
-                    // narrows (gently) for the receding-deck look.
-                    transform: `translateY(${n * 14}px) scaleX(${1 - n * 0.025})`,
-                    opacity: Math.max(0.08, 0.55 - n * 0.08),
-                  }}
-                />
-              )
-            })}
           <FlashCard
             key={current.id}
             entry={current}
@@ -477,7 +456,6 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             onReplay={() => tts.playSequence(current.pl, current.en)}
             onOpenModal={onOpenModal}
           />
-          </div>
           <AnimatePresence>
             {revealed && (
               <motion.div
