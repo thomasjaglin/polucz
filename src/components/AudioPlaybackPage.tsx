@@ -90,8 +90,9 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Enriched cards available for review — drives the start / empty screens.
   // Only cards whose audio is already cached (audio-ready) — so playback never
   // hits the rate-limited TTS API and can't error/stall. Cards become ready by
-  // being opened in the word-detail modal, which caches their audio.
-  const availableCount = cards.filter(c => c.enriched && c.audioReady).length
+  // opening them in the modal or via "Prepare all". Listening needs no grammar
+  // enrichment, so audioReady alone qualifies.
+  const availableCount = cards.filter(c => c.audioReady).length
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
@@ -106,7 +107,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Order: 'list' plays the enriched cards in list order (newest first, as on
   // the folder page); 'new-first' floats never-reviewed cards to the front.
   function buildQueue(o: 'list' | 'new-first'): VocabEntry[] {
-    const due = [...cards].reverse().filter(c => c.enriched && c.audioReady)
+    const due = [...cards].reverse().filter(c => c.audioReady)
     if (o === 'new-first') {
       const reviews = getAllReviews()
       const isNew = (c: VocabEntry) => { const r = reviews[c.id]; return !r || r.reviewCount === 0 }

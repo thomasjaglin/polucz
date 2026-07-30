@@ -1,23 +1,57 @@
 import { useState, useEffect, useRef } from 'react'
 import IconButton from './IconButton'
 import GlassPane from './GlassPane'
-import type { PageId } from '../data/types'
+import GlassButton from './GlassButton'
+import type { PageId, VocabEntry } from '../data/types'
 import { getCards, replaceAllCards } from '../lib/storage'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
 import { saveSentences } from '../lib/sentenceStorage'
+import { useTTS } from '../lib/useTTS'
 
 interface Props {
   activeId: PageId
   onChangePage: (id: PageId) => void
   onImport: () => void
+  cards: VocabEntry[]
+  onAudioReady: (id: string) => void
   hidden?: boolean
 }
 
-export default function TopHeader({ activeId, onChangePage, onImport, hidden = false }: Props) {
+// Space between cards while preparing audio. Each card is 2 TTS requests; the
+// provider caps at 10/min, so ~13 s/card keeps us safely under it.
+const PREP_SPACING_MS = 13000
+
+export default function TopHeader({ activeId, onChangePage, onImport, cards, onAudioReady, hidden = false }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const settingsBtnRef = useRef<HTMLButtonElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const tts = useTTS()
+
+  // ─── Prepare-audio batch ───────────────────────────────────────────────────
+  const [prepConfirm, setPrepConfirm] = useState(false)
+  const [prepProgress, setPrepProgress] = useState<{ done: number; total: number } | null>(null)
+  const prepCancel = useRef(false)
+  const incompleteCount = cards.filter(c => !c.audioReady).length
+
+  async function runPrepare() {
+    const todo = cards.filter(c => !c.audioReady)
+    setPrepConfirm(false)
+    if (todo.length === 0) return
+    prepCancel.current = false
+    setPrepProgress({ done: 0, total: todo.length })
+    for (let i = 0; i < todo.length; i++) {
+      if (prepCancel.current) break
+      const ok = await tts.prefetch(todo[i].pl, todo[i].en)
+      if (ok) onAudioReady(todo[i].id)
+      setPrepProgress({ done: i + 1, total: todo.length })
+      // Throttle between cards to respect the TTS rate limit.
+      if (i < todo.length - 1 && !prepCancel.current) {
+        await new Promise(r => setTimeout(r, PREP_SPACING_MS))
+      }
+    }
+    setPrepProgress(null)
+  }
 
   useEffect(() => {
     if (!settingsOpen) return
@@ -137,6 +171,19 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
           className="absolute right-6 flex items-center gap-3"
           style={{ top: 'calc(1.25rem + env(safe-area-inset-top))' }}
         >
+          {/* Prepare audio for all cards missing it (left of add + settings) */}
+          <div className="relative">
+            <IconButton
+              icon={prepProgress ? 'progress_activity' : 'download_for_offline'}
+              onClick={() => setPrepConfirm(true)}
+              className={prepProgress ? '[&_span]:animate-spin' : ''}
+            />
+            {prepProgress && (
+              <span className="pointer-events-none absolute -bottom-1 -right-1 rounded-full bg-[#B4A0FF] px-1.5 py-0.5 font-instrument text-[9px] font-semibold leading-none text-[#121212]">
+                {prepProgress.done}/{prepProgress.total}
+              </span>
+            )}
+          </div>
           <IconButton icon="add" onClick={() => onChangePage('add_page')} />
           <div className="relative">
             <IconButton
@@ -215,6 +262,57 @@ export default function TopHeader({ activeId, onChangePage, onImport, hidden = f
         </div>
       )}
     </div>
+
+    {/* Prepare-audio confirmation / progress modal */}
+    {prepConfirm && (
+      <div
+        className="fixed inset-0 z-[110] flex items-center justify-center p-6"
+        onClick={e => { if (e.target === e.currentTarget && !prepProgress) setPrepConfirm(false) }}
+      >
+        <div className="pointer-events-none absolute inset-0 z-0 bg-black/40" />
+        <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[24px] border border-[#F8FAFC]/10 p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5)]">
+          <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/70" />
+          <div className="relative z-10 flex flex-col gap-4">
+            {prepProgress ? (
+              <>
+                <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">Preparing audio…</h2>
+                <p className="font-instrument text-[14px] text-[#F8FAFC]/50">
+                  {prepProgress.done} / {prepProgress.total} cards. This keeps running in the background — you can close this and keep using the app.
+                </p>
+                <div className="h-[4px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/10">
+                  <div className="h-full rounded-full bg-[#B4A0FF] transition-all" style={{ width: `${(prepProgress.done / Math.max(prepProgress.total, 1)) * 100}%` }} />
+                </div>
+                <div className="mt-1 flex gap-3">
+                  <GlassButton variant="secondary" onClick={() => setPrepConfirm(false)} className="flex-1 py-2.5 font-instrument text-[14px]">
+                    Run in background
+                  </GlassButton>
+                  <GlassButton variant="danger" onClick={() => { prepCancel.current = true; setPrepProgress(null); setPrepConfirm(false) }} className="flex-1 py-2.5 font-instrument text-[14px]">
+                    Stop
+                  </GlassButton>
+                </div>
+              </>
+            ) : incompleteCount === 0 ? (
+              <>
+                <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">All caught up</h2>
+                <p className="font-instrument text-[14px] text-[#F8FAFC]/50">Every card already has its audio prepared.</p>
+                <GlassButton variant="secondary" onClick={() => setPrepConfirm(false)} className="mt-1 py-2.5 font-instrument text-[14px]">Close</GlassButton>
+              </>
+            ) : (
+              <>
+                <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">Prepare audio</h2>
+                <p className="font-instrument text-[14px] text-[#F8FAFC]/50">
+                  Generate and cache audio for <span className="text-[#B4A0FF]">{incompleteCount}</span> {incompleteCount === 1 ? 'card' : 'cards'}. It's rate-limited, so it runs slowly in the background (~{Math.ceil((incompleteCount * PREP_SPACING_MS) / 60000)} min) — you can keep using the app.
+                </p>
+                <div className="mt-1 flex gap-3">
+                  <GlassButton variant="secondary" onClick={() => setPrepConfirm(false)} className="flex-1 py-2.5 font-instrument text-[14px]">Cancel</GlassButton>
+                  <GlassButton variant="primary" onClick={runPrepare} className="flex-1 py-2.5 font-instrument text-[14px]">Prepare</GlassButton>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   )
 }
