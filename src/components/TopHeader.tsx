@@ -172,19 +172,23 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
           className="absolute right-6 flex items-center gap-3"
           style={{ top: 'calc(1.25rem + env(safe-area-inset-top))' }}
         >
-          {/* Prepare audio for all cards missing it (left of add + settings) */}
-          <div className="relative">
-            <IconButton
-              icon={prepProgress ? 'progress_activity' : 'download_for_offline'}
+          {/* Prepare audio for all cards missing it (left of add + settings).
+              While running it becomes a glass pill: "done/total" + spinner. */}
+          {prepProgress ? (
+            <button
               onClick={() => setPrepConfirm(true)}
-              className={prepProgress ? '[&_span]:animate-spin' : ''}
-            />
-            {prepProgress && (
-              <span className="pointer-events-none absolute -bottom-1 -right-1 rounded-full bg-[#B4A0FF] px-1.5 py-0.5 font-instrument text-[9px] font-semibold leading-none text-[#121212]">
+              aria-label={`Preparing audio ${prepProgress.done} of ${prepProgress.total}`}
+              className="relative flex h-[42px] items-center gap-2 rounded-full px-4 shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-all hover:scale-105 active:scale-95"
+            >
+              <GlassPane borderRadius={21} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/[0.02]" />
+              <span className="relative z-10 font-instrument text-[13px] font-medium tabular-nums text-[#F8FAFC]/80">
                 {prepProgress.done}/{prepProgress.total}
               </span>
-            )}
-          </div>
+              <span className="material-symbols-rounded relative z-10 animate-spin text-[18px] text-[#F8FAFC]">progress_activity</span>
+            </button>
+          ) : (
+            <IconButton icon="download_for_offline" onClick={() => setPrepConfirm(true)} />
+          )}
           <IconButton icon="add" onClick={() => onChangePage('add_page')} />
           <div className="relative">
             <IconButton
