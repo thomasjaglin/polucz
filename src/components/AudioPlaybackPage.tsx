@@ -166,22 +166,39 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     }
   }, [idx, queue]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Detect natural sequence completion (playing → idle) ──────────────────
+  // ─── Advance when a card finishes OR errors out ───────────────────────────
+  // Move on for a clean finish (playing → idle) AND for a failure (playing →
+  // error): a word whose audio couldn't be produced must not freeze the whole
+  // player — it's skipped so hands-off listening keeps going.
   useEffect(() => {
     const prev = prevTtsStateRef.current
     prevTtsStateRef.current = tts.state
 
-    if (prev === 'playing' && tts.state === 'idle' && phase === 'playing') {
+    if (prev === 'playing' && (tts.state === 'idle' || tts.state === 'error') && phase === 'playing') {
       const wasUserSkipped = userRatedRef.current
       userRatedRef.current = false
       if (wasUserSkipped) return // user already skipped — idx change plays next card
 
-      // Pure player: no SRS rating. Repeat-one replays the same card; otherwise
-      // advance. Either way a 2 s gap ('waiting') precedes the next play.
-      if (!repeatOne) setIdx(i => i + 1)
+      // Pure player: no SRS rating. Repeat-one replays the same card (only on a
+      // clean finish); otherwise advance. A 2 s gap ('waiting') precedes next.
+      if (!(repeatOne && tts.state === 'idle')) setIdx(i => i + 1)
       setPhase('waiting')
     }
   }, [tts.state, phase]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ─── Watchdog: never get stuck on a word ──────────────────────────────────
+  // If a word neither finishes nor errors within a generous window (e.g. a clip
+  // whose 'ended' event never fires, or a stalled fetch), force it forward so
+  // the player can't freeze on one card.
+  useEffect(() => {
+    if (phase !== 'playing' || !current) return
+    const timer = setTimeout(() => {
+      tts.stop()
+      setIdx(i => i + 1)
+      setPhase('waiting')
+    }, 30000)
+    return () => clearTimeout(timer)
+  }, [phase, current?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── 2 s between-card gap ─────────────────────────────────────────────────
   useEffect(() => {
@@ -246,8 +263,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     if (phase === 'idle')    return 'Ready to start'
     if (phase === 'waiting') return repeatOne ? 'Repeating…' : 'Next card…'
     if (tts.state === 'loading') return 'Loading…'
-    if (tts.state === 'error')   return 'Audio error'
-    return 'Listening'
+    if (tts.state === 'error')   return 'Skipping…'
+    return 'Playing'
   }
 
   // ─── Render ───────────────────────────────────────────────────────────────

@@ -1,18 +1,31 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { getCachedClip, putCachedClip } from './audioCache'
 
 export type AudioState = 'idle' | 'loading' | 'playing' | 'error'
 
-async function fetchBlob(text: string, language: 'pl' | 'en'): Promise<Blob> {
-  const res = await fetch('/api/tts', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, language }),
-  })
-  if (!res.ok) throw new Error('TTS fetch failed')
-  const { audio, mimeType } = await res.json()
-  if (!audio) throw new Error('No audio in response')
-  const bytes = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0))
-  return new Blob([bytes], { type: mimeType ?? 'audio/wav' })
+// Fetch a clip with retry + exponential backoff. The TTS endpoint (Gemini) can
+// rate-limit or hiccup under repeated hits; a couple of retries turns most of
+// those transient failures into a successful clip instead of an audio error.
+async function fetchBlob(text: string, language: 'pl' | 'en', retries = 2): Promise<Blob> {
+  let lastErr: unknown
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt - 1)))
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, language }),
+      })
+      if (!res.ok) throw new Error(`TTS fetch failed (${res.status})`)
+      const { audio, mimeType } = await res.json()
+      if (!audio) throw new Error('No audio in response')
+      const bytes = Uint8Array.from(atob(audio), (c) => c.charCodeAt(0))
+      return new Blob([bytes], { type: mimeType ?? 'audio/wav' })
+    } catch (e) {
+      lastErr = e
+    }
+  }
+  throw lastErr
 }
 
 
@@ -41,12 +54,24 @@ export function useTTS() {
     }
   }, [])
 
+  // Three-tier lookup: in-memory (this session) → IndexedDB (persisted across
+  // sessions) → network (generate once, then persist). So a word is fetched
+  // from the TTS API at most once, ever.
   const getBlob = useCallback(async (text: string, language: 'pl' | 'en'): Promise<Blob> => {
     const key = `${language}:${text}`
-    if (!cache.current.has(key)) {
-      cache.current.set(key, await fetchBlob(text, language))
+    const mem = cache.current.get(key)
+    if (mem) return mem
+
+    const persisted = await getCachedClip(key)
+    if (persisted) {
+      cache.current.set(key, persisted)
+      return persisted
     }
-    return cache.current.get(key)!
+
+    const blob = await fetchBlob(text, language)
+    cache.current.set(key, blob)
+    putCachedClip(key, blob) // fire-and-forget persist
+    return blob
   }, [])
 
   const playOne = useCallback((blob: Blob): Promise<void> => {
