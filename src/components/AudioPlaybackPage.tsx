@@ -287,9 +287,10 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
             )}
           </div>
-          <div className="h-[3px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/10">
+          <div className="relative h-[12px] w-full overflow-hidden rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+            <GlassPane borderRadius={6} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/[0.02]" />
             <motion.div
-              className="h-full rounded-full bg-[#B4A0FF]/60"
+              className="relative z-10 h-full rounded-full bg-[#B4A0FF]/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]"
               animate={{ width: `${progress * 100}%` }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
             />
