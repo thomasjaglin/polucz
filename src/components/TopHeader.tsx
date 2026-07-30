@@ -272,9 +272,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         className="fixed inset-0 z-[110] flex items-center justify-center p-6"
         onClick={e => { if (e.target === e.currentTarget && !prepProgress) setPrepConfirm(false) }}
       >
-        <div className="pointer-events-none absolute inset-0 z-0 bg-black/40" />
-        <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[24px] border border-[#F8FAFC]/10 p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5)]">
-          <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/70" />
+        {/* Blurred, dimmed backdrop to focus attention on the modal. */}
+        <div className="pointer-events-none absolute inset-0 z-0 bg-black/40 backdrop-blur-lg" />
+        <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[24px] border border-[#F8FAFC]/10 p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.14)]">
+          <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/60" />
           <div className="relative z-10 flex flex-col gap-4">
             {prepProgress ? (
               <>
