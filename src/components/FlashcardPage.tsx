@@ -443,7 +443,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             {/* Upcoming cards peeking below the current one — a simple vertical
                 deck (no fanning, no played cards above). Blank card shapes so
                 the next word isn't spoiled; they just show the queue depth. */}
-            {queue.slice(1, 7).map((entry, i) => {
+            {queue.slice(1, 13).map((entry, i) => {
               const n = i + 1
               return (
                 <div
