@@ -443,7 +443,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             {/* Upcoming cards peeking below the current one — a simple vertical
                 deck (no fanning, no played cards above). Blank card shapes so
                 the next word isn't spoiled; they just show the queue depth. */}
-            {queue.slice(1, 4).map((entry, i) => {
+            {queue.slice(1, 7).map((entry, i) => {
               const n = i + 1
               return (
                 <div
@@ -453,9 +453,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
                   style={{
                     // Full height + straight-down translate so the bottom edge
                     // always trails below the current card; only the width
-                    // narrows for the receding-deck look.
-                    transform: `translateY(${n * 16}px) scaleX(${1 - n * 0.05})`,
-                    opacity: Math.max(0.12, 0.5 - n * 0.13),
+                    // narrows (gently) for the receding-deck look.
+                    transform: `translateY(${n * 14}px) scaleX(${1 - n * 0.025})`,
+                    opacity: Math.max(0.08, 0.55 - n * 0.08),
                   }}
                 />
               )
