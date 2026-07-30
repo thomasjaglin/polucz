@@ -18,6 +18,7 @@ import GlassLabPage from './components/GlassLabPage'
 import { pages, pageOrder } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
+import { haptics } from './lib/haptics'
 import { vocabularyData } from './data/vocabulary'
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
   // Hide header on scroll down, reveal on scroll up
   const [headerHidden, setHeaderHidden] = useState(false)
   const lastScrollY = useRef(0)
+  const lastTickY = useRef(0)   // last scroll position that fired a haptic tick
 
   const [cards, setCards] = useState<VocabEntry[]>(() => {
     const stored = getCards()
@@ -144,6 +146,11 @@ export default function App() {
 
   function handleScroll(e: React.UIEvent<HTMLDivElement>) {
     const y = e.currentTarget.scrollTop
+    // Ratchet: a tiny haptic tick every ~48px of scroll (Android only).
+    if (Math.abs(y - lastTickY.current) >= 48) {
+      haptics.scrollTick()
+      lastTickY.current = y
+    }
     if (y <= 50) { setHeaderHidden(false); lastScrollY.current = y; return }
     const delta = y - lastScrollY.current
     if (delta > 4) setHeaderHidden(true)
@@ -197,7 +204,7 @@ export default function App() {
     const idx = pageOrder.indexOf(activeId)
     if (idx === -1) return // add/api pages aren't in the swipe flow
     const next = idx + (dx < 0 ? 1 : -1)
-    if (next >= 0 && next < pageOrder.length) changePage(pageOrder[next])
+    if (next >= 0 && next < pageOrder.length) { haptics.select(); changePage(pageOrder[next]) }
   }
 
   const showNav = activeId !== 'add_page' && activeId !== 'api_config'

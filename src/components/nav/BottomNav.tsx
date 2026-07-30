@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { pages, pageOrder } from '../../data/pages'
 import GlassPane from '../GlassPane'
+import { haptics } from '../../lib/haptics'
 import type { PageId } from '../../data/types'
 
 interface Props {
@@ -51,7 +52,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
           return (
             <button
               key={id}
-              onClick={() => onChangePage(id)}
+              onClick={() => { if (id !== activeId) haptics.select(); onChangePage(id) }}
               aria-label={pages[id].title}
               className="relative z-10 flex h-[46px] w-[46px] items-center justify-center rounded-full"
             >

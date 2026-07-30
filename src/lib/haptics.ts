@@ -6,6 +6,8 @@ const fire = (pattern: number | number[]) => {
 
 export const haptics = {
   tap:         () => fire(15),
+  scrollTick:  () => fire(6),   // tiny ratchet tick as the list scrolls
+  select:      () => fire(12),  // nav / page change
   doubleTap:   () => fire([20, 30, 20]),
   swipeRight:  () => fire(30),
   swipeLeft:   () => fire(60),

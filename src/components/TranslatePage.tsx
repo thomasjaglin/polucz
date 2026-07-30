@@ -7,6 +7,7 @@ import { findByLemma, getCards, saveCard } from '../lib/storage'
 import type { VocabEntry, WordType } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
+import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
 
 type Direction = 'pl-en' | 'en-pl'
@@ -374,10 +375,12 @@ export default function TranslatePage({ onAddCard }: Props) {
     const goRight = info.offset.x > threshold || info.velocity.x > 400
     const goLeft = info.offset.x < -threshold || info.velocity.x < -400
     if (goRight && canSwipe) {
+      haptics.swipeRight()
       animate(x, 700, { duration: 0.25 })
       setTimeout(() => { x.set(0); handleAdd() }, 270)
     } else if (goLeft) {
       // Left swipe clears everything — input and translation
+      haptics.swipeLeft()
       animate(x, -700, { duration: 0.25 })
       setTimeout(() => { x.set(0); handleDismiss() }, 270)
     } else {
