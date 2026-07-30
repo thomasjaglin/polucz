@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import IconButton from './IconButton'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -263,8 +264,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
       )}
     </div>
 
-    {/* Prepare-audio confirmation / progress modal */}
-    {prepConfirm && (
+    {/* Prepare-audio confirmation / progress modal — portalled to <body> so it's
+        positioned relative to the viewport, not the header's transformed
+        (translate-y) container which would otherwise capture `position: fixed`. */}
+    {prepConfirm && createPortal(
       <div
         className="fixed inset-0 z-[110] flex items-center justify-center p-6"
         onClick={e => { if (e.target === e.currentTarget && !prepProgress) setPrepConfirm(false) }}
@@ -311,7 +314,8 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
             )}
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
     </div>
   )
