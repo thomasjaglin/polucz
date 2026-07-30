@@ -88,7 +88,10 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const tts = useTTS()
 
   // Enriched cards available for review — drives the start / empty screens.
-  const availableCount = cards.filter(c => c.enriched).length
+  // Only cards whose audio is already cached (audio-ready) — so playback never
+  // hits the rate-limited TTS API and can't error/stall. Cards become ready by
+  // being opened in the word-detail modal, which caches their audio.
+  const availableCount = cards.filter(c => c.enriched && c.audioReady).length
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
@@ -103,7 +106,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Order: 'list' plays the enriched cards in list order (newest first, as on
   // the folder page); 'new-first' floats never-reviewed cards to the front.
   function buildQueue(o: 'list' | 'new-first'): VocabEntry[] {
-    const due = [...cards].reverse().filter(c => c.enriched)
+    const due = [...cards].reverse().filter(c => c.enriched && c.audioReady)
     if (o === 'new-first') {
       const reviews = getAllReviews()
       const isNew = (c: VocabEntry) => { const r = reviews[c.id]; return !r || r.reviewCount === 0 }
@@ -302,10 +305,10 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             animate={{ opacity: 1 }}
             className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
           >
-            <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">spatial_audio</span>
-            <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No cards yet</h2>
+            <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">headphones</span>
+            <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No audio ready yet</h2>
             <p className="font-instrument text-[15px] text-[#F8FAFC]/30 px-4">
-              Add vocabulary words to start audio review.
+              Open a word to prepare its audio — cards with a ⌾ headphones mark are ready to play here.
             </p>
           </motion.div>
         ) : !started ? (

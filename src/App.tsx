@@ -72,6 +72,15 @@ export default function App() {
     setModalEntry(updated)
   }
 
+  // The modal cached this card's TTS audio → mark it audio-ready (partial merge,
+  // so it doesn't clobber enrichment). Drives the list "ready" icon and gates
+  // which cards the audio player will use.
+  function handleAudioReady(id: string) {
+    updateCard(id, { audioReady: true })
+    setCards(getCards())
+    setModalEntry(e => (e && e.id === id ? { ...e, audioReady: true } : e))
+  }
+
   function handleDeleteCard() {
     if (!modalEntry) return
     deleteCard(modalEntry.id)
@@ -262,6 +271,7 @@ export default function App() {
           overlayVisible={overlayVisible}
           onClose={handleCloseModal}
           onEnriched={handleEnriched}
+          onAudioReady={handleAudioReady}
           onDelete={handleDeleteCard}
         />
       )}

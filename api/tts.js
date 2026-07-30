@@ -71,6 +71,8 @@ export default async function handler(req, res) {
   if (!r.ok) {
     const errBody = await r.text().catch(() => '')
     console.error('Gemini TTS error', r.status, errBody)
+    // Pass through the rate limit so the client can stop hammering the quota.
+    if (r.status === 429) return res.status(429).json({ error: 'TTS rate limited' })
     return res.status(502).json({ error: 'TTS service error' })
   }
 

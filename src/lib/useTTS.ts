@@ -3,19 +3,22 @@ import { getCachedClip, putCachedClip } from './audioCache'
 
 export type AudioState = 'idle' | 'loading' | 'playing' | 'error'
 
-// Fetch a clip with retry + exponential backoff. The TTS endpoint (Gemini) can
-// rate-limit or hiccup under repeated hits; a couple of retries turns most of
-// those transient failures into a successful clip instead of an audio error.
+// Fetch a clip with retry + backoff. IMPORTANT: on a 429 (the TTS provider's
+// rate limit) we do NOT retry — hammering it just burns more quota and makes the
+// limit worse. We only retry transient 5xx/network errors. Requests are meant to
+// be low-volume (audio is cached per-card via the modal), so this stays well
+// under the provider's per-minute ceiling.
 async function fetchBlob(text: string, language: 'pl' | 'en', retries = 2): Promise<Blob> {
   let lastErr: unknown
   for (let attempt = 0; attempt <= retries; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt - 1)))
+    if (attempt > 0) await new Promise(r => setTimeout(r, 700 * Math.pow(2, attempt - 1)))
     try {
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language }),
       })
+      if (res.status === 429) throw Object.assign(new Error('TTS rate limited'), { rateLimited: true })
       if (!res.ok) throw new Error(`TTS fetch failed (${res.status})`)
       const { audio, mimeType } = await res.json()
       if (!audio) throw new Error('No audio in response')
@@ -23,6 +26,7 @@ async function fetchBlob(text: string, language: 'pl' | 'en', retries = 2): Prom
       return new Blob([bytes], { type: mimeType ?? 'audio/wav' })
     } catch (e) {
       lastErr = e
+      if ((e as { rateLimited?: boolean }).rateLimited) break // don't retry a rate limit
     }
   }
   throw lastErr
@@ -103,12 +107,14 @@ export function useTTS() {
     setState('idle')
   }, [])
 
-  // Silent pre-fetch for both clips — populates cache so playSequence has no loading gap on reveal
-  const prefetch = useCallback(async (pl: string, en: string): Promise<void> => {
+  // Silent pre-fetch for both clips — populates the cache. Returns true only if
+  // both clips are now cached (used to mark a card "audio-ready").
+  const prefetch = useCallback(async (pl: string, en: string): Promise<boolean> => {
     try {
       await Promise.all([getBlob(pl, 'pl'), getBlob(en, 'en')])
+      return true
     } catch {
-      // Prefetch failure is silent; playSequence will retry and surface an error if it recurs
+      return false
     }
   }, [getBlob])
 

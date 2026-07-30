@@ -271,10 +271,11 @@ interface Props {
   overlayVisible: boolean
   onClose: () => void
   onEnriched: (updated: VocabEntry) => void
+  onAudioReady: (id: string) => void
   onDelete: () => void
 }
 
-export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose, onEnriched, onDelete }: Props) {
+export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose, onEnriched, onAudioReady, onDelete }: Props) {
   const [enriching, setEnriching] = useState(false)
   const [enrichError, setEnrichError] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -324,6 +325,20 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
   useEffect(() => {
     if (!entry.enriched) doEnrich()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry.id])
+
+  // Cache this card's TTS audio in the background while the modal is open (a
+  // small, naturally-throttled batch), and mark it audio-ready on success. This
+  // is how the vocabulary gets its audio without a burst that trips the rate
+  // limit — the audio player then only uses cards that are already cached.
+  useEffect(() => {
+    if (entry.audioReady) return
+    let cancelled = false
+    tts.prefetch(entry.pl, entry.en).then(ok => {
+      if (ok && !cancelled) onAudioReady(entry.id)
+    })
+    return () => { cancelled = true }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry.id])
 

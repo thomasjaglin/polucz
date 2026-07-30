@@ -35,6 +35,7 @@ export interface NounDeclensions {
 interface VocabBase {
   id: string        // lemma — dedup key for localStorage
   enriched: boolean // false until enrich-card populates grammar tables
+  audioReady?: boolean // true once the PL+EN TTS clips are cached in IndexedDB
   pl: string
   en: string
   left: string
