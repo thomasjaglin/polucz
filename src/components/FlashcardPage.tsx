@@ -295,7 +295,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
       <div className="relative h-[12px] flex-1 overflow-hidden rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <GlassPane borderRadius={6} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/[0.02]" />
         <motion.div
-          className="relative z-10 h-full rounded-full bg-[#B4A0FF]/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]"
+          className="relative z-10 h-full rounded-full bg-gradient-to-r from-[#60A5FA]/70 to-[#B4A0FF]/70 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]"
           initial={false}
           animate={{ width: `${pct}%` }}
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
