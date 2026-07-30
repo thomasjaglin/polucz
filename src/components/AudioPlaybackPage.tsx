@@ -309,7 +309,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             <span className="material-symbols-rounded text-[56px] text-[#F8FAFC]/30">headphones</span>
             <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/60">No audio ready yet</h2>
             <p className="font-instrument text-[15px] text-[#F8FAFC]/30 px-4">
-              Open a word to prepare its audio — cards with a ⌾ headphones mark are ready to play here.
+              Open a word to prepare its audio, or use “Prepare all” on the vocabulary page — prepared words play here.
             </p>
           </motion.div>
         ) : !started ? (

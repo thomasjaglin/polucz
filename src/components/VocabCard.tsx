@@ -34,12 +34,12 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 {mastered && (
                   <span className="shrink-0 text-[14px] leading-none text-[#B4A0FF]">★</span>
                 )}
-                {entry.audioReady && (
+                {entry.enriched && entry.audioReady && (
                   <span
-                    aria-label="Audio ready"
+                    aria-label="Fully prepared (details + audio)"
                     className="material-symbols-rounded shrink-0 text-[16px] leading-none text-[#B4A0FF]/70"
                   >
-                    headphones
+                    done_all
                   </span>
                 )}
               </div>
