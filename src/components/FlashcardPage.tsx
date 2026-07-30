@@ -451,8 +451,10 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
                   aria-hidden
                   className="pointer-events-none absolute inset-0 rounded-[36px] border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.03] shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
                   style={{
-                    transform: `translateY(${n * 10}px) scale(${1 - n * 0.04})`,
-                    transformOrigin: 'top center',
+                    // Full height + straight-down translate so the bottom edge
+                    // always trails below the current card; only the width
+                    // narrows for the receding-deck look.
+                    transform: `translateY(${n * 16}px) scaleX(${1 - n * 0.05})`,
                     opacity: Math.max(0.12, 0.5 - n * 0.13),
                   }}
                 />
