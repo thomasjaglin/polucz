@@ -68,7 +68,7 @@ export default function App() {
   function handleAddCard(entry: VocabEntry) {
     saveCard(entry)
     setCards(getCards())
-    pushToast(`${entry.pl} added to vocabulary`)
+    pushToast(`${entry.pl} added to vocabulary`, 'success')
   }
 
   function handleEnriched(updated: VocabEntry) {
@@ -92,7 +92,7 @@ export default function App() {
     deleteCard(modalEntry.id)
     setCards(getCards())
     handleCloseModal()
-    pushToast(`${removed} deleted`)
+    pushToast(`${removed} deleted`, 'info')
   }
 
   // ─── Modal animation state ───────────────────────────────────────────────

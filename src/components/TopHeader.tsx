@@ -127,7 +127,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
       try {
         const data = JSON.parse(ev.target?.result as string)
         if (!Array.isArray(data.cards) || typeof data.reviews !== 'object') {
-          alert('Invalid backup file.')
+          pushToast('Invalid backup file', 'error')
           return
         }
         replaceAllCards(data.cards)
@@ -136,9 +136,9 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
           saveSentences(data.sentences)
         }
         onImport()
-        pushToast(`Imported ${data.cards.length} cards`)
+        pushToast(`Imported ${data.cards.length} cards`, 'success')
       } catch {
-        alert('Could not read the file. Make sure it is a valid Polucz backup.')
+        pushToast('Could not read the file — not a valid Polucz backup', 'error')
       }
     }
     reader.readAsText(file)
