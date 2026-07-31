@@ -5,6 +5,7 @@ import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import { getGlassMode } from '../lib/glassMode'
+import { hasCachedClips } from '../lib/audioCache'
 import { setAudioCard } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -87,12 +88,23 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const [repeatOne, setRepeatOne] = useState(false)
   const tts = useTTS()
 
-  // Enriched cards available for review — drives the start / empty screens.
-  // Only cards whose audio is already cached (audio-ready) — so playback never
-  // hits the rate-limited TTS API and can't error/stall. Cards become ready by
-  // opening them in the modal or via "Prepare all". Listening needs no grammar
-  // enrichment, so audioReady alone qualifies.
-  const availableCount = cards.filter(c => c.audioReady).length
+  // Playable cards = those whose audio is ACTUALLY in the cache (verified below),
+  // not merely flagged audioReady. The flag can drift from the real cache (stale
+  // import, eviction, interrupted write), and any such card would hit the
+  // rate-limited API and error/skip — so we verify the store directly and only
+  // ever play confirmed-cached cards. `null` = still verifying (fall back to the
+  // flag so the screen isn't empty for the first frame).
+  const [cachedIds, setCachedIds] = useState<Set<string> | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    const flagged = cards.filter(c => c.audioReady)
+    Promise.all(flagged.map(async c => ((await hasCachedClips(c.pl, c.en)) ? c.id : null)))
+      .then(ids => { if (!cancelled) setCachedIds(new Set(ids.filter((x): x is string => x !== null))) })
+    return () => { cancelled = true }
+  }, [cards])
+
+  const isReady = (c: VocabEntry) => cachedIds ? cachedIds.has(c.id) : !!c.audioReady
+  const availableCount = cards.filter(isReady).length
 
   // Refs that need to be readable inside effects without triggering re-renders
   const prevTtsStateRef = useRef<AudioState>('idle')
@@ -107,7 +119,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Order: 'list' plays the enriched cards in list order (newest first, as on
   // the folder page); 'new-first' floats never-reviewed cards to the front.
   function buildQueue(o: 'list' | 'new-first'): VocabEntry[] {
-    const due = [...cards].reverse().filter(c => c.audioReady)
+    const due = [...cards].reverse().filter(isReady)
     if (o === 'new-first') {
       const reviews = getAllReviews()
       const isNew = (c: VocabEntry) => { const r = reviews[c.id]; return !r || r.reviewCount === 0 }

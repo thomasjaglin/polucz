@@ -74,7 +74,10 @@ export function useTTS() {
 
     const blob = await fetchBlob(text, language)
     cache.current.set(key, blob)
-    putCachedClip(key, blob) // fire-and-forget persist
+    // Await the persist so a card is only ever marked "audio-ready" once its
+    // clips are durably in IndexedDB (prevents the flag/cache drift that made
+    // playback still hit the API and skip).
+    await putCachedClip(key, blob)
     return blob
   }, [])
 

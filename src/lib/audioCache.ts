@@ -36,6 +36,14 @@ export async function getCachedClip(key: string): Promise<Blob | null> {
   }
 }
 
+// True only if BOTH clips for a card are actually present in the cache — the
+// source of truth for "this card can play offline without hitting the API",
+// independent of the (possibly stale) audioReady flag stored on the card.
+export async function hasCachedClips(pl: string, en: string): Promise<boolean> {
+  const [p, e] = await Promise.all([getCachedClip(`pl:${pl}`), getCachedClip(`en:${en}`)])
+  return !!p && !!e
+}
+
 export async function putCachedClip(key: string, blob: Blob): Promise<void> {
   try {
     const db = await openDB()
