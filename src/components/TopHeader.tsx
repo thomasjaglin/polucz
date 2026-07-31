@@ -8,6 +8,7 @@ import { getCards, replaceAllCards } from '../lib/storage'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
 import { saveSentences } from '../lib/sentenceStorage'
 import { useTTS } from '../lib/useTTS'
+import { pushToast } from '../lib/toastStore'
 
 interface Props {
   activeId: PageId
@@ -135,6 +136,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
           saveSentences(data.sentences)
         }
         onImport()
+        pushToast(`Imported ${data.cards.length} cards`)
       } catch {
         alert('Could not read the file. Make sure it is a valid Polucz backup.')
       }

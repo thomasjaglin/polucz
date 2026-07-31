@@ -161,17 +161,8 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [wordPhase, setWordPhase] = useState<'idle' | 'loading' | 'done'>('idle')
   const [words, setWords] = useState<AnalyzedWord[]>([])
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
-  const [toasts, setToasts] = useState<{ id: number; text: string }[]>([])
-  const toastIdRef = useRef(0)
   const translateIdRef = useRef(0)
   const circleRef = useRef<HTMLDivElement>(null)
-
-  // Success messages stack at the top of the screen and auto-dismiss.
-  function pushToast(text: string) {
-    const id = ++toastIdRef.current
-    setToasts(t => [...t, { id, text }])
-    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2500)
-  }
 
   // Register the circle as an elliptical glass mask pane so it reads as a glass
   // disc refracting the blob behind it. The map is size-only (rebuilt on
@@ -343,9 +334,8 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   function handleAdd() {
     if (!result) return
-    const lemma = result.lemma
+    // onAddCard (App) fires the global "added to vocabulary" toast.
     onAddCard(buildEntry(result.lemma, result.canonicalEn, result.type, result.gender))
-    pushToast(`${lemma} added to vocabulary`)
     // Single-word card added → clear the page (this path is only reachable for
     // single words; sentence translations aren't swipe-savable, so they stay).
     handleDismiss()
@@ -365,9 +355,8 @@ export default function TranslatePage({ onAddCard }: Props) {
     if (!result) return
     const entry = buildMiningEntry(word, result.plSentence, result.enSentence)
     saveCard(entry)
-    onAddCard(entry)
+    onAddCard(entry) // fires the global toast
     setSavedSet(prev => new Set([...prev, word.lemma.toLowerCase()]))
-    pushToast(`${word.lemma} added to vocabulary`)
   }
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
@@ -593,28 +582,6 @@ export default function TranslatePage({ onAddCard }: Props) {
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
         <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">English</p>
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
-      </div>
-
-      {/* ── Success toasts — stacked at the top of the screen ─────── */}
-      <div
-        className="pointer-events-none fixed inset-x-0 z-[80] flex flex-col items-center gap-2"
-        style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
-      >
-        <AnimatePresence>
-          {toasts.map(t => (
-            <motion.div
-              key={t.id}
-              layout
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="relative overflow-hidden rounded-full border border-[#F8FAFC]/10 px-5 py-2"
-            >
-              <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
-              <span className="relative z-10 whitespace-nowrap font-instrument text-[14px] text-[#F8FAFC]/80">{t.text}</span>
-            </motion.div>
-          ))}
-        </AnimatePresence>
       </div>
     </div>
   )

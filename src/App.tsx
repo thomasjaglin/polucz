@@ -15,6 +15,8 @@ import AudioPlaybackPage from './components/AudioPlaybackPage'
 import QuizPage from './components/QuizPage'
 import WordDetailModal from './components/WordDetailModal'
 import GlassLabPage from './components/GlassLabPage'
+import Toaster from './components/Toaster'
+import { pushToast } from './lib/toastStore'
 import { pages, pageOrder } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
@@ -66,6 +68,7 @@ export default function App() {
   function handleAddCard(entry: VocabEntry) {
     saveCard(entry)
     setCards(getCards())
+    pushToast(`${entry.pl} added to vocabulary`)
   }
 
   function handleEnriched(updated: VocabEntry) {
@@ -85,9 +88,11 @@ export default function App() {
 
   function handleDeleteCard() {
     if (!modalEntry) return
+    const removed = modalEntry.pl
     deleteCard(modalEntry.id)
     setCards(getCards())
     handleCloseModal()
+    pushToast(`${removed} deleted`)
   }
 
   // ─── Modal animation state ───────────────────────────────────────────────
@@ -282,6 +287,9 @@ export default function App() {
           onDelete={handleDeleteCard}
         />
       )}
+
+      {/* Global toast stack (top of screen) */}
+      <Toaster />
     </div>
   )
 }
