@@ -505,9 +505,12 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             {/* Controls — vertical column pinned to the right (thumb zone):
                 repeat-one (top), Play/Pause (large, middle), skip-next (bottom). */}
             {showControls && (
-              <div className="absolute bottom-2 right-0 z-10 flex flex-col items-center gap-3.5">
-                {/* Playback speed — tap to open the picker (all rates visible) */}
-                <div ref={speedRef} className="relative flex-shrink-0">
+              <div className="absolute bottom-2 right-0 z-10" style={{ width: 124, height: 178 }}>
+                {/* Controls fan out on an arc around the play button (thumb zone):
+                    repeat top · speed upper-left · previous lower-left · next
+                    bottom · play centre-right. Positioned absolutely. */}
+                {/* Playback speed — upper-left; tap to open the picker */}
+                <div ref={speedRef} className="absolute" style={{ left: 11, top: 28 }}>
                   {speedOpen && (
                     <div className="absolute bottom-0 right-full z-10 mr-2 flex flex-col gap-1.5">
                       {[...RATE_OPTIONS].reverse().map(r => {
@@ -531,7 +534,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                     onClick={() => setSpeedOpen(o => !o)}
                     aria-label={`Playback speed ${rate}×`}
                     aria-expanded={speedOpen}
-                    className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${rate !== 1 ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
+                    className={`relative flex h-[46px] w-[46px] items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${rate !== 1 ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
                   >
                     <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${rate !== 1 ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
                     <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${rate !== 1 ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/55'}`}>
@@ -540,11 +543,12 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   </button>
                 </div>
 
-                {/* Repeat current card — toggle */}
+                {/* Repeat current card — top */}
                 <button
                   onClick={() => setRepeatOne(r => !r)}
                   aria-pressed={repeatOne}
-                  className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
+                  style={{ left: 65, top: 0 }}
+                  className={`absolute flex h-[46px] w-[46px] items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
                 >
                   <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
                   <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/50'}`}>
@@ -552,21 +556,23 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   </span>
                 </button>
 
-                {/* Skip to previous card — neutral step back */}
+                {/* Skip to previous card — lower-left */}
                 <button
                   onClick={handleSkipPrev}
                   disabled={!current || idx <= 0}
-                  className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                  style={{ left: 11, top: 104 }}
+                  className="absolute flex h-[46px] w-[46px] items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                 >
                   <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className="material-symbols-rounded relative z-10 text-[22px] text-[#F8FAFC]/60">skip_previous</span>
                 </button>
 
-                {/* Play / Pause — primary, large */}
+                {/* Play / Pause — primary, centre-right */}
                 <button
                   onClick={phase === 'idle' ? handleStart : (isActive ? handlePause : handleResume)}
                   disabled={!current}
-                  className="relative flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
+                  style={{ left: 52, top: 53 }}
+                  className="absolute flex h-[72px] w-[72px] items-center justify-center rounded-full border border-[#B4A0FF]/30 shadow-[0_0_24px_rgba(180,160,255,0.25)] transition-all hover:scale-105 active:scale-[0.94] disabled:pointer-events-none disabled:opacity-30"
                 >
                   <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-full bg-[#B4A0FF]/15" />
                   <span className="material-symbols-rounded relative z-10 text-[34px] text-[#B4A0FF]">
@@ -574,11 +580,12 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   </span>
                 </button>
 
-                {/* Skip to next card — neutral advance */}
+                {/* Skip to next card — bottom */}
                 <button
                   onClick={handleSkipNext}
                   disabled={!current || idx >= queue.length}
-                  className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                  style={{ left: 65, top: 132 }}
+                  className="absolute flex h-[46px] w-[46px] items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
                 >
                   <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className="material-symbols-rounded relative z-10 text-[22px] text-[#F8FAFC]/60">skip_next</span>
