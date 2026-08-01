@@ -294,31 +294,18 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
       .filter((p): p is { entry: VocabEntry; d: number } => Boolean(p.entry)),
   ].sort((a, b) => Math.abs(b.d) - Math.abs(a.d))
 
-  function statusText(): string {
-    if (phase === 'idle')    return 'Ready to start'
-    if (phase === 'waiting') return repeatOne ? 'Repeating…' : 'Next card…'
-    if (tts.state === 'loading') return 'Loading…'
-    if (tts.state === 'error')   return 'Skipping…'
-    return 'Playing'
-  }
-
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="flex h-full flex-col items-center gap-6 pt-2">
 
-      {/* Progress row — shared glass bar with the count on the right; the
-          transient status / Completed label sits on its own line below.
-          Lifted into the empty header clearance so it sits near the top; the
-          card (flex-1, centred) and bottom controls stay put. */}
+      {/* Progress row — shared glass bar with the count on the right. Lifted
+          into the empty header clearance so it sits near the top; the card
+          (flex-1, centred) and bottom controls stay put. The transient status
+          label is intentionally omitted so it can't push other elements down. */}
       {totalCount > 0 && (
-        <div className="-mt-14 flex w-full flex-col gap-2">
+        <div className="-mt-14 w-full">
           <ProgressBar done={doneCount} total={totalCount} />
-          {phase === 'done' ? (
-            <span className="font-instrument text-[13px] text-[#B4A0FF]/60">Completed</span>
-          ) : phase !== 'idle' ? (
-            <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
-          ) : null}
         </div>
       )}
 
