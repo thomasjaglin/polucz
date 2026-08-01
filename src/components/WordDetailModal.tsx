@@ -79,8 +79,13 @@ function ParadigmGrid({
           return (
             <div
               key={`c-${r}-${c}`}
+              // `min-w-0` removes the grid item's default min-content floor so the
+              // cell can shrink below its longest word; paired with the value
+              // tracks' `minmax(0, …)` this lets `break-words`/hyphenation wrap a
+              // long form instead of forcing the table past the card edge.
+              lang={isLabel ? undefined : 'pl'}
               className={[
-                'px-2 py-1.5 break-words font-instrument leading-tight',
+                'min-w-0 px-2 py-1.5 break-words hyphens-auto font-instrument leading-tight',
                 isLabel ? 'text-[#F8FAFC]/45' : 'italic text-[#F8FAFC]/85',
                 zebra ? 'bg-[#F8FAFC]/[0.04]' : '',
                 zebra && c === 0 ? 'rounded-l-[8px]' : '',
@@ -124,7 +129,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
     <>
       <div className="mb-8 flex w-full flex-col">
         <ParadigmGrid
-          colTemplate="0.5fr 1fr 1fr 1fr"
+          colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'present', 'past m.', 'past f.']}
           kinds={['label', 'value', 'value', 'value']}
           rows={rows}
@@ -150,7 +155,7 @@ function NounSection({ entry }: { entry: VocabNoun }) {
   return (
     <div className="mb-8 flex w-full flex-col">
       <ParadigmGrid
-        colTemplate="0.5fr 1fr 1fr"
+        colTemplate="auto minmax(0,1fr) minmax(0,1fr)"
         headers={['', 'l. poj.', 'l. mn.']}
         kinds={['label', 'value', 'value']}
         rows={rows}
@@ -171,7 +176,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
       <div className="flex flex-col">
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. pojedyncza</span>
         <ParadigmGrid
-          colTemplate="0.5fr 1fr 1fr 1fr"
+          colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.', 'f.', 'n.']}
           kinds={['label', 'value', 'value', 'value']}
           rows={sgRows}
@@ -185,7 +190,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
       <div className="flex flex-col">
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. mnoga</span>
         <ParadigmGrid
-          colTemplate="0.5fr 1fr 1fr"
+          colTemplate="auto minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.os.', 'nm.os.']}
           kinds={['label', 'value', 'value']}
           rows={plRows}
