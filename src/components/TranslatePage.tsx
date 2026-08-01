@@ -24,6 +24,17 @@ const EDGE_OFFSET = 0 // vh — border ring aligned flush with the gradient circ
 
 const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
 
+// Soft top-edge fade for the scrollable result areas: as the card scrolls up
+// toward the boundary (where the circle's edge sits) it dissolves into the
+// circle instead of being hard-clipped. Pure paint-time alpha mask on the DOM
+// layer, so it composites cleanly over the WebGL glass and needs no scroll
+// listener — it tracks the scroll box's own top edge. (-webkit- twin for the
+// Android WebView.)
+const SCROLL_FADE = {
+  WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, #000 44px)',
+  maskImage: 'linear-gradient(to bottom, transparent 0, #000 44px)',
+} as const
+
 // Vertical position (topFrac, fraction of viewport height) of the procedural
 // gradient blob in the WebGL background, for the two swap states. Derived from
 // the old DOM blob's animated top (BOUNDARY-CIRCLE_H / 100-BOUNDARY) plus the
@@ -553,7 +564,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[14vh]">
         <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">Polish</p>
         {srcTop ? inputBlock : (
-          <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
+          <div className="no-scrollbar overflow-y-auto" style={SCROLL_FADE}>{resultBlock}{wordListBlock}</div>
         )}
       </div>
 
@@ -579,9 +590,13 @@ export default function TranslatePage({ onAddCard }: Props) {
       {/* ── English — fixed bottom section ─────────────────────── */}
       {/* pt reduced (9.5vh -> 6vh) so the English input + Translate button sit
           higher and clear the floating bottom nav on shorter viewports. */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
+      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
         <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">English</p>
-        {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
+        {/* Heading stays crisp; only the result content scrolls + fades under
+            the circle. */}
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto" style={srcTop ? SCROLL_FADE : undefined}>
+          {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
+        </div>
       </div>
     </div>
   )
