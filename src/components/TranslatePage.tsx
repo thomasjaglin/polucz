@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -23,6 +23,25 @@ const CIRCLE_W = 135  // vw (557/412)
 const EDGE_OFFSET = 0 // vh — border ring aligned flush with the gradient circle clip
 
 const SPRING = { type: 'spring', stiffness: 220, damping: 28 } as const
+
+// Result-under-circle mask. The WebGL glass is occluded by the circle's ellipse
+// (see GlassPane clipEllipseRef), so the DOM text must vanish along the same
+// curve to match. We raise the result section up into the circle by CLIP_OVER
+// so content can render above the boundary (where the circle's curve sits), and
+// apply a static radial-ellipse mask that hides whatever falls inside the
+// circle. The section box is fixed (only its content scrolls) and the circle is
+// fixed per swap state, so the mask is a constant vw/vh gradient — no listener.
+const CLIP_OVER = 12 // vh the result section extends past the boundary into the circle
+const CIRCLE_RX = CIRCLE_W / 2 // vw
+const CIRCLE_RY = CIRCLE_H / 2 // vh
+const CIRCLE_CY_TOP = BOUNDARY - CIRCLE_H / 2 // vh — circle centre when source is on top
+
+// Radial ellipse mask (transparent inside the circle → hidden, opaque outside →
+// shown). cyInSection = circle centre minus the masked section's own top (vh).
+function circleMask(cyInSection: number): CSSProperties {
+  const g = `radial-gradient(${CIRCLE_RX}vw ${CIRCLE_RY}vh at 50% ${cyInSection}vh, transparent 99.5%, #000 100%)`
+  return { WebkitMaskImage: g, maskImage: g }
+}
 
 // Vertical position (topFrac, fraction of viewport height) of the procedural
 // gradient blob in the WebGL background, for the two swap states. Derived from
@@ -579,7 +598,17 @@ export default function TranslatePage({ onAddCard }: Props) {
       {/* ── English — fixed bottom section ─────────────────────── */}
       {/* pt reduced (9.5vh -> 6vh) so the English input + Translate button sit
           higher and clear the floating bottom nav on shorter viewports. */}
-      <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pt-[6vh] pb-[110px]" style={{ top: `${BOUNDARY}vh` }}>
+      {/* When this side holds the result (srcTop), raise it up into the circle
+          and mask it so the text disappears under the circle's curve, matching
+          the glass. When it holds the input, keep the original geometry. */}
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-y-auto no-scrollbar px-8 pb-[110px]"
+        style={{
+          top: `${srcTop ? BOUNDARY - CLIP_OVER : BOUNDARY}vh`,
+          paddingTop: `${srcTop ? 6 + CLIP_OVER : 6}vh`,
+          ...(srcTop ? circleMask(CIRCLE_CY_TOP - (BOUNDARY - CLIP_OVER)) : {}),
+        }}
+      >
         <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">English</p>
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
