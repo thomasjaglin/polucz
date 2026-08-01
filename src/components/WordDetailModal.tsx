@@ -28,23 +28,22 @@ function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): Voca
   return base
 }
 
-// Standard Polish case abbreviations (capitalised, as used in reference tables).
+// Polish case abbreviations, keyed by the full case name that the API returns.
 const CASE_ABBREV: Record<string, string> = {
-  'mianownik':  'M.',
-  'dopełniacz': 'D.',
-  'celownik':   'C.',
-  'biernik':    'B.',
-  'narzędnik':  'N.',
-  'miejscownik':'Ms.',
-  'wołacz':     'W.',
+  'mianownik':  'm.',
+  'dopełniacz': 'd.',
+  'celownik':   'c.',
+  'biernik':    'b.',
+  'narzędnik':  'n.',
+  'miejscownik':'ms.',
+  'wołacz':     'w.',
 }
 const abbrev = (c: string) => CASE_ABBREV[c] ?? c
 
-// Full case names for the legend under declension tables.
-const CASE_FULL: [string, string][] = [
-  ['M.', 'mianownik'], ['D.', 'dopełniacz'], ['C.', 'celownik'],
-  ['B.', 'biernik'], ['N.', 'narzędnik'], ['Ms.', 'miejscownik'], ['W.', 'wołacz'],
-]
+// Reverse lookup: abbreviation → full case name, for the tap tooltip.
+const CASE_TIP: Record<string, string> = Object.fromEntries(
+  Object.entries(CASE_ABBREV).map(([full, abbr]) => [abbr, full]),
+)
 
 // Person markers for the verb conjugation rows (present/past forms come back in
 // this fixed order from the enrichment API).
@@ -59,14 +58,25 @@ type ColKind = 'label' | 'value'
 // alignment (the failure mode of the old side-by-side flex stacks). Alternating
 // rows get a faint band so the eye can track across on a narrow screen.
 function ParadigmGrid({
-  colTemplate, headers, kinds, rows, size = 15,
+  colTemplate, headers, kinds, rows, size = 15, tips,
 }: {
   colTemplate: string
   headers: string[]
   kinds: ColKind[]
   rows: string[][]
   size?: number
+  // Optional abbreviation → full-word map; label cells whose text has an entry
+  // become tappable and reveal the full word in a tooltip.
+  tips?: Record<string, string>
 }) {
+  const [openKey, setOpenKey] = useState<string | null>(null)
+  // Auto-dismiss the tooltip so there's no outside-tap handling to manage.
+  useEffect(() => {
+    if (openKey === null) return
+    const t = setTimeout(() => setOpenKey(null), 2200)
+    return () => clearTimeout(t)
+  }, [openKey])
+
   return (
     <div className="grid" style={{ gridTemplateColumns: colTemplate }}>
       {headers.map((h, c) => (
@@ -76,19 +86,24 @@ function ParadigmGrid({
         row.map((cell, c) => {
           const zebra = r % 2 === 1
           const isLabel = kinds[c] === 'label'
+          const tip = isLabel ? tips?.[cell] : undefined
+          const key = `${r}-${c}`
+          const open = openKey === key
           return (
             <div
-              key={`c-${r}-${c}`}
+              key={`c-${key}`}
               // `min-w-0` removes the grid item's default min-content floor so the
               // cell can shrink below its longest word; paired with the value
               // tracks' `minmax(0, …)` this lets `break-words`/hyphenation wrap a
               // long form instead of forcing the table past the card edge.
               lang={isLabel ? undefined : 'pl'}
+              onClick={tip ? () => { haptics.tap(); setOpenKey(open ? null : key) } : undefined}
               className={[
-                'min-w-0 py-1.5 break-words hyphens-auto font-instrument leading-tight',
+                'relative min-w-0 py-1.5 break-words hyphens-auto font-instrument leading-tight',
                 // Tighten the gap between the label column and the values by
                 // trimming the label cell's right padding.
                 isLabel ? 'pl-2 pr-0.5 text-[#F8FAFC]/45' : 'px-2 italic text-[#F8FAFC]/85',
+                tip ? 'cursor-pointer select-none' : '',
                 zebra ? 'bg-[#F8FAFC]/[0.04]' : '',
                 zebra && c === 0 ? 'rounded-l-[8px]' : '',
                 zebra && c === row.length - 1 ? 'rounded-r-[8px]' : '',
@@ -96,21 +111,16 @@ function ParadigmGrid({
               style={{ fontSize: `${size}px` }}
             >
               {cell}
+              {tip && open && (
+                <span className="absolute bottom-full left-0 z-20 mb-1 whitespace-nowrap rounded-[8px] border border-[#F8FAFC]/10 bg-[#181528]/95 px-2.5 py-1 font-instrument text-[12px] not-italic text-[#F8FAFC]/90 shadow-[0_6px_20px_rgba(0,0,0,0.4)] backdrop-blur-md">
+                  {tip}
+                </span>
+              )}
             </div>
           )
         })
       )}
     </div>
-  )
-}
-
-function CaseLegend() {
-  return (
-    <p className="mt-3 font-instrument text-[11px] leading-relaxed text-[#F8FAFC]/25">
-      {CASE_FULL.map(([a, full], i) => (
-        <span key={a}>{a}&nbsp;{full}{i < CASE_FULL.length - 1 ? ' · ' : ''}</span>
-      ))}
-    </p>
   )
 }
 
@@ -161,8 +171,8 @@ function NounSection({ entry }: { entry: VocabNoun }) {
         headers={['', 'l. poj.', 'l. mn.']}
         kinds={['label', 'value', 'value']}
         rows={rows}
+        tips={CASE_TIP}
       />
-      <CaseLegend />
     </div>
   )
 }
@@ -183,6 +193,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
           kinds={['label', 'value', 'value', 'value']}
           rows={sgRows}
           size={13}
+          tips={CASE_TIP}
         />
       </div>
 
@@ -197,10 +208,9 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
           kinds={['label', 'value', 'value']}
           rows={plRows}
           size={13}
+          tips={CASE_TIP}
         />
       </div>
-
-      <CaseLegend />
     </div>
   )
 }
