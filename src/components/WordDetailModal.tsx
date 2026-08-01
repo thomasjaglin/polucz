@@ -466,7 +466,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
 
             {/* Word + translation */}
             <div className="mb-8 flex flex-col gap-1">
-              <div className="flex min-w-0 items-center gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <h1 lang="pl" className="hyphens-auto break-words font-instrument text-[42px] font-bold leading-none tracking-tight text-[#F8FAFC]">
                   {entry.pl}
                   {entry.type === 'noun' && (
@@ -476,7 +476,7 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                 <button
                   onClick={handleSpeaker}
                   disabled={false}
-                  className={`relative flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
+                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
                 >
                   <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
                   <span className={`material-symbols-rounded relative z-10 text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>
