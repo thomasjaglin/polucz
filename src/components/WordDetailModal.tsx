@@ -63,12 +63,14 @@ const VERB_PERSONS = ['ja', 'ty', 'on', 'my', 'wy', 'oni']
 
 type ColKind = 'label' | 'value'
 
-// Small auto-dismissing tooltip shown above a tapped abbreviation.
+// Small auto-dismissing tooltip shown above a tapped abbreviation, styled as a
+// liquid-glass pane (same GlassPane-behind-content pattern as the header pills).
 function TipBubble({ text }: { text: string }) {
   return (
-    <span className="absolute bottom-full left-0 z-20 mb-1 whitespace-nowrap rounded-[8px] border border-[#F8FAFC]/10 bg-[#181528]/95 px-2.5 py-1 font-instrument text-[12px] not-italic text-[#F8FAFC]/90 shadow-[0_6px_20px_rgba(0,0,0,0.4)] backdrop-blur-md">
-      {text}
-    </span>
+    <div className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 whitespace-nowrap rounded-[12px] border border-[#F8FAFC]/15 px-3 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+      <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-[12px] bg-[#1a1a1a]/55" />
+      <span className="relative z-10 font-instrument text-[12px] not-italic text-[#F8FAFC]/90">{text}</span>
+    </div>
   )
 }
 
