@@ -174,19 +174,6 @@ float sdRoundRect(vec2 p, vec2 halfSize, float r) {
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
-// Shrink an axis-aligned pane (x,y,w,h) to its visible scroll-clip band
-// (clip.x=top, clip.y=bottom in css y). Because the SDF then treats the clipped
-// top/bottom as real edges, the pane's corner radius applies to the cut — a
-// rounded cut rather than a straight slice. Returns false if fully clipped.
-bool clipPane(inout vec4 r, vec2 clip) {
-  float top = max(r.y, clip.x);
-  float bot = min(r.y + r.w, clip.y);
-  if (bot <= top) return false;
-  r.y = top;
-  r.w = bot - top;
-  return true;
-}
-
 // Rotate a center-relative point into the pane's un-rotated (local) frame:
 // rotate by -angle. ca/sa are cos/sin of the pane's angle.
 vec2 toLocal(vec2 p, float ca, float sa) {
@@ -255,12 +242,9 @@ void main() {
   float hitArea = 1e12;
   for (int i = 0; i < ${MAX_PANES}; i++) {
     if (i >= uPaneCount) break;
+    if (css.y < uPaneClip[i].x || css.y > uPaneClip[i].y) continue; // scroll-clip
     vec4 r = uPane[i];
     float a = uPaneAngle[i];
-    // Scroll-clip: axis-aligned panes get a rounded cut (shrink the box, corner
-    // radius follows); rotated panes fall back to a hard band cut.
-    if (a == 0.0) { if (!clipPane(r, uPaneClip[i])) continue; }
-    else if (css.y < uPaneClip[i].x || css.y > uPaneClip[i].y) continue;
     vec2 lp = css - r.xy - r.zw * 0.5;               // relative to pane center
     if (a != 0.0) lp = toLocal(lp, cos(a), sin(a));  // into the pane's un-rotated frame
     float d = sdRoundRect(lp, r.zw * 0.5, min(uPaneRadius[i], min(r.z, r.w) * 0.5));
@@ -284,7 +268,6 @@ void main() {
   }
 
   vec4 r = uPane[hit];
-  if (uPaneAngle[hit] == 0.0) clipPane(r, uPaneClip[hit]); // match the rounded cut used in selection
   vec2 halfSize = r.zw * 0.5;
   float rad = min(uPaneRadius[hit], min(halfSize.x, halfSize.y));
   float pa = uPaneAngle[hit];
