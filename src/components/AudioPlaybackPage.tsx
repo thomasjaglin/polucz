@@ -308,17 +308,17 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     <div className="flex h-full flex-col items-center gap-6 pt-2">
 
       {/* Progress row — shared glass bar with the count on the right; the
-          transient status / Completed label sits on its own line above.
+          transient status / Completed label sits on its own line below.
           Lifted into the empty header clearance so it sits near the top; the
           card (flex-1, centred) and bottom controls stay put. */}
       {totalCount > 0 && (
         <div className="-mt-14 flex w-full flex-col gap-2">
+          <ProgressBar done={doneCount} total={totalCount} />
           {phase === 'done' ? (
             <span className="font-instrument text-[13px] text-[#B4A0FF]/60">Completed</span>
           ) : phase !== 'idle' ? (
             <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
           ) : null}
-          <ProgressBar done={doneCount} total={totalCount} />
         </div>
       )}
 
