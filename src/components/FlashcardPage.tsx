@@ -418,16 +418,18 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
           card (which sits above the viewport center) rather than mid-screen. */}
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left 40%, rgba(222,0,4,0.85) 0%, transparent 65%)' }} />
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.85) 0%, transparent 65%)' }} />
-    {/* Lift up into the (empty on this page) header clearance so the progress
-        bar sits near the true top of the screen; the safe-area inset in the
-        scroll container's padding is preserved. */}
-    <div className="animate-fade-in -mt-14 flex w-full flex-col gap-6">
+    {/* Fill the content area so the card can center vertically; the progress
+        bar is lifted into the (empty on this page) header clearance to sit near
+        the true top, while the safe-area inset in the padding is preserved. */}
+    <div className="animate-fade-in flex h-full w-full flex-col gap-6">
       {totalCount > 0 && (
-        <ProgressBar done={doneCount} total={totalCount} />
+        <div className="-mt-14">
+          <ProgressBar done={doneCount} total={totalCount} />
+        </div>
       )}
 
       {current ? (
-        <>
+        <div className="flex flex-1 flex-col items-center justify-center gap-6">
           <FlashCard
             key={current.id}
             entry={current}
@@ -457,9 +459,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
               </motion.div>
             )}
           </AnimatePresence>
-        </>
+        </div>
       ) : (
-        <AllCaughtUp onReset={handleReset} />
+        <div className="flex flex-1 items-center justify-center">
+          <AllCaughtUp onReset={handleReset} />
+        </div>
       )}
     </div>
     </>
