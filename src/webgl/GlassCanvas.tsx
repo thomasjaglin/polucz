@@ -136,11 +136,14 @@ uniform int uPaneCount;
 uniform vec4 uPane[${MAX_PANES}];        // x, y, w, h (css px, top-left, un-rotated)
 uniform float uPaneRadius[${MAX_PANES}];
 uniform float uPaneAngle[${MAX_PANES}];  // z-rotation, radians (tilted cards)
-// Vertical clip band (css y) for panes inside a scrolling container: glass is
-// suppressed above .x (top) / below .y (bottom) so it doesn't paint past the
-// container's overflow edge (e.g. the translate card sliding under the circle).
-// Packed as vec2 to save fragment-uniform vectors. Sentinels ±1e9 = no clip.
-uniform vec2 uPaneClip[${MAX_PANES}];
+// Optional elliptical occluder per pane (css px: cx, cy, rx, ry). Where the
+// pane overlaps this ellipse its glass is suppressed, so it reads as sliding
+// under that shape — e.g. the translate result card disappearing behind the
+// gradient circle along the circle's curve instead of a straight line. rx<=0
+// disables it. Hard occlusion (pixels inside the ellipse fall through to the
+// mask shapes, so the circle glass shows there); the box is NOT resized, so the
+// pane's refraction keeps its scale.
+uniform vec4 uPaneClipEll[${MAX_PANES}];
 uniform float uBezel;
 uniform float uThick;
 uniform float uN2;
@@ -242,7 +245,8 @@ void main() {
   float hitArea = 1e12;
   for (int i = 0; i < ${MAX_PANES}; i++) {
     if (i >= uPaneCount) break;
-    if (css.y < uPaneClip[i].x || css.y > uPaneClip[i].y) continue; // scroll-clip
+    vec4 ce = uPaneClipEll[i];
+    if (ce.z > 0.0) { vec2 dd = (css - ce.xy) / ce.zw; if (dot(dd, dd) <= 1.0) continue; } // circle occluder
     vec4 r = uPane[i];
     float a = uPaneAngle[i];
     vec2 lp = css - r.xy - r.zw * 0.5;               // relative to pane center
@@ -450,7 +454,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     const paneRect = new Float32Array(MAX_PANES * 4)
     const paneRadius = new Float32Array(MAX_PANES)
     const paneAngle = new Float32Array(MAX_PANES) // z-rotation, radians
-    const paneClip = new Float32Array(MAX_PANES * 2) // (top, bottom) css y; ±1e9 = no clip
+    const paneClipEll = new Float32Array(MAX_PANES * 4) // (cx, cy, rx, ry) css px; rx<=0 = no clip
 
     function markActive() {
       lastActivity = performance.now()
@@ -593,11 +597,13 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
         paneRect[i * 4 + 3] = h
         paneRadius[i] = p.borderRadius
         paneAngle[i] = angle
-        const clip = p.getClip ? p.getClip() : null
-        paneClip[i * 2] = clip ? clip.top : -1e9
-        paneClip[i * 2 + 1] = clip ? clip.bottom : 1e9
+        const clip = p.getClipEllipse ? p.getClipEllipse() : null
+        paneClipEll[i * 4]     = clip ? clip.cx : 0
+        paneClipEll[i * 4 + 1] = clip ? clip.cy : 0
+        paneClipEll[i * 4 + 2] = clip ? clip.rx : 0 // rx<=0 → shader ignores the clip
+        paneClipEll[i * 4 + 3] = clip ? clip.ry : 0
         hash(pc.x); hash(pc.y); hash(w); hash(h); hash(angle * 100)
-        hash(paneClip[i * 2]); hash(paneClip[i * 2 + 1])
+        hash(paneClipEll[i * 4 + 1]); hash(paneClipEll[i * 4 + 2])
         i++
       }
 
@@ -638,7 +644,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
       gl.uniform4fv(compU('uPane'), paneRect)
       gl.uniform1fv(compU('uPaneRadius'), paneRadius)
       gl.uniform1fv(compU('uPaneAngle'), paneAngle)
-      gl.uniform2fv(compU('uPaneClip'), paneClip)
+      gl.uniform4fv(compU('uPaneClipEll'), paneClipEll)
       gl.uniform1f(compU('uBezel'), BEZEL_WIDTH)
       gl.uniform1f(compU('uThick'), THICKNESS)
       gl.uniform1f(compU('uN2'), REFRACTIVE_INDEX)
