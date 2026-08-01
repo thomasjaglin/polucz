@@ -423,7 +423,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
               {typeGradient && (
                 <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[36px]">
                   <div
-                    className="absolute inset-0 scale-125 opacity-70 mix-blend-screen blur-sm"
+                    className="absolute inset-0 scale-150 opacity-70 mix-blend-screen blur-md"
                     dangerouslySetInnerHTML={{ __html: typeGradient }}
                   />
                 </div>
