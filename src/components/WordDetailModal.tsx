@@ -40,10 +40,20 @@ const CASE_ABBREV: Record<string, string> = {
 }
 const abbrev = (c: string) => CASE_ABBREV[c] ?? c
 
-// Reverse lookup: abbreviation → full case name, for the tap tooltip.
-const CASE_TIP: Record<string, string> = Object.fromEntries(
-  Object.entries(CASE_ABBREV).map(([full, abbr]) => [abbr, full]),
-)
+// Abbreviation → full-word expansions revealed on tap. Covers the case labels
+// (reverse of CASE_ABBREV) plus the column headers (number, gender, virility).
+const ABBREV_TIP: Record<string, string> = {
+  ...Object.fromEntries(Object.entries(CASE_ABBREV).map(([full, abbr]) => [abbr, full])),
+  'l. poj.': 'liczba pojedyncza',
+  'l. mn.':  'liczba mnoga',
+  'm.':      'rodzaj męski',
+  'f.':      'rodzaj żeński',
+  'n.':      'rodzaj nijaki',
+  'm.os.':   'męskoosobowy',
+  'nm.os.':  'niemęskoosobowy',
+  'past m.': 'past — rodzaj męski',
+  'past f.': 'past — rodzaj żeński',
+}
 
 // Person markers for the verb conjugation rows (present/past forms come back in
 // this fixed order from the enrichment API).
@@ -52,6 +62,15 @@ const VERB_PERSONS = ['ja', 'ty', 'on', 'my', 'wy', 'oni']
 // ─── Sub-sections ─────────────────────────────────────────────────────────────
 
 type ColKind = 'label' | 'value'
+
+// Small auto-dismissing tooltip shown above a tapped abbreviation.
+function TipBubble({ text }: { text: string }) {
+  return (
+    <span className="absolute bottom-full left-0 z-20 mb-1 whitespace-nowrap rounded-[8px] border border-[#F8FAFC]/10 bg-[#181528]/95 px-2.5 py-1 font-instrument text-[12px] not-italic text-[#F8FAFC]/90 shadow-[0_6px_20px_rgba(0,0,0,0.4)] backdrop-blur-md">
+      {text}
+    </span>
+  )
+}
 
 // One CSS grid where every row shares a single baseline: when a long form wraps,
 // the whole row grows together, so case/person labels never drift out of
@@ -79,9 +98,24 @@ function ParadigmGrid({
 
   return (
     <div className="grid" style={{ gridTemplateColumns: colTemplate }}>
-      {headers.map((h, c) => (
-        <div key={`h-${c}`} className="px-2 pb-2.5 font-instrument text-[12px] leading-tight text-[#F8FAFC]/40">{h}</div>
-      ))}
+      {headers.map((h, c) => {
+        const tip = tips?.[h]
+        const key = `h-${c}`
+        const open = openKey === key
+        return (
+          <div
+            key={key}
+            onClick={tip ? () => { haptics.tap(); setOpenKey(open ? null : key) } : undefined}
+            className={[
+              'relative px-2 pb-2.5 font-instrument text-[12px] leading-tight text-[#F8FAFC]/40',
+              tip ? 'cursor-pointer select-none' : '',
+            ].join(' ')}
+          >
+            {h}
+            {tip && open && <TipBubble text={tip} />}
+          </div>
+        )
+      })}
       {rows.map((row, r) =>
         row.map((cell, c) => {
           const zebra = r % 2 === 1
@@ -111,11 +145,7 @@ function ParadigmGrid({
               style={{ fontSize: `${size}px` }}
             >
               {cell}
-              {tip && open && (
-                <span className="absolute bottom-full left-0 z-20 mb-1 whitespace-nowrap rounded-[8px] border border-[#F8FAFC]/10 bg-[#181528]/95 px-2.5 py-1 font-instrument text-[12px] not-italic text-[#F8FAFC]/90 shadow-[0_6px_20px_rgba(0,0,0,0.4)] backdrop-blur-md">
-                  {tip}
-                </span>
-              )}
+              {tip && open && <TipBubble text={tip} />}
             </div>
           )
         })
@@ -145,6 +175,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
           headers={['', 'present', 'past m.', 'past f.']}
           kinds={['label', 'value', 'value', 'value']}
           rows={rows}
+          tips={ABBREV_TIP}
         />
       </div>
 
@@ -171,7 +202,7 @@ function NounSection({ entry }: { entry: VocabNoun }) {
         headers={['', 'l. poj.', 'l. mn.']}
         kinds={['label', 'value', 'value']}
         rows={rows}
-        tips={CASE_TIP}
+        tips={ABBREV_TIP}
       />
     </div>
   )
@@ -193,7 +224,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
           kinds={['label', 'value', 'value', 'value']}
           rows={sgRows}
           size={13}
-          tips={CASE_TIP}
+          tips={ABBREV_TIP}
         />
       </div>
 
@@ -208,7 +239,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
           kinds={['label', 'value', 'value']}
           rows={plRows}
           size={13}
-          tips={CASE_TIP}
+          tips={ABBREV_TIP}
         />
       </div>
     </div>
