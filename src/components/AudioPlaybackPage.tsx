@@ -6,7 +6,8 @@ import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import { getGlassMode } from '../lib/glassMode'
 import { hasCachedClips } from '../lib/audioCache'
-import { usePlaybackRate, cyclePlaybackRate } from '../lib/playbackRate'
+import { usePlaybackRate, setPlaybackRate, RATE_OPTIONS } from '../lib/playbackRate'
+import { useBackClose } from '../hooks/useBackClose'
 import { setAudioCard } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -89,6 +90,17 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const [repeatOne, setRepeatOne] = useState(false)
   const tts = useTTS()
   const rate = usePlaybackRate()
+  const [speedOpen, setSpeedOpen] = useState(false)
+  const speedRef = useRef<HTMLDivElement>(null)
+  useBackClose(speedOpen, () => setSpeedOpen(false)) // Android back closes the picker
+  useEffect(() => {
+    if (!speedOpen) return
+    const onClick = (e: MouseEvent) => {
+      if (!speedRef.current?.contains(e.target as Node)) setSpeedOpen(false)
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [speedOpen])
 
   // Playable cards = those whose audio is ACTUALLY in the cache (verified below),
   // not merely flagged audioReady. The flag can drift from the real cache (stale
@@ -498,17 +510,39 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 repeat-one (top), Play/Pause (large, middle), skip-next (bottom). */}
             {showControls && (
               <div className="absolute bottom-2 right-0 z-10 flex flex-col items-center gap-3.5">
-                {/* Playback speed — tap to cycle 0.75× / 1× / 1.25× */}
-                <button
-                  onClick={() => cyclePlaybackRate()}
-                  aria-label={`Playback speed ${rate}×`}
-                  className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${rate !== 1 ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
-                >
-                  <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${rate !== 1 ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
-                  <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${rate !== 1 ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/55'}`}>
-                    {rate === 1 ? '1×' : `${rate}×`}
-                  </span>
-                </button>
+                {/* Playback speed — tap to open the picker (all rates visible) */}
+                <div ref={speedRef} className="relative flex-shrink-0">
+                  {speedOpen && (
+                    <div className="absolute bottom-0 right-full z-10 mr-2 flex flex-col gap-1.5">
+                      {[...RATE_OPTIONS].reverse().map(r => {
+                        const active = r === rate
+                        return (
+                          <button
+                            key={r}
+                            onClick={() => { setPlaybackRate(r); setSpeedOpen(false) }}
+                            className={`relative flex h-[40px] w-[54px] flex-shrink-0 items-center justify-center rounded-full border transition-all active:scale-95 ${active ? 'border-[#B4A0FF]/50' : 'border-[#F8FAFC]/10'}`}
+                          >
+                            <GlassPane borderRadius={20} className={`absolute inset-0 z-0 rounded-full ${active ? 'bg-[#B4A0FF]/20' : 'bg-[#0d0d0d]/70'}`} />
+                            <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${active ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/70'}`}>
+                              {r === 1 ? '1×' : `${r}×`}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setSpeedOpen(o => !o)}
+                    aria-label={`Playback speed ${rate}×`}
+                    aria-expanded={speedOpen}
+                    className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${rate !== 1 ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
+                  >
+                    <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${rate !== 1 ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
+                    <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${rate !== 1 ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/55'}`}>
+                      {rate === 1 ? '1×' : `${rate}×`}
+                    </span>
+                  </button>
+                </div>
 
                 {/* Repeat current card — toggle */}
                 <button
