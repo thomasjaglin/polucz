@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react'
 // with preservesPitch, so slower/faster keeps the voice natural.
 
 const KEY = 'polucz_playback_rate'
-export const RATE_OPTIONS = [0.75, 1, 1.25] as const
+export const RATE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5] as const
 
 function load(): number {
   const raw = Number(localStorage.getItem(KEY))
