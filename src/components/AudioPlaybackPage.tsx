@@ -4,11 +4,9 @@ import type { VocabEntry } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
-import { getGlassMode } from '../lib/glassMode'
 import { hasCachedClips } from '../lib/audioCache'
 import { usePlaybackRate, setPlaybackRate, RATE_OPTIONS } from '../lib/playbackRate'
 import { useBackClose } from '../hooks/useBackClose'
-import { setAudioCard } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import ProgressBar from './ProgressBar'
@@ -159,27 +157,6 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
 
   const current = queue[idx] ?? null
   const doubleTap = useDoubleTap(useCallback(() => { if (current) onOpenModal?.(current) }, [current, onOpenModal]))
-
-  // Feed the front card's rect + word type to the WebGL background so it bakes a
-  // per-word colour glow there; the card's transparent glass then refracts it.
-  useEffect(() => {
-    if (getGlassMode() !== 'webgl') return
-    if (!started || phase === 'done' || !current) { setAudioCard(null); return }
-    const type = current.type
-    function measure() {
-      const el = cardRef.current
-      if (!el) return
-      const r = el.getBoundingClientRect()
-      if (r.width < 2 || r.height < 2) return
-      setAudioCard({ cx: r.left + r.width / 2, cy: r.top + r.height / 2, rx: r.width / 2, ry: r.height / 2, type })
-    }
-    const raf = requestAnimationFrame(measure)
-    window.addEventListener('resize', measure)
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
-  }, [current?.id, started, phase]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Clear the glow when the page unmounts.
-  useEffect(() => () => setAudioCard(null), [])
 
   // ─── Start TTS when phase becomes 'playing' or the current card changes ────
   useEffect(() => {
@@ -433,17 +410,24 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   )
                 })}
               </AnimatePresence>
-            {/* Transparent glass, exactly like the vocab card: the per-word
-                colour glow now lives in the WebGL background (see the cardRef
-                effect + backgroundData audio blob), so the card's own GlassPane
-                refracts it with the renderer's real rim light — no opaque DOM
-                gradient in front of the canvas to hide the effect. */}
+            {/* Per-word colour: the filter-gradient blob (same SVG as the type
+                badge) painted as the card background, masked to the card's
+                rounded outline (overflow-hidden), with the GlassPane frosting on
+                top — the modal's blob-behind-glass pattern. */}
             <motion.div
               ref={cardRef}
               onTouchEnd={doubleTap.onTouchEnd}
               onClick={doubleTap.onClick}
               className="relative w-full select-none rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]"
             >
+              {typeGradient && (
+                <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[36px]">
+                  <div
+                    className="absolute inset-0 opacity-70 mix-blend-screen"
+                    dangerouslySetInnerHTML={{ __html: typeGradient }}
+                  />
+                </div>
+              )}
               <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
               {/* Same compact layout as the vocab list card (VocabCard) */}
               <div className="relative z-10 p-5">
