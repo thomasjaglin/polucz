@@ -275,6 +275,11 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     if (idx < queue.length) skipTo(idx + 1)
   }
 
+  // Skip-previous control: step back one card (neutral).
+  function handleSkipPrev() {
+    if (idx > 0) skipTo(idx - 1)
+  }
+
   // ─── Derived UI values ────────────────────────────────────────────────────
 
   const doneCount     = Math.min(idx, totalCount)
@@ -545,6 +550,16 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/50'}`}>
                     repeat_one
                   </span>
+                </button>
+
+                {/* Skip to previous card — neutral step back */}
+                <button
+                  onClick={handleSkipPrev}
+                  disabled={!current || idx <= 0}
+                  className="relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                >
+                  <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                  <span className="material-symbols-rounded relative z-10 text-[22px] text-[#F8FAFC]/60">skip_previous</span>
                 </button>
 
                 {/* Play / Pause — primary, large */}
