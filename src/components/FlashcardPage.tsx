@@ -418,9 +418,10 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
           card (which sits above the viewport center) rather than mid-screen. */}
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: leftOpacity, background: 'radial-gradient(ellipse at left 40%, rgba(222,0,4,0.85) 0%, transparent 65%)' }} />
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.85) 0%, transparent 65%)' }} />
-    {/* No top padding: the progress bar sits at the very top of the content
-        area, up against the header. */}
-    <div className="animate-fade-in flex w-full flex-col gap-6">
+    {/* Lift up into the (empty on this page) header clearance so the progress
+        bar sits near the true top of the screen; the safe-area inset in the
+        scroll container's padding is preserved. */}
+    <div className="animate-fade-in -mt-14 flex w-full flex-col gap-6">
       {totalCount > 0 && (
         <ProgressBar done={doneCount} total={totalCount} />
       )}
