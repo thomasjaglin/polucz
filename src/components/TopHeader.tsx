@@ -164,7 +164,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
 
   // Main nav pages: logo centered + optional right-side actions
   return (
-    <div className={`absolute inset-x-0 top-0 z-50 transition-transform duration-300 ease-in-out ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
+    <div className={`absolute inset-x-0 top-0 z-50 bg-[#ff1493]/60 transition-transform duration-300 ease-in-out ${hidden ? '-translate-y-full' : 'translate-y-0'}`}>
     <div
       className="relative mx-auto flex max-w-[426px] items-center justify-center px-6"
       style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))' }}
