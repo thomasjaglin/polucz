@@ -85,8 +85,10 @@ function ParadigmGrid({
               // long form instead of forcing the table past the card edge.
               lang={isLabel ? undefined : 'pl'}
               className={[
-                'min-w-0 px-2 py-1.5 break-words hyphens-auto font-instrument leading-tight',
-                isLabel ? 'text-[#F8FAFC]/45' : 'italic text-[#F8FAFC]/85',
+                'min-w-0 py-1.5 break-words hyphens-auto font-instrument leading-tight',
+                // Tighten the gap between the label column and the values by
+                // trimming the label cell's right padding.
+                isLabel ? 'pl-2 pr-0.5 text-[#F8FAFC]/45' : 'px-2 italic text-[#F8FAFC]/85',
                 zebra ? 'bg-[#F8FAFC]/[0.04]' : '',
                 zebra && c === 0 ? 'rounded-l-[8px]' : '',
                 zebra && c === row.length - 1 ? 'rounded-r-[8px]' : '',
