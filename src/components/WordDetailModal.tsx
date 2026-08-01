@@ -260,11 +260,41 @@ function FallbackSection({ entry }: { entry: VocabUnknown }) {
 }
 
 interface Example { pl: string; en: string }
+type ExampleSource = 'corpus' | 'generated' | null
+interface ExampleData { examples: Example[]; source: ExampleSource }
+
+// Examples are stable per word, so cache what we fetch and reuse it instead of
+// re-hitting /api/examples every time the modal reopens. In-memory for the
+// session, mirrored to localStorage so it also survives reloads. Best-effort:
+// any storage failure just falls back to a network fetch.
+const exampleMem = new Map<string, ExampleData>()
+const exampleKey = (w: string) => `polucz_examples:${w.toLowerCase()}`
+
+function getCachedExamples(word: string): ExampleData | null {
+  const mem = exampleMem.get(word)
+  if (mem) return mem
+  try {
+    const raw = localStorage.getItem(exampleKey(word))
+    if (raw) {
+      const data = JSON.parse(raw) as ExampleData
+      exampleMem.set(word, data)
+      return data
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function putCachedExamples(word: string, data: ExampleData) {
+  exampleMem.set(word, data)
+  try { localStorage.setItem(exampleKey(word), JSON.stringify(data)) } catch { /* ignore */ }
+}
 
 function ExamplesSection({ word }: { word: string }) {
   const [loading, setLoading] = useState(false)
-  const [examples, setExamples] = useState<Example[] | null>(null)
-  const [source, setSource] = useState<'corpus' | 'generated' | null>(null)
+  // Seed from cache so a previously-fetched card shows its examples instantly
+  // (no button, no refetch).
+  const [examples, setExamples] = useState<Example[] | null>(() => getCachedExamples(word)?.examples ?? null)
+  const [source, setSource] = useState<ExampleSource>(() => getCachedExamples(word)?.source ?? null)
   const [error, setError] = useState(false)
 
   async function handleFind() {
@@ -281,6 +311,7 @@ function ExamplesSection({ word }: { word: string }) {
       if (Array.isArray(data.examples) && data.examples.length > 0) {
         setExamples(data.examples)
         setSource(data.source ?? null)
+        putCachedExamples(word, { examples: data.examples, source: data.source ?? null })
       } else setError(true)
     } catch {
       setError(true)
