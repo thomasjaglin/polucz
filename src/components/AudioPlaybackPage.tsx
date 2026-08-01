@@ -343,29 +343,36 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="flex flex-1 flex-col items-center justify-center gap-5 text-center"
+            className="flex flex-1 flex-col items-center gap-5 text-center"
           >
-            <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">spatial_audio</span>
-            <div className="flex flex-col gap-1">
-              <h2 className="font-instrument text-[24px] font-semibold text-[#F8FAFC]/80">Audio review</h2>
-              <p className="font-instrument text-[15px] text-[#F8FAFC]/40">{availableCount} cards ready</p>
+            {/* Title lifted to the top (into the empty header clearance), like
+                the flashcard progress bar; the play-choice buttons stay
+                centered in the space below. */}
+            <div className="-mt-14 flex flex-col items-center gap-3">
+              <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">spatial_audio</span>
+              <div className="flex flex-col gap-1">
+                <h2 className="font-instrument text-[24px] font-semibold text-[#F8FAFC]/80">Audio review</h2>
+                <p className="font-instrument text-[15px] text-[#F8FAFC]/40">{availableCount} cards ready</p>
+              </div>
             </div>
-            <GlassButton
-              variant="primary"
-              onClick={() => beginPlayback('list')}
-              className="mt-1 px-7 py-3.5 font-instrument text-[16px]"
-            >
-              <span className="material-symbols-rounded text-[20px]">play_arrow</span>
-              Play through list
-            </GlassButton>
-            <GlassButton
-              variant="secondary"
-              onClick={() => beginPlayback('new-first')}
-              className="px-5 py-2.5 font-instrument text-[14px]"
-            >
-              <span className="material-symbols-rounded text-[16px]">fiber_new</span>
-              Play with new words first
-            </GlassButton>
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <GlassButton
+                variant="primary"
+                onClick={() => beginPlayback('list')}
+                className="px-7 py-3.5 font-instrument text-[16px]"
+              >
+                <span className="material-symbols-rounded text-[20px]">play_arrow</span>
+                Play through list
+              </GlassButton>
+              <GlassButton
+                variant="secondary"
+                onClick={() => beginPlayback('new-first')}
+                className="px-5 py-2.5 font-instrument text-[14px]"
+              >
+                <span className="material-symbols-rounded text-[16px]">fiber_new</span>
+                Play with new words first
+              </GlassButton>
+            </div>
           </motion.div>
         ) : phase === 'done' ? (
           <motion.div
