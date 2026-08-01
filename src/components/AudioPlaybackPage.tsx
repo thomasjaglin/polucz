@@ -6,6 +6,7 @@ import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import { getGlassMode } from '../lib/glassMode'
 import { hasCachedClips } from '../lib/audioCache'
+import { usePlaybackRate, cyclePlaybackRate } from '../lib/playbackRate'
 import { setAudioCard } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -87,6 +88,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // instead of advancing to the next one.
   const [repeatOne, setRepeatOne] = useState(false)
   const tts = useTTS()
+  const rate = usePlaybackRate()
 
   // Playable cards = those whose audio is ACTUALLY in the cache (verified below),
   // not merely flagged audioReady. The flag can drift from the real cache (stale
@@ -496,6 +498,18 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 repeat-one (top), Play/Pause (large, middle), skip-next (bottom). */}
             {showControls && (
               <div className="absolute bottom-2 right-0 z-10 flex flex-col items-center gap-3.5">
+                {/* Playback speed — tap to cycle 0.75× / 1× / 1.25× */}
+                <button
+                  onClick={() => cyclePlaybackRate()}
+                  aria-label={`Playback speed ${rate}×`}
+                  className={`relative flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${rate !== 1 ? 'border-[#B4A0FF]/40' : 'border-[#F8FAFC]/10'}`}
+                >
+                  <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${rate !== 1 ? 'bg-[#B4A0FF]/15' : 'bg-[#F8FAFC]/5'}`} />
+                  <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${rate !== 1 ? 'text-[#B4A0FF]' : 'text-[#F8FAFC]/55'}`}>
+                    {rate === 1 ? '1×' : `${rate}×`}
+                  </span>
+                </button>
+
                 {/* Repeat current card — toggle */}
                 <button
                   onClick={() => setRepeatOne(r => !r)}
