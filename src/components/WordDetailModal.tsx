@@ -10,6 +10,7 @@ import { useTTS } from '../lib/useTTS'
 import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
 import { useBackClose } from '../hooks/useBackClose'
+import { pushToast } from '../lib/toastStore'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const base = { ...entry, enriched: true }
@@ -297,35 +298,62 @@ function ExamplesSection({ word }: { word: string }) {
   const [source, setSource] = useState<ExampleSource>(() => getCachedExamples(word)?.source ?? null)
   const [error, setError] = useState(false)
 
-  async function handleFind() {
-    if (loading || examples) return
+  // `exclude` non-empty = a refresh: ask the API for sentences other than the
+  // ones already shown. On failure we keep the current examples and just toast,
+  // rather than wiping them.
+  async function fetchExamples(exclude: string[] = []) {
+    const isRefresh = exclude.length > 0
     setLoading(true)
-    setError(false)
+    if (!isRefresh) setError(false)
     try {
       const res = await fetch('/api/examples', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ word }),
+        body: JSON.stringify({ word, exclude }),
       })
       const data = await res.json()
-      if (Array.isArray(data.examples) && data.examples.length > 0) {
+      if (res.ok && Array.isArray(data.examples) && data.examples.length > 0) {
         setExamples(data.examples)
         setSource(data.source ?? null)
         putCachedExamples(word, { examples: data.examples, source: data.source ?? null })
+      } else if (isRefresh) {
+        pushToast('No different examples found', 'info')
       } else setError(true)
     } catch {
-      setError(true)
+      if (isRefresh) pushToast('Could not refresh examples', 'error')
+      else setError(true)
     } finally {
       setLoading(false)
     }
   }
 
+  function handleFind() {
+    if (loading || examples) return
+    fetchExamples()
+  }
+
+  function handleRefresh() {
+    if (loading) return
+    fetchExamples(examples?.map(e => e.pl) ?? [])
+  }
+
   if (examples) {
     return (
       <div className="mt-6 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-6">
-        <span className="font-instrument text-[14px] text-[#F8FAFC]/20">
-          Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="font-instrument text-[14px] text-[#F8FAFC]/20">
+            Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
+          </span>
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            aria-label="Get different examples"
+            className="relative flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 text-[#F8FAFC]/40 transition-all hover:scale-105 hover:text-[#F8FAFC]/80 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+          >
+            <GlassPane borderRadius={15} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+            <span className={`material-symbols-rounded relative z-10 text-[16px]${loading ? ' animate-spin' : ''}`}>refresh</span>
+          </button>
+        </div>
         <div className="flex flex-col gap-4">
           {examples.map((ex, i) => (
             <div key={i} className="flex flex-col gap-1">

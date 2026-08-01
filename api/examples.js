@@ -32,7 +32,9 @@ async function fetchTatoeba(word) {
     const en = (result.translations ?? []).flat().find(t => t?.lang === 'eng' && t.text)?.text?.trim()
     if (!en) continue
     out.push({ pl, en })
-    if (out.length >= WANT) break
+    // Collect more than WANT so the "different examples" refresh has fresh
+    // candidates to fall back on after excluding already-seen sentences.
+    if (out.length >= 12) break
   }
   return out
 }
@@ -60,6 +62,14 @@ const GEN_PROMPT =
   'that word (any inflected form is fine), with a faithful English translation. Prefer common, ' +
   'everyday phrasing over textbook stiffness. Return JSON matching the schema.'
 
+// Appended to the model input when refreshing, so it doesn't repeat sentences
+// the user has already seen.
+function excludeClause(exclude) {
+  if (!exclude.length) return ''
+  return '\n\nDo NOT reuse or closely paraphrase any of these sentences:\n' +
+    exclude.map(s => '- ' + s).join('\n')
+}
+
 async function fetchWithBackoff(apiKey, body) {
   let res
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -79,7 +89,7 @@ function extractText(data) {
   return step?.content?.find(c => c.type === 'text')?.text ?? null
 }
 
-async function fetchGenerated(word) {
+async function fetchGenerated(word, exclude = []) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return []
   let r
@@ -87,7 +97,7 @@ async function fetchGenerated(word) {
     r = await fetchWithBackoff(apiKey, {
       model: 'gemini-3.5-flash',
       system_instruction: GEN_PROMPT,
-      input: word,
+      input: word + excludeClause(exclude),
       response_format: { type: 'text', mime_type: 'application/json', schema: GEN_SCHEMA },
     })
   } catch {
@@ -113,20 +123,26 @@ async function fetchGenerated(word) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  const { word } = req.body ?? {}
+  const { word, exclude } = req.body ?? {}
   if (!word || typeof word !== 'string' || !word.trim()) {
     return res.status(400).json({ error: 'word is required' })
   }
   const w = word.trim()
 
+  // Optional: sentences already shown, so a "different examples" refresh can
+  // skip them. Empty on the first fetch → behaves exactly as before.
+  const excludeList = Array.isArray(exclude) ? exclude.filter(s => typeof s === 'string' && s.trim()) : []
+  const excludeSet = new Set(excludeList.map(s => s.trim().toLowerCase()))
+  const fresh = arr => arr.filter(e => !excludeSet.has(e.pl.trim().toLowerCase())).slice(0, WANT)
+
   // Corpus first (real attested usage) …
-  const corpus = await fetchTatoeba(w)
+  const corpus = fresh(await fetchTatoeba(w))
   if (corpus.length > 0) {
     return res.status(200).json({ examples: corpus, source: 'corpus' })
   }
 
-  // … LLM fallback where the corpus has no coverage.
-  const generated = await fetchGenerated(w)
+  // … LLM fallback where the corpus has no coverage (or is exhausted on refresh).
+  const generated = fresh(await fetchGenerated(w, excludeList))
   if (generated.length > 0) {
     return res.status(200).json({ examples: generated, source: 'generated' })
   }
