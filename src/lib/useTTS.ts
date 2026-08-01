@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { getCachedClip, putCachedClip } from './audioCache'
+import { getPlaybackRate, subscribeRate } from './playbackRate'
 
 export type AudioState = 'idle' | 'loading' | 'playing' | 'error'
 
@@ -58,6 +59,11 @@ export function useTTS() {
     }
   }, [])
 
+  // Apply speed changes to the clip that's already playing, not just the next.
+  useEffect(() => subscribeRate(() => {
+    if (currentRef.current) currentRef.current.playbackRate = getPlaybackRate()
+  }), [])
+
   // Three-tier lookup: in-memory (this session) → IndexedDB (persisted across
   // sessions) → network (generate once, then persist). So a word is fetched
   // from the TTS API at most once, ever.
@@ -85,6 +91,12 @@ export function useTTS() {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
+      // Time-stretch, not pitch-shift, so slower/faster keeps a natural voice.
+      // (preservesPitch is the standard prop; webkit* covers older WebViews.)
+      const a = audio as HTMLAudioElement & { preservesPitch?: boolean; webkitPreservesPitch?: boolean }
+      a.preservesPitch = true
+      a.webkitPreservesPitch = true
+      audio.playbackRate = getPlaybackRate()
       currentRef.current = audio
 
       const done = (ok: boolean) => {
