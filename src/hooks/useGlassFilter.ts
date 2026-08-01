@@ -103,7 +103,20 @@ export function upsertFilter(id: string, maps: GlassMaps, w: number, h: number) 
 
 // `rotation` (degrees, a live MotionValue) lets a tilting pane — a swiped
 // card — tell the webgl renderer its angle so the glass rotates to match.
-export function useGlassFilter(borderRadius: number, rotation?: MotionValue<number>) {
+// Nearest scrolling/clipping ancestor of `el`, or null. Used to bound a pane's
+// glass to where its DOM is actually visible (overflow clip), so the WebGL
+// glass doesn't extend past the container edge.
+function findClipAncestor(el: HTMLElement): HTMLElement | null {
+  let node = el.parentElement
+  while (node) {
+    const oy = getComputedStyle(node).overflowY
+    if (oy === 'auto' || oy === 'scroll' || oy === 'hidden' || oy === 'clip') return node
+    node = node.parentElement
+  }
+  return null
+}
+
+export function useGlassFilter(borderRadius: number, rotation?: MotionValue<number>, clipToScroll = false) {
   const elRef = useRef<HTMLElement | null>(null)
   const [filterId] = useState(() => `kube-glass-${++counter}`)
   const prevSize = useRef({ w: 0, h: 0 })
@@ -117,7 +130,11 @@ export function useGlassFilter(borderRadius: number, rotation?: MotionValue<numb
     // css mode: plain backdrop blur from the stylesheet, nothing to do.
     if (mode === 'webgl') {
       const getRotation = rotation ? () => (rotation.get() * Math.PI) / 180 : undefined
-      return registerPane({ el, borderRadius, getRotation })
+      const clipEl = clipToScroll ? findClipAncestor(el) : null
+      const getClip = clipEl
+        ? () => { const r = clipEl.getBoundingClientRect(); return { top: r.top, bottom: r.bottom } }
+        : undefined
+      return registerPane({ el, borderRadius, getRotation, getClip })
     }
     if (mode !== 'svg') return
 
@@ -153,7 +170,7 @@ export function useGlassFilter(borderRadius: number, rotation?: MotionValue<numb
       const defs = document.querySelector('#kube-glass-filters defs')
       defs?.querySelector(`#${filterId}`)?.remove()
     }
-  }, [filterId, borderRadius, mode, rotation])
+  }, [filterId, borderRadius, mode, rotation, clipToScroll])
 
   // In non-svg modes the ::before must not reference a filter that never gets
   // created — GlassPane feeds this straight into --glass-filter.

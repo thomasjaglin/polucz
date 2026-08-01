@@ -10,13 +10,16 @@ interface Props {
   /** Live z-rotation (deg) of this pane, for tilting cards, so the webgl
    *  glass rotates to match instead of ghosting as an upright frame. */
   rotation?: MotionValue<number>
+  /** Clip this pane's webgl glass to its nearest scrolling ancestor, so the
+   *  glass doesn't paint past the container's overflow edge when scrolled. */
+  clipToScroll?: boolean
 }
 
 // Applies the per-element computed displacement map via --glass-filter CSS variable.
 // The .kube-glass-bg::before picks it up with filter: var(--glass-filter).
 // Blur is handled separately by backdrop-filter: blur() on the same ::before.
-export default function GlassPane({ borderRadius, className = '', style, children, rotation }: Props) {
-  const { elRef, filterCss } = useGlassFilter(borderRadius, rotation)
+export default function GlassPane({ borderRadius, className = '', style, children, rotation, clipToScroll }: Props) {
+  const { elRef, filterCss } = useGlassFilter(borderRadius, rotation, clipToScroll)
 
   return (
     <div

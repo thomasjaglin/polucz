@@ -453,7 +453,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         onDragEnd={handleDragEnd}
         className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
       >
-        <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#F8FAFC]/[0.02]" />
+        <GlassPane borderRadius={24} clipToScroll className="absolute inset-0 z-0 rounded-[24px] bg-[#F8FAFC]/[0.02]" />
 
         {/* Swipe feedback wash, scaled to the card (mirrors the flashcard
             glows): green on the right (save), red on the left (clear). */}

@@ -11,6 +11,11 @@ export interface PaneRecord {
   // draw the glass rotated to match, instead of the axis-aligned bounding box
   // (which for a tilted card is larger and upright — a visible "ghost frame").
   getRotation?: () => number
+  // Optional live vertical clip band (css y) — the rect of a scroll-clipping
+  // ancestor. When set, the renderer suppresses this pane's glass above
+  // clip.top / below clip.bottom so it doesn't paint past the container's
+  // overflow edge (e.g. the translate result card sliding under the circle).
+  getClip?: () => { top: number; bottom: number } | null
 }
 
 const panes = new Set<PaneRecord>()
