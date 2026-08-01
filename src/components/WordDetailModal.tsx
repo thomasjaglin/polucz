@@ -28,18 +28,84 @@ function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): Voca
   return base
 }
 
+// Standard Polish case abbreviations (capitalised, as used in reference tables).
 const CASE_ABBREV: Record<string, string> = {
-  'mianownik':  'm.',
-  'dopełniacz': 'd.',
-  'celownik':   'c.',
-  'biernik':    'b.',
-  'narzędnik':  'n.',
-  'miejscownik':'ms.',
-  'wołacz':     'w.',
+  'mianownik':  'M.',
+  'dopełniacz': 'D.',
+  'celownik':   'C.',
+  'biernik':    'B.',
+  'narzędnik':  'N.',
+  'miejscownik':'Ms.',
+  'wołacz':     'W.',
 }
 const abbrev = (c: string) => CASE_ABBREV[c] ?? c
 
+// Full case names for the legend under declension tables.
+const CASE_FULL: [string, string][] = [
+  ['M.', 'mianownik'], ['D.', 'dopełniacz'], ['C.', 'celownik'],
+  ['B.', 'biernik'], ['N.', 'narzędnik'], ['Ms.', 'miejscownik'], ['W.', 'wołacz'],
+]
+
+// Person markers for the verb conjugation rows (present/past forms come back in
+// this fixed order from the enrichment API).
+const VERB_PERSONS = ['ja', 'ty', 'on', 'my', 'wy', 'oni']
+
 // ─── Sub-sections ─────────────────────────────────────────────────────────────
+
+type ColKind = 'label' | 'value'
+
+// One CSS grid where every row shares a single baseline: when a long form wraps,
+// the whole row grows together, so case/person labels never drift out of
+// alignment (the failure mode of the old side-by-side flex stacks). Alternating
+// rows get a faint band so the eye can track across on a narrow screen.
+function ParadigmGrid({
+  colTemplate, headers, kinds, rows, size = 15,
+}: {
+  colTemplate: string
+  headers: string[]
+  kinds: ColKind[]
+  rows: string[][]
+  size?: number
+}) {
+  return (
+    <div className="grid" style={{ gridTemplateColumns: colTemplate }}>
+      {headers.map((h, c) => (
+        <div key={`h-${c}`} className="px-2 pb-2.5 font-instrument text-[12px] leading-tight text-[#F8FAFC]/40">{h}</div>
+      ))}
+      {rows.map((row, r) =>
+        row.map((cell, c) => {
+          const zebra = r % 2 === 1
+          const isLabel = kinds[c] === 'label'
+          return (
+            <div
+              key={`c-${r}-${c}`}
+              className={[
+                'px-2 py-1.5 break-words font-instrument leading-tight',
+                isLabel ? 'text-[#F8FAFC]/45' : 'italic text-[#F8FAFC]/85',
+                zebra ? 'bg-[#F8FAFC]/[0.04]' : '',
+                zebra && c === 0 ? 'rounded-l-[8px]' : '',
+                zebra && c === row.length - 1 ? 'rounded-r-[8px]' : '',
+              ].join(' ')}
+              style={{ fontSize: `${size}px` }}
+            >
+              {cell}
+            </div>
+          )
+        })
+      )}
+    </div>
+  )
+}
+
+function CaseLegend() {
+  return (
+    <p className="mt-3 font-instrument text-[11px] leading-relaxed text-[#F8FAFC]/25">
+      {CASE_FULL.map(([a, full], i) => (
+        <span key={a}>{a}&nbsp;{full}{i < CASE_FULL.length - 1 ? ' · ' : ''}</span>
+      ))}
+    </p>
+  )
+}
 
 function EnrichingSkeleton() {
   return (
@@ -52,36 +118,24 @@ function EnrichingSkeleton() {
 
 function VerbSection({ entry }: { entry: VocabVerb }) {
   if (!entry.conjugations) return <EnrichingSkeleton />
+  const { present, past, past2 } = entry.conjugations
+  const rows = VERB_PERSONS.map((p, i) => [p, present[i] ?? '', past[i] ?? '', past2[i] ?? ''])
   return (
     <>
       <div className="mb-8 flex w-full flex-col">
-        <div className="grid grid-cols-3 gap-2 [&>*]:min-w-0">
-          <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">present</span>
-            {entry.conjugations.present.map((c, i) => (
-              <span key={`pres-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">past m.</span>
-            {entry.conjugations.past.map((c, i) => (
-              <span key={`past-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">past f.</span>
-            {entry.conjugations.past2.map((c, i) => (
-              <span key={`past2-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-        </div>
+        <ParadigmGrid
+          colTemplate="0.5fr 1fr 1fr 1fr"
+          headers={['', 'present', 'past m.', 'past f.']}
+          kinds={['label', 'value', 'value', 'value']}
+          rows={rows}
+        />
       </div>
 
       <div className="my-6 h-[1px] w-full bg-[#F8FAFC]/10" />
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
-          <span className="font-instrument text-[15px] text-[#F8FAFC]/20">{entry.otherForm.label}</span>
+          <span className="font-instrument text-[15px] text-[#F8FAFC]/40">{entry.otherForm.label}</span>
           <span className="font-instrument text-[18px] italic text-[#B4A0FF]">{entry.otherForm.word}</span>
         </div>
       )}
@@ -91,28 +145,17 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
 
 function NounSection({ entry }: { entry: VocabNoun }) {
   if (!entry.declensions) return <EnrichingSkeleton />
+  const { cases, singular, plural } = entry.declensions
+  const rows = cases.map((c, i) => [abbrev(c), singular[i] ?? '', plural[i] ?? ''])
   return (
     <div className="mb-8 flex w-full flex-col">
-      <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-2 [&>*]:min-w-0">
-        <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">p.</span>
-          {entry.declensions.cases.map((c, i) => (
-            <span key={`case-${i}`} className="mb-1.5 font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/40">{abbrev(c)}</span>
-          ))}
-        </div>
-        <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">li. pojedyncza</span>
-          {entry.declensions.singular.map((c, i) => (
-            <span key={`sg-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-          ))}
-        </div>
-        <div className="flex flex-col">
-          <span className="mb-3 font-instrument text-[14px] text-[#F8FAFC]/20">li. mnoga</span>
-          {entry.declensions.plural.map((c, i) => (
-            <span key={`pl-${i}`} className="mb-1.5 break-words font-instrument text-[16px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-          ))}
-        </div>
-      </div>
+      <ParadigmGrid
+        colTemplate="0.5fr 1fr 1fr"
+        headers={['', 'l. poj.', 'l. mn.']}
+        kinds={['label', 'value', 'value']}
+        rows={rows}
+      />
+      <CaseLegend />
     </div>
   )
 }
@@ -120,65 +163,37 @@ function NounSection({ entry }: { entry: VocabNoun }) {
 function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
   if (!entry.declensions) return <EnrichingSkeleton />
   const { cases, masculine, feminine, neuter, pluralMasc, pluralNonMasc } = entry.declensions
+  const sgRows = cases.map((c, i) => [abbrev(c), masculine[i] ?? '', feminine[i] ?? '', neuter[i] ?? ''])
+  const plRows = cases.map((c, i) => [abbrev(c), pluralMasc[i] ?? '', pluralNonMasc[i] ?? ''])
   return (
     <div className="mb-8 flex w-full flex-col gap-6">
-      {/* Singular: 4 columns — cases, m., f., n. */}
+      {/* Singular: cases, m., f., n. */}
       <div className="flex flex-col">
-        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/20">li. pojedyncza</span>
-        <div className="grid grid-cols-[0.5fr_1fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">p.</span>
-            {cases.map((c, i) => (
-              <span key={`adj-case-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/40">{abbrev(c)}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">m.</span>
-            {masculine.map((c, i) => (
-              <span key={`adj-m-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">f.</span>
-            {feminine.map((c, i) => (
-              <span key={`adj-f-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">n.</span>
-            {neuter.map((c, i) => (
-              <span key={`adj-n-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-        </div>
+        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. pojedyncza</span>
+        <ParadigmGrid
+          colTemplate="0.5fr 1fr 1fr 1fr"
+          headers={['', 'm.', 'f.', 'n.']}
+          kinds={['label', 'value', 'value', 'value']}
+          rows={sgRows}
+          size={13}
+        />
       </div>
 
       <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
 
-      {/* Plural: 3 columns — cases, m.os. (virile), nm.os. (non-virile) */}
+      {/* Plural: cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
-        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/20">li. mnoga</span>
-        <div className="grid grid-cols-[0.5fr_1fr_1fr] gap-1.5 [&>*]:min-w-0">
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">p.</span>
-            {cases.map((c, i) => (
-              <span key={`adj-case2-${i}`} className="mb-1 font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/40">{abbrev(c)}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">m.os.</span>
-            {pluralMasc.map((c, i) => (
-              <span key={`adj-pm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-          <div className="flex flex-col">
-            <span className="mb-2.5 font-instrument text-[11px] text-[#F8FAFC]/20">nm.os.</span>
-            {pluralNonMasc.map((c, i) => (
-              <span key={`adj-pnm-${i}`} className="mb-1 break-words font-instrument text-[12px] italic leading-tight text-[#F8FAFC]/80">{c}</span>
-            ))}
-          </div>
-        </div>
+        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. mnoga</span>
+        <ParadigmGrid
+          colTemplate="0.5fr 1fr 1fr"
+          headers={['', 'm.os.', 'nm.os.']}
+          kinds={['label', 'value', 'value']}
+          rows={plRows}
+          size={13}
+        />
       </div>
+
+      <CaseLegend />
     </div>
   )
 }
