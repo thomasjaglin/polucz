@@ -420,7 +420,12 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
       <motion.div className="pointer-events-none fixed inset-0" style={{ opacity: rightOpacity, background: 'radial-gradient(ellipse at right 40%, rgba(39,209,178,0.85) 0%, transparent 65%)' }} />
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
       {totalCount > 0 && (
-        <ProgressBar done={doneCount} total={totalCount} />
+        // Pinned to the top of the scroll area: stays put while the card and
+        // action buttons move/scroll. Full-bleed frosted strip so content
+        // scrolls cleanly underneath.
+        <div className="sticky top-0 z-20 -mx-6 bg-[#121212]/40 px-6 py-3 backdrop-blur-md">
+          <ProgressBar done={doneCount} total={totalCount} />
+        </div>
       )}
 
       {current ? (
