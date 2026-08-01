@@ -9,6 +9,7 @@ import GlassButton from './GlassButton'
 import { useTTS } from '../lib/useTTS'
 import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
+import { useBackClose } from '../hooks/useBackClose'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const base = { ...entry, enriched: true }
@@ -347,6 +348,10 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
   const tts = useTTS()
   const backdropLastTap = useRef(0)
   const glassMode = getGlassMode()
+
+  // Android back cancels the delete confirmation first; a second back then
+  // closes the whole modal (which App registers as its own back layer).
+  useBackClose(confirmDelete, () => setConfirmDelete(false))
 
   function handleSpeaker() {
     haptics.ttsStart()

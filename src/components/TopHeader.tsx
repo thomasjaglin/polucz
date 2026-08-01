@@ -9,6 +9,7 @@ import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
 import { saveSentences } from '../lib/sentenceStorage'
 import { useTTS } from '../lib/useTTS'
 import { pushToast } from '../lib/toastStore'
+import { useBackClose } from '../hooks/useBackClose'
 
 interface Props {
   activeId: PageId
@@ -54,6 +55,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     }
     setPrepProgress(null)
   }
+
+  // Android back closes these overlays instead of exiting the app.
+  useBackClose(settingsOpen, () => setSettingsOpen(false))
+  useBackClose(prepConfirm, () => setPrepConfirm(false))
 
   useEffect(() => {
     if (!settingsOpen) return

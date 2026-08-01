@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import AppBackground from './components/AppBackground'
 import PageGradient from './components/PageGradient'
@@ -22,6 +22,8 @@ import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
 import { haptics } from './lib/haptics'
 import { vocabularyData } from './data/vocabulary'
+import { initBackHandler } from './lib/backStack'
+import { useBackClose } from './hooks/useBackClose'
 
 export default function App() {
   const [activeId, setActiveId] = useState<PageId>('folder')
@@ -104,6 +106,11 @@ export default function App() {
   // transition. See the background-hiding comment below for why this exists.
   const [backgroundHidden, setBackgroundHidden] = useState(false)
   const activeCardElRef = useRef<HTMLDivElement | null>(null)
+
+  // Android hardware-back handling (see backStack.ts). Install once, then let
+  // each overlay register itself so back closes it instead of exiting the app.
+  useEffect(() => { initBackHandler() }, [])
+  useBackClose(!!modalEntry, handleCloseModal)
 
   function handleOpenModal(entry: VocabEntry, cardEl: HTMLDivElement | null) {
     activeCardElRef.current = cardEl
