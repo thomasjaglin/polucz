@@ -9,6 +9,7 @@ import { hasCachedClips } from '../lib/audioCache'
 import { setAudioCard } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
+import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -263,7 +264,6 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // ─── Derived UI values ────────────────────────────────────────────────────
 
   const doneCount     = Math.min(idx, totalCount)
-  const progress      = totalCount > 0 ? doneCount / totalCount : 0
   const typeGradient  = current ? (tagGradients[current.type] ?? tagGradients['unknown']) : null
   const isActive      = phase === 'playing' || phase === 'waiting'
   const showControls  = phase !== 'done'
@@ -288,25 +288,16 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   return (
     <div className="flex h-full flex-col items-center gap-6 pt-2">
 
-      {/* Progress row */}
+      {/* Progress row — shared glass bar with the count on the right; the
+          transient status / Completed label sits on its own line above. */}
       {totalCount > 0 && (
         <div className="flex w-full flex-col gap-2">
-          <div className="flex justify-between">
-            <span className="font-instrument text-[13px] text-[#F8FAFC]/40">
-              {phase === 'done' ? 'Completed' : `${doneCount} / ${totalCount}`}
-            </span>
-            {phase !== 'idle' && phase !== 'done' && (
-              <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
-            )}
-          </div>
-          <div className="relative h-[12px] w-full overflow-hidden rounded-full shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-            <GlassPane borderRadius={6} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/[0.02]" />
-            <motion.div
-              className="relative z-10 h-full rounded-full bg-gradient-to-r from-[#60A5FA]/70 to-[#B4A0FF]/70 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]"
-              animate={{ width: `${progress * 100}%` }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-            />
-          </div>
+          {phase === 'done' ? (
+            <span className="font-instrument text-[13px] text-[#B4A0FF]/60">Completed</span>
+          ) : phase !== 'idle' ? (
+            <span className="font-instrument text-[13px] text-[#B4A0FF]/60">{statusText()}</span>
+          ) : null}
+          <ProgressBar done={doneCount} total={totalCount} />
         </div>
       )}
 
