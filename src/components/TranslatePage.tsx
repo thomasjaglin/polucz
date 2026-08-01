@@ -410,7 +410,7 @@ export default function TranslatePage({ onAddCard }: Props) {
           value={input}
           onChange={e => { setInput(e.target.value); if (phase === 'error') setPhase('idle') }}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
-          placeholder={srcTop ? 'pisz tutaj...' : 'Translate text…'}
+          placeholder={srcTop ? 'Wpisz tekst…' : 'Translate text…'}
           rows={2}
           className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-[#F8FAFC]/95 placeholder:text-[#F8FAFC]/40 outline-none"
         />
