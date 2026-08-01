@@ -537,6 +537,9 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                   {entry.type === 'noun' && (
                     <span className="ml-3 text-[24px] font-medium italic text-[#e879f9]">{entry.gender}</span>
                   )}
+                  {entry.type === 'verb' && entry.left && (
+                    <span className="ml-3 text-[24px] font-medium italic text-[#e879f9]">{entry.left}</span>
+                  )}
                 </h1>
                 <button
                   onClick={handleSpeaker}

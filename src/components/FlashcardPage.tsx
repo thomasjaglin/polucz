@@ -187,6 +187,9 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
               {!displayHardMode && entry.type === 'noun' && entry.gender && (
                 <span className="font-instrument text-[22px] italic text-[#e879f9]">{entry.gender}</span>
               )}
+              {!displayHardMode && entry.type === 'verb' && entry.left && (
+                <span className="font-instrument text-[22px] italic text-[#e879f9]">{entry.left}</span>
+              )}
             </div>
 
             {/* Reveal area */}
@@ -215,6 +218,9 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
                         <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.pl}</p>
                         {entry.type === 'noun' && entry.gender && (
                           <span className="font-instrument text-[18px] italic text-[#e879f9]">{entry.gender}</span>
+                        )}
+                        {entry.type === 'verb' && entry.left && (
+                          <span className="font-instrument text-[18px] italic text-[#e879f9]">{entry.left}</span>
                         )}
                       </div>
                     ) : (
