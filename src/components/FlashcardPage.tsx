@@ -218,10 +218,14 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
     <motion.div
       ref={cardRef}
       style={{ x, y, rotate, perspective: '1200px' }}
-      drag={revealed ? (conquerable ? true : 'x') : false}
+      drag={revealed ? true : false}
       dragDirectionLock
-      dragConstraints={conquerable ? { left: 0, right: 0, top: -170, bottom: 0 } : { left: 0, right: 0 }}
-      dragElastic={0.8}
+      // Up is always draggable so the gesture is discoverable, but only a
+      // conquerable card gets real upward range (top:-170) to hold & charge.
+      // Otherwise top:0 means an up-drag is pure rubber-band (firmer top elastic)
+      // that springs back — a clear "you can swipe up, but not yet" signal.
+      dragConstraints={{ left: 0, right: 0, top: conquerable ? -170 : 0, bottom: 0 }}
+      dragElastic={{ top: conquerable ? 0.8 : 0.4, bottom: 0.2, left: 0.8, right: 0.8 }}
       onDrag={revealed ? handleDrag : undefined}
       onDragEnd={revealed ? handleDragEnd : undefined}
       onTouchEnd={e => { if (rotationJustFired.current) return; doubleTap.onTouchEnd(e) }}
