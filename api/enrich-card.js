@@ -72,6 +72,13 @@ const UNKNOWN_SCHEMA = {
 
 const SCHEMAS = { verb: VERB_SCHEMA, noun: NOUN_SCHEMA, adjective: ADJECTIVE_SCHEMA, unknown: UNKNOWN_SCHEMA }
 
+// Every card type also returns a few alternative English senses ("secondary
+// definitions"), shown under the primary translation in the modal.
+for (const s of Object.values(SCHEMAS)) {
+  s.properties.definitions = { type: 'array', items: { type: 'string' } }
+  s.required = [...s.required, 'definitions']
+}
+
 // ─── Prompts ──────────────────────────────────────────────────────────────────
 
 const PROMPTS = {
@@ -99,6 +106,11 @@ For the accusative masculine singular, use the slash notation "anim/inanim" wher
 
   unknown: `You are a Polish grammar reference. Given an unclassified Polish word, return a brief grammatical note in the info field. If nothing useful can be said, return an empty string.`,
 }
+
+// Appended to every prompt: a few alternative English senses of the word.
+const DEFINITIONS_LINE =
+  '\n- definitions: 2-4 short alternative English senses/meanings of the word, most common first (single words or short phrases). Omit near-duplicates.'
+for (const k of Object.keys(PROMPTS)) PROMPTS[k] += DEFINITIONS_LINE
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 

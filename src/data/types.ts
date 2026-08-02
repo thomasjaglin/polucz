@@ -37,7 +37,8 @@ interface VocabBase {
   enriched: boolean // false until enrich-card populates grammar tables
   audioReady?: boolean // true once the PL+EN TTS clips are cached in IndexedDB
   pl: string
-  en: string
+  en: string                  // primary translation (set at card creation)
+  definitions?: string[]      // secondary English senses, filled during enrichment
   left: string
   right: string
   tags: WordType[]

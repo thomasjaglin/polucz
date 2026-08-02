@@ -13,7 +13,8 @@ import { useBackClose } from '../hooks/useBackClose'
 import { pushToast } from '../lib/toastStore'
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
-  const base = { ...entry, enriched: true }
+  const definitions = Array.isArray(data.definitions) ? (data.definitions as string[]) : entry.definitions
+  const base = { ...entry, enriched: true, definitions }
   if (base.type === 'verb') {
     const aspect = typeof data.aspect === 'string' && data.aspect ? data.aspect : base.left
     return { ...base, left: aspect, conjugations: data.conjugations as VerbConjugations, otherForm: data.otherForm as { label: string; word: string } }
@@ -613,6 +614,12 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
                 <h3 className="mb-1 mt-1 font-instrument text-[20px] leading-none text-[#F8FAFC]/40">{entry.plAlt}</h3>
               )}
               <h2 className="mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF]">{entry.en}</h2>
+              {/* Secondary senses filled during enrichment */}
+              {entry.definitions && entry.definitions.length > 0 && (
+                <p className="mt-1.5 font-instrument text-[14px] leading-snug text-[#F8FAFC]/45">
+                  {entry.definitions.join(' · ')}
+                </p>
+              )}
             </div>
 
             {/* Type-specific grammatical detail */}
