@@ -149,10 +149,14 @@ body {
 }
 
 /* ─── Mastered card holographic effect ─────────────────────────────────────
-   Route A (overlay child, not ::before): the GlassPane content wrapper already
-   owns its ::before for the liquid-glass layer, so the shimmer is a real child
-   <div class="holo-shimmer"> instead. It sits above the glass tint (z-1) and
-   below the card text (which is raised to z-10). See docs/holographic-mastered-spec.md. */
+   Route A (overlay children, not ::before): the GlassPane content wrapper
+   already owns its ::before for the liquid-glass layer, so the effect is real
+   child <div>s instead — .holo-shimmer (foil + glitter fill, z-1) and
+   .holo-edge (light travelling around the stroke, z-2). Both sit above the
+   glass tint and below the card text (raised to z-10). Gold + prismatic palette.
+   See docs/holographic-mastered-spec.md. */
+
+/* Foil fill + glitter sparkle */
 .holo-shimmer {
   position: absolute;
   inset: 0;
@@ -160,27 +164,56 @@ body {
   pointer-events: none;
   z-index: 1;
   background-image:
-    repeating-conic-gradient(
-      rgba(255, 255, 255, 0.04) 0deg,
-      transparent 1deg,
-      transparent 9deg,
-      rgba(255, 255, 255, 0.04) 10deg
-    ),
-    linear-gradient(
-      115deg,
-      transparent 20%,
-      rgba(255, 210, 80,  0.30) 30%,
-      rgba(255, 105, 180, 0.30) 45%,
-      rgba(100, 200, 255, 0.30) 60%,
-      rgba(120, 255, 160, 0.30) 75%,
-      transparent 85%
-    );
-  background-size: 200% 200%, 200% 200%;
+    /* glitter: two fine sparkle grids (white + gold) at coprime sizes */
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95) 0.6px, transparent 1.7px),
+    radial-gradient(circle at 70% 60%, rgba(255, 235, 190, 0.85) 0.6px, transparent 1.9px),
+    /* metallic specular sheen sweep */
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.55) 47%, rgba(255, 240, 210, 0.35) 50%, transparent 60%),
+    /* gold + prismatic foil bands */
+    repeating-linear-gradient(115deg,
+      rgba(255, 215, 120, 0.42) 0%,
+      rgba(255, 120, 200, 0.34) 7%,
+      rgba(120, 200, 255, 0.34) 14%,
+      rgba(150, 255, 190, 0.34) 21%,
+      rgba(255, 215, 120, 0.42) 28%);
+  background-size: 23px 23px, 31px 31px, 300% 300%, 220% 220%;
   mix-blend-mode: color-dodge;
-  opacity: 0.35;                 /* subtle at rest (not 0 → no paint-trigger on scroll) */
+  opacity: 0.4;                  /* subtle at rest (not 0 → no paint-trigger on scroll) */
   transition: opacity 0.6s ease;
-  will-change: filter;           /* promote to its own compositor layer */
-  animation: holoShift 4s linear infinite;
+  will-change: filter, background-position;
+  animation: holoShift 7s linear infinite;
+}
+
+/* Light travelling around the card stroke: a rotating gold/prismatic conic
+   gradient masked to a thin border ring. --holo-angle is animated via
+   @property; where unsupported it degrades to a static prismatic border. */
+@property --holo-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+.holo-edge {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  padding: 1.5px;
+  background: conic-gradient(from var(--holo-angle),
+    rgba(255, 225, 150, 0.95),
+    rgba(255, 130, 205, 0.85),
+    rgba(130, 205, 255, 0.85),
+    rgba(150, 255, 195, 0.85),
+    rgba(255, 225, 150, 0.95));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  transition: opacity 0.6s ease;
+  will-change: --holo-angle;
+  animation: holoEdge 6s linear infinite;
 }
 
 /* Intensify on hover/tap, and in a dedicated full-intensity container. */
@@ -188,20 +221,30 @@ body {
 .card-mastered:active .holo-shimmer,
 .holo-full .holo-shimmer {
   opacity: 1;
-  animation-duration: 2s;
+  animation-duration: 3.5s;
+}
+.card-mastered:hover .holo-edge,
+.card-mastered:active .holo-edge,
+.holo-full .holo-edge {
+  opacity: 1;
+  animation-duration: 3s;
 }
 
 @keyframes holoShift {
   0% {
-    filter: hue-rotate(0deg) brightness(1.1) saturate(1.4);
-    background-position: 0% 50%, 0% 50%;
+    filter: hue-rotate(0deg) brightness(1.15) saturate(1.6) contrast(1.15);
+    background-position: 0 0, 0 0, 0% 50%, 0% 50%;
   }
   50% {
-    filter: hue-rotate(180deg) brightness(1.2) saturate(1.6);
-    background-position: 100% 50%, 100% 50%;
+    filter: hue-rotate(200deg) brightness(1.35) saturate(2) contrast(1.25);
+    background-position: 12px -8px, -10px 9px, 100% 50%, 100% 50%;
   }
   100% {
-    filter: hue-rotate(360deg) brightness(1.1) saturate(1.4);
-    background-position: 0% 50%, 0% 50%;
+    filter: hue-rotate(360deg) brightness(1.15) saturate(1.6) contrast(1.15);
+    background-position: 23px 0, 0 31px, 0% 50%, 0% 50%;
   }
+}
+
+@keyframes holoEdge {
+  to { --holo-angle: 360deg; }
 }
