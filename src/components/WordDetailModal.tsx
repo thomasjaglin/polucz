@@ -393,6 +393,7 @@ function ExamplesSection({ word }: { word: string }) {
 
 interface Props {
   entry: VocabEntry
+  mastered?: boolean
   flipIn: boolean
   overlayVisible: boolean
   onClose: () => void
@@ -401,7 +402,7 @@ interface Props {
   onDelete: () => void
 }
 
-export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose, onEnriched, onAudioReady, onDelete }: Props) {
+export default function WordDetailModal({ entry, mastered = false, flipIn, overlayVisible, onClose, onEnriched, onAudioReady, onDelete }: Props) {
   const [enriching, setEnriching] = useState(false)
   const [enrichError, setEnrichError] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -501,9 +502,9 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
           >
             <span className="material-symbols-rounded text-[28px]">close</span>
           </GlassButton>
-        <div className="relative w-full rounded-[36px] shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+        <div className={`relative w-full rounded-[36px] ${mastered ? 'shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_30px_rgba(255,200,100,0.15),inset_0_0_0_1px_rgba(255,220,150,0.3)]' : 'shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]'}`}>
 
-          <div className="relative flex w-full flex-col rounded-[36px]">
+          <div className={`relative flex w-full flex-col rounded-[36px] ${mastered ? 'card-mastered holo-full' : ''}`}>
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
             <div className="absolute inset-0 overflow-hidden rounded-[36px]">
               {entry.type === 'verb' && (
@@ -529,6 +530,9 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
               )}
             </div>
             <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+            {/* Holographic shimmer for mastered words — sits above the glass
+                (z-0) and below the content (z-10). */}
+            {mastered && <div className="holo-shimmer" aria-hidden="true" />}
             <div className="relative z-10 flex flex-col p-8">
 
             {/* Top row: type tag + actions */}

@@ -22,6 +22,8 @@ import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
 import { haptics } from './lib/haptics'
 import { vocabularyData } from './data/vocabulary'
+import { getAllReviews } from './lib/reviewStorage'
+import { isConquered } from './lib/scheduler'
 import { initBackHandler } from './lib/backStack'
 import { useBackClose } from './hooks/useBackClose'
 
@@ -286,6 +288,7 @@ export default function App() {
       {overlayMounted && modalEntry && (
         <WordDetailModal
           entry={modalEntry}
+          mastered={(() => { const r = getAllReviews()[modalEntry.id]; return !!r && isConquered(r) })()}
           flipIn={contentFlipIn}
           overlayVisible={overlayVisible}
           onClose={handleCloseModal}
