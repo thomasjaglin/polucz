@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
-import { getAllReviews, getReview, saveReview, initReview, resetDueReviews } from '../lib/reviewStorage'
+import { getAllReviews, getReview, saveReview, initReview, resetDueReviews, resetAllReviews } from '../lib/reviewStorage'
 import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
@@ -484,7 +484,13 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleReset() {
     resetDueReviews()  // leaves conquered cards (interval >= 180) untouched
-    const due = getDueCards(cards, getAllReviews())
+    let due = getDueCards(cards, getAllReviews())
+    // If nothing non-conquered is due (e.g. everything's already conquered),
+    // fall back to a full reset so "Review again" always brings cards back.
+    if (due.length === 0) {
+      resetAllReviews()
+      due = getDueCards(cards, getAllReviews())
+    }
     setQueue(due)
     setTotalCount(due.length)
     setRevealed(false)
