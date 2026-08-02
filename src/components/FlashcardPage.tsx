@@ -21,6 +21,15 @@ const CONQUER_THRESHOLD = 3
 const CONQUER_UP_START = 64   // px dragged up to begin charging
 const CONQUER_UP_KEEP  = 28   // if the card drops back below this, cancel
 const CONQUER_HOLD_MS  = 2200 // hold this long (trembling) to conquer
+// Twinkling sparkles along the top of a conquerable card — an affordance that
+// it can be swiped up. { left%, top px offset, size px, anim delay, colour }.
+const CONQUER_SPARKLES = [
+  { left: '14%', top: -4,  size: 15, delay: 0.0,  color: '#B4A0FF' },
+  { left: '31%', top: -13, size: 11, delay: 0.6,  color: '#FFE0A0' },
+  { left: '50%', top: -8,  size: 19, delay: 1.0,  color: '#B4A0FF' },
+  { left: '69%', top: -13, size: 11, delay: 0.35, color: '#FFE0A0' },
+  { left: '86%', top: -4,  size: 15, delay: 0.8,  color: '#B4A0FF' },
+]
 
 // ─── Flashcard UI ─────────────────────────────────────────────────────────────
 
@@ -248,6 +257,24 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
         className="pointer-events-none absolute inset-0 z-30 rounded-[36px]"
         style={{ opacity: chargeGlow, boxShadow: '0 0 0 2px rgba(180,160,255,0.9), 0 0 44px 10px rgba(180,160,255,0.55)' }}
       />
+
+      {/* Sparkle crown along the top edge — signals the card can be swiped up */}
+      {conquerable && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
+          {CONQUER_SPARKLES.map((s, i) => (
+            <motion.span
+              key={i}
+              className="material-symbols-rounded absolute -translate-x-1/2"
+              style={{ left: s.left, top: s.top, fontSize: s.size, color: s.color, filter: 'drop-shadow(0 0 4px currentColor)' }}
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: [0, 1, 0], scale: [0.4, 1, 0.4], rotate: [0, 25, 0] }}
+              transition={{ duration: 1.9, delay: s.delay, repeat: Infinity, repeatDelay: 0.5, ease: 'easeInOut' }}
+            >
+              auto_awesome
+            </motion.span>
+          ))}
+        </div>
+      )}
 
       {/* Hint: card is conquerable — swipe up and hold */}
       {conquerable && revealed && !isCharging && (
