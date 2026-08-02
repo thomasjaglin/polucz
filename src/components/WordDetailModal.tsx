@@ -533,6 +533,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             {/* Holographic shimmer for mastered words — sits above the glass
                 (z-0) and below the content (z-10). */}
             {mastered && <div className="holo-shimmer" aria-hidden="true" />}
+            {mastered && <div className="holo-glitter" aria-hidden="true" />}
             {mastered && <div className="holo-edge" aria-hidden="true" />}
             <div className="relative z-10 flex flex-col p-8">
 

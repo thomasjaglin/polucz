@@ -156,7 +156,7 @@ body {
    glass tint and below the card text (raised to z-10). Gold + prismatic palette.
    See docs/holographic-mastered-spec.md. */
 
-/* Foil fill + glitter sparkle */
+/* Foil fill: metallic specular sheen sweep over gold + prismatic bands. */
 .holo-shimmer {
   position: absolute;
   inset: 0;
@@ -164,9 +164,6 @@ body {
   pointer-events: none;
   z-index: 1;
   background-image:
-    /* glitter: two fine sparkle grids (white + gold) at coprime sizes */
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95) 0.6px, transparent 1.7px),
-    radial-gradient(circle at 70% 60%, rgba(255, 235, 190, 0.85) 0.6px, transparent 1.9px),
     /* metallic specular sheen sweep */
     linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.55) 47%, rgba(255, 240, 210, 0.35) 50%, transparent 60%),
     /* gold + prismatic foil bands */
@@ -176,12 +173,43 @@ body {
       rgba(120, 200, 255, 0.34) 14%,
       rgba(150, 255, 190, 0.34) 21%,
       rgba(255, 215, 120, 0.42) 28%);
-  background-size: 23px 23px, 31px 31px, 300% 300%, 220% 220%;
+  background-size: 300% 300%, 220% 220%;
   mix-blend-mode: color-dodge;
   opacity: 0.4;                  /* subtle at rest (not 0 → no paint-trigger on scroll) */
   transition: opacity 0.6s ease;
   will-change: filter, background-position;
   animation: holoShift 11s linear infinite;
+}
+
+/* Glitter: a static sparkle grain (SVG fractal noise, thresholded to bright
+   warm specks) that is only revealed where a sweeping diagonal light streak
+   passes over it — a mask band travels across, color-dodge makes the exposed
+   grain glint. The grain itself doesn't move; the light does. */
+.holo-glitter {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='170' height='170'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 0.92 0 0 0 0 0.7 0 0 0 22 -13'/></filter><rect width='170' height='170' filter='url(%23g)'/></svg>");
+  background-size: 170px 170px;
+  background-repeat: repeat;
+  mix-blend-mode: color-dodge;
+  opacity: 0.9;
+  transition: opacity 0.6s ease;
+  /* moving diagonal light streak that reveals the grain only under the band */
+  -webkit-mask-image: linear-gradient(115deg, transparent 44%, rgba(0,0,0,0.85) 48%, #000 50%, rgba(0,0,0,0.85) 52%, transparent 56%);
+          mask-image: linear-gradient(115deg, transparent 44%, rgba(0,0,0,0.85) 48%, #000 50%, rgba(0,0,0,0.85) 52%, transparent 56%);
+  -webkit-mask-size: 300% 300%;
+          mask-size: 300% 300%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  will-change: mask-position;
+  animation: holoGlitter 9s linear infinite;
+}
+@keyframes holoGlitter {
+  0%   { -webkit-mask-position: 0% 0%;     mask-position: 0% 0%; }
+  100% { -webkit-mask-position: 100% 100%; mask-position: 100% 100%; }
 }
 
 /* Light travelling around the card stroke: a rotating gold/prismatic conic
@@ -242,15 +270,15 @@ body {
 @keyframes holoShift {
   0% {
     filter: hue-rotate(0deg) brightness(1.15) saturate(1.6) contrast(1.15);
-    background-position: 0 0, 0 0, 0% 50%, 0% 50%;
+    background-position: 0% 50%, 0% 50%;
   }
   50% {
     filter: hue-rotate(200deg) brightness(1.35) saturate(2) contrast(1.25);
-    background-position: 12px -8px, -10px 9px, 100% 50%, 100% 50%;
+    background-position: 100% 50%, 100% 50%;
   }
   100% {
     filter: hue-rotate(360deg) brightness(1.15) saturate(1.6) contrast(1.15);
-    background-position: 23px 0, 0 31px, 0% 50%, 0% 50%;
+    background-position: 0% 50%, 0% 50%;
   }
 }
 
