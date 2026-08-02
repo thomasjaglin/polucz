@@ -24,6 +24,7 @@ import { haptics } from './lib/haptics'
 import { vocabularyData } from './data/vocabulary'
 import { getAllReviews } from './lib/reviewStorage'
 import { isConquered } from './lib/scheduler'
+import { initHoloMotion } from './lib/holoMotion'
 import { initBackHandler } from './lib/backStack'
 import { useBackClose } from './hooks/useBackClose'
 
@@ -112,6 +113,7 @@ export default function App() {
   // Android hardware-back handling (see backStack.ts). Install once, then let
   // each overlay register itself so back closes it instead of exiting the app.
   useEffect(() => { initBackHandler() }, [])
+  useEffect(() => { initHoloMotion() }, [])
   useBackClose(!!modalEntry, handleCloseModal)
 
   function handleOpenModal(entry: VocabEntry, cardEl: HTMLDivElement | null) {

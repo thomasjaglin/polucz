@@ -178,7 +178,7 @@ body {
   opacity: 0.4;                  /* subtle at rest (not 0 → no paint-trigger on scroll) */
   transition: opacity 0.6s ease;
   will-change: filter, background-position;
-  animation: holoShift 11s linear infinite;
+  animation: holoShift 16s linear infinite;
 }
 
 /* Glitter: a static sparkle grain (SVG fractal noise, thresholded to bright
@@ -194,7 +194,9 @@ body {
   background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='2' seed='4' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 0.78 0 0 0 0 0.42 0 0 0 20 -12'/></filter><rect width='180' height='180' filter='url(%23g)'/></svg>");
   background-size: 220px 220px;
   background-repeat: repeat;
-  mix-blend-mode: color-dodge;
+  /* overlay (not color-dodge) so the sparkle takes on the colour of the foil
+     beneath it — coloured glints rather than blown-out white. */
+  mix-blend-mode: overlay;
   opacity: 1;
   transition: opacity 0.6s ease;
   /* Reveal streaks aligned to the shimmer's sheen (same 115deg / 300% / path /
@@ -218,7 +220,7 @@ body {
   -webkit-mask-repeat: no-repeat;
           mask-repeat: no-repeat;
   will-change: mask-position;
-  animation: holoGlitter 11s linear infinite;   /* must match .holo-shimmer's holoShift */
+  animation: holoGlitter 16s linear infinite;   /* must match .holo-shimmer's holoShift */
 }
 /* Mirrors holoShift's background-position path so the streak and the sheen stay
    phase-locked (both start at mount with equal linear periods). */
@@ -257,7 +259,7 @@ body {
   opacity: 0.85;
   transition: opacity 0.6s ease;
   will-change: --holo-angle;
-  animation: holoEdge 10s linear infinite;
+  animation: holoEdge 14s linear infinite;
 }
 
 /* Hover/tap on list cards: full intensity, a touch quicker. Shimmer + glitter
@@ -267,26 +269,38 @@ body {
 .card-mastered:hover .holo-glitter,
 .card-mastered:active .holo-glitter {
   opacity: 1;
-  animation-duration: 8s;
+  animation-duration: 9s;
 }
 .card-mastered:hover .holo-edge,
 .card-mastered:active .holo-edge {
   opacity: 1;
-  animation-duration: 7s;
+  animation-duration: 8s;
 }
 
 /* Modal / celebration: the foil layers ON TOP of the card's gradient colours —
    kept translucent so the original per-type gradient still reads underneath. */
 .holo-full .holo-shimmer {
   opacity: 0.7;
-  animation-duration: 8s;
+  animation-duration: 12s;
 }
 .holo-full .holo-glitter {
-  animation-duration: 8s;   /* matches the shimmer so the light reads as one */
+  animation-duration: 12s;   /* matches the shimmer so the light reads as one */
 }
 .holo-full .holo-edge {
   opacity: 1;
-  animation-duration: 7s;
+  animation-duration: 11s;
+}
+
+/* Motion boost: on scroll / device movement, holoMotion.ts adds `holo-fast` to
+   the document root and the light sweeps quicken, then decay back to rest.
+   Listed last so it wins over the rest/full durations at equal specificity.
+   Shimmer + glitter keep equal durations so their shared light stays locked. */
+.holo-fast .holo-shimmer,
+.holo-fast .holo-glitter {
+  animation-duration: 5s;
+}
+.holo-fast .holo-edge {
+  animation-duration: 4.5s;
 }
 
 @keyframes holoShift {
