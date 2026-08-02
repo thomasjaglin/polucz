@@ -283,6 +283,17 @@ export default function App() {
           </div>
         </div>
 
+        {/* Bottom scrim: a static gradient behind the floating nav that fades
+            the scrolling card list into the page's base colour, so cards don't
+            clutter the nav. Sits above the content (z-30) and below the nav
+            (z-60). Static (unlike a per-frame mask), so it doesn't jank scroll. */}
+        {showNav && (
+          <div
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 h-[210px]"
+            style={{ background: 'linear-gradient(to top, #121212 14%, rgba(18,18,18,0.72) 42%, transparent 100%)' }}
+          />
+        )}
+
         {showNav && <BottomNav activeId={activeId} onChangePage={changePage} />}
       </div>
 
