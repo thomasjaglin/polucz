@@ -291,17 +291,9 @@ body {
   animation-duration: 11s;
 }
 
-/* Motion boost: on scroll / device movement, holoMotion.ts adds `holo-fast` to
-   the document root and the light sweeps quicken, then decay back to rest.
-   Listed last so it wins over the rest/full durations at equal specificity.
-   Shimmer + glitter keep equal durations so their shared light stays locked. */
-.holo-fast .holo-shimmer,
-.holo-fast .holo-glitter {
-  animation-duration: 5s;
-}
-.holo-fast .holo-edge {
-  animation-duration: 4.5s;
-}
+/* Motion boost is applied via each animation's playbackRate (see holoMotion.ts),
+   not a duration swap — changing duration recomputes the phase and jumps, while
+   playbackRate scales the running timeline smoothly. */
 
 @keyframes holoShift {
   0% {
