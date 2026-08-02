@@ -41,6 +41,7 @@ export function initReview(id: string): ReviewState {
     dueDate: today(),
     lastReviewed: null,
     reviewCount: 0,
+    conquerProgress: 0,
   }
   saveReview(id, state)
   return state

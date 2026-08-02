@@ -15,6 +15,12 @@ import { haptics } from '../lib/haptics'
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
 
 const THRESHOLD = 0.30
+// conquerProgress needed to unlock the swipe-up-hold conquer gesture.
+const CONQUER_THRESHOLD = 3
+// Swipe-up-hold conquer gesture tuning.
+const CONQUER_UP_START = 64   // px dragged up to begin charging
+const CONQUER_UP_KEEP  = 28   // if the card drops back below this, cancel
+const CONQUER_HOLD_MS  = 2200 // hold this long (trembling) to conquer
 
 // ─── Flashcard UI ─────────────────────────────────────────────────────────────
 
@@ -22,6 +28,7 @@ interface CardProps {
   entry: VocabEntry
   x: MotionValue<number>
   hardMode: boolean
+  conquerable: boolean
   onToggleHardMode: () => void
   onEasy: () => void
   onHard: () => void
@@ -35,13 +42,25 @@ interface CardProps {
   onOpenModal?: (entry: VocabEntry) => void
 }
 
-function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
+function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, onHard, onConquered, onLapse, isConquering, revealed, onReveal, ttsState, onReplay, onOpenModal }: CardProps) {
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
   const cardRef = useRef<HTMLDivElement>(null)
   const rotationJustFired = useRef(false)
   const rotateYVal = useMotionValue(0)
+
+  // Swipe-up-hold-to-conquer state (only active when `conquerable`).
+  const y = useMotionValue(0)
+  const trembleX = useMotionValue(0)   // added on the inner wrapper
+  const trembleR = useMotionValue(0)
+  const chargeGlow = useMotionValue(0) // 0..1 glow opacity while holding
+  const [isCharging, setIsCharging] = useState(false)
+  const chargingRef = useRef(false)
+  const rafRef = useRef<number | null>(null)
+  const chargeStartRef = useRef(0)
+  const lastHapticRef = useRef(0)
+  useEffect(() => stopChargeLoop, [])   // stop the charge rAF if the card unmounts mid-hold
   // Lags behind hardMode by one animation cycle so content swaps at the midpoint
   const [displayHardMode, setDisplayHardMode] = useState(hardMode)
 
@@ -118,10 +137,70 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
     }
   }, [onToggleHardMode])
 
-  function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
+  // ─── Swipe-up-hold to conquer ─────────────────────────────────────────────
+  function stopChargeLoop() {
+    if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
+  }
+  function startCharge() {
+    if (chargingRef.current) return
+    chargingRef.current = true
+    setIsCharging(true)
+    chargeStartRef.current = performance.now()
+    lastHapticRef.current = 0
+    const loop = () => {
+      if (!chargingRef.current) return
+      const p = Math.min(1, (performance.now() - chargeStartRef.current) / CONQUER_HOLD_MS)
+      chargeGlow.set(p)
+      // Tremble grows with the hold.
+      trembleX.set((Math.random() * 2 - 1) * 8 * p)
+      trembleR.set((Math.random() * 2 - 1) * 4 * p)
+      // Haptics escalate: lighter/slower → heavier/faster as it builds.
+      const interval = 220 - 150 * p
+      if (performance.now() - lastHapticRef.current >= interval) {
+        lastHapticRef.current = performance.now()
+        if (p < 0.4) haptics.tap()
+        else if (p < 0.78) haptics.doubleTap()
+        else haptics.swipeLeft()
+      }
+      if (p >= 1) { completeCharge(); return }
+      rafRef.current = requestAnimationFrame(loop)
+    }
+    rafRef.current = requestAnimationFrame(loop)
+  }
+  function cancelCharge() {
+    if (!chargingRef.current) return
+    chargingRef.current = false
+    setIsCharging(false)
+    stopChargeLoop()
+    animate(chargeGlow, 0, { duration: 0.25 })
+    animate(trembleX, 0, { duration: 0.2 })
+    animate(trembleR, 0, { duration: 0.2 })
+  }
+  function completeCharge() {
+    chargingRef.current = false
+    setIsCharging(false)
+    stopChargeLoop()
+    chargeGlow.set(0)
+    trembleX.set(0); trembleR.set(0)
+    animate(y, 0, { type: 'spring', stiffness: 260, damping: 22 })
+    onConquered()
+  }
+
+  function handleDrag(_: unknown, info: { offset: { x: number; y: number } }) {
+    if (!conquerable || isConquering) return
+    const upDominant = info.offset.y < -CONQUER_UP_START && Math.abs(info.offset.y) > Math.abs(info.offset.x)
+    if (upDominant) { if (!chargingRef.current) startCharge() }
+    else if (chargingRef.current && info.offset.y > -CONQUER_UP_KEEP) cancelCharge()
+  }
+
+  function handleDragEnd(_: unknown, info: { offset: { x: number; y: number }; velocity: { x: number } }) {
+    // Conquer charge in progress but finger lifted before completion → cancel.
+    if (chargingRef.current) { cancelCharge(); animate(y, 0, { type: 'spring', stiffness: 300, damping: 25 }); return }
+    // A vertical drag that never reached the charge threshold → spring back.
+    if (Math.abs(info.offset.y) > Math.abs(info.offset.x)) { animate(y, 0, { type: 'spring', stiffness: 300, damping: 25 }); return }
+    // Horizontal swipe → easy (right) / hard (left).
     const cardWidth = window.innerWidth * 0.82
     const committed = Math.abs(info.offset.x) > cardWidth * THRESHOLD || Math.abs(info.velocity.x) > 400
-
     if (committed && info.offset.x > 0) {
       haptics.swipeRight()
       animate(x, 600, { duration: 0.25 })
@@ -138,10 +217,12 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
   return (
     <motion.div
       ref={cardRef}
-      style={{ x, rotate, perspective: '1200px' }}
-      drag={revealed ? 'x' : false}
-      dragConstraints={{ left: 0, right: 0 }}
+      style={{ x, y, rotate, perspective: '1200px' }}
+      drag={revealed ? (conquerable ? true : 'x') : false}
+      dragDirectionLock
+      dragConstraints={conquerable ? { left: 0, right: 0, top: -170, bottom: 0 } : { left: 0, right: 0 }}
       dragElastic={0.8}
+      onDrag={revealed ? handleDrag : undefined}
       onDragEnd={revealed ? handleDragEnd : undefined}
       onTouchEnd={e => { if (rotationJustFired.current) return; doubleTap.onTouchEnd(e) }}
       onClick={e => { if (rotationJustFired.current) return; doubleTap.onClick(e); if (!revealed) onReveal() }}
@@ -158,8 +239,28 @@ function FlashCard({ entry, x, hardMode, onToggleHardMode, onEasy, onHard, onCon
         />
       )}
 
-      {/* Inner wrapper that rotates on hard-mode toggle */}
-      <motion.div style={{ rotateY: rotateYVal }}>
+      {/* Charge glow that builds while holding the card up to conquer */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 z-30 rounded-[36px]"
+        style={{ opacity: chargeGlow, boxShadow: '0 0 0 2px rgba(180,160,255,0.9), 0 0 44px 10px rgba(180,160,255,0.55)' }}
+      />
+
+      {/* Hint: card is conquerable — swipe up and hold */}
+      {conquerable && revealed && !isCharging && (
+        <motion.div
+          className="pointer-events-none absolute -top-9 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 whitespace-nowrap"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, y: [0, -4, 0] }}
+          transition={{ y: { repeat: Infinity, duration: 1.4 }, opacity: { duration: 0.3 } }}
+        >
+          <span className="material-symbols-rounded text-[18px] text-[#B4A0FF]">keyboard_double_arrow_up</span>
+          <span className="font-instrument text-[12px] font-medium text-[#B4A0FF]/80">hold up to conquer</span>
+        </motion.div>
+      )}
+
+      {/* Inner wrapper that rotates on hard-mode toggle; also carries the
+          conquer tremble (x jitter + rotateZ) so it stacks on the drag. */}
+      <motion.div style={{ rotateY: rotateYVal, x: trembleX, rotate: trembleR }}>
         <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
           <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
 
@@ -270,7 +371,7 @@ function AllCaughtUp({ onReset }: { onReset: () => void }) {
 
 // ─── Action buttons ───────────────────────────────────────────────────────────
 
-function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLapse: () => void }) {
+function ActionButtons({ conquerable, onConquered, onLapse }: { conquerable: boolean; onConquered: () => void; onLapse: () => void }) {
   return (
     <div className="flex w-full gap-3">
       <GlassButton
@@ -281,14 +382,18 @@ function ActionButtons({ onConquered, onLapse }: { onConquered: () => void; onLa
         <span className="material-symbols-rounded text-[18px]">replay</span>
         Again
       </GlassButton>
-      <GlassButton
-        variant="primary"
-        onClick={onConquered}
-        className="flex-1 py-4 font-instrument text-[15px]"
-      >
-        <span className="material-symbols-rounded text-[18px]">military_tech</span>
-        Conquered
-      </GlassButton>
+      {/* Conquered is only offered once the card is conquerable (earned via
+          left-swipes) — the primary way to conquer is the swipe-up-hold. */}
+      {conquerable && (
+        <GlassButton
+          variant="primary"
+          onClick={onConquered}
+          className="flex-1 py-4 font-instrument text-[15px]"
+        >
+          <span className="material-symbols-rounded text-[18px]">military_tech</span>
+          Conquered
+        </GlassButton>
+      )}
     </div>
   )
 }
@@ -330,6 +435,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const doneCount = totalCount - queue.length
 
   const current = queue[0] ?? null
+  // A card unlocks the swipe-up-hold conquer gesture once it's been left-swiped
+  // enough (3 normal / 2 hard, tracked in review state).
+  const conquerable = current ? (getReview(current.id)?.conquerProgress ?? 0) >= CONQUER_THRESHOLD : false
 
   // Pre-fetch both audio clips while the question side is visible so playback starts instantly on reveal
   useEffect(() => {
@@ -384,20 +492,25 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleEasy() {
     if (!current) return
-    saveReview(current.id, applyEasy(getOrInit(current.id)))
+    // Got it easily → reset progress toward conquerable.
+    saveReview(current.id, { ...applyEasy(getOrInit(current.id)), conquerProgress: 0 })
     advance()
   }
 
   function handleHard() {
     if (!current) return
-    saveReview(current.id, applyHard(getOrInit(current.id)))
+    // Struggled → schedule as hard AND advance toward conquerable (hard mode
+    // counts 1.5 so 2 hard-swipes reach the same 3 as 3 normal swipes).
+    const st = getOrInit(current.id)
+    const conquerProgress = (st.conquerProgress ?? 0) + (hardMode ? 1.5 : 1)
+    saveReview(current.id, { ...applyHard(st), conquerProgress })
     advance()
   }
 
   function handleConquered() {
     if (!current) return
     haptics.conquered()
-    saveReview(current.id, applyConquered(getOrInit(current.id)))
+    saveReview(current.id, { ...applyConquered(getOrInit(current.id)), conquerProgress: 0 })
     setIsConquering(true)
     setTimeout(() => {
       setIsConquering(false)
@@ -435,6 +548,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             entry={current}
             x={x}
             hardMode={hardMode}
+            conquerable={conquerable}
             onToggleHardMode={handleToggleHardMode}
             onEasy={handleEasy}
             onHard={handleHard}
@@ -455,7 +569,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
                 transition={{ duration: 0.2, delay: 0.05 }}
                 className="flex w-full flex-col gap-3"
               >
-                <ActionButtons onConquered={handleConquered} onLapse={handleLapse} />
+                <ActionButtons conquerable={conquerable} onConquered={handleConquered} onLapse={handleLapse} />
               </motion.div>
             )}
           </AnimatePresence>
