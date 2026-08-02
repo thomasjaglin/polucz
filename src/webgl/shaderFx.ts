@@ -26,7 +26,8 @@ export const fx: ShaderFx = {
   lightAngle: Math.atan2(LIGHT_Y, LIGHT_X),
   autoLight: false,
   tiltLight: false,
-  lead: 1.2,
+  lead: 2.0,   // up from 1.2 — extrapolate rects further so the glass keeps up
+               // with fast compositor-driven scroll instead of trailing behind
 }
 
 const listeners = new Set<() => void>()
