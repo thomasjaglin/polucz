@@ -197,11 +197,22 @@ body {
   mix-blend-mode: color-dodge;
   opacity: 0.9;
   transition: opacity 0.6s ease;
-  /* Reveal streak aligned to the shimmer's specular sheen band (same 115deg,
-     same 300% size, same position path + duration below) so it reads as the
-     one light: as the sheen passes, the grain under it glints. */
-  -webkit-mask-image: linear-gradient(115deg, transparent 40%, rgba(0,0,0,0.85) 46%, #000 48%, rgba(0,0,0,0.85) 50%, transparent 56%);
-          mask-image: linear-gradient(115deg, transparent 40%, rgba(0,0,0,0.85) 46%, #000 48%, rgba(0,0,0,0.85) 50%, transparent 56%);
+  /* Reveal streaks aligned to the shimmer's sheen (same 115deg / 300% / path /
+     duration) so it reads as one light. One bright main band (full sparkle,
+     over the specular sheen) plus smaller lower-alpha satellite bands so the
+     grain also peeks through faintly over the surrounding prismatic foil. */
+  -webkit-mask-image: linear-gradient(115deg,
+    transparent 26%, rgba(0,0,0,0.22) 29%, transparent 33%,
+    rgba(0,0,0,0.32) 38%, transparent 42%,
+    rgba(0,0,0,0.85) 46%, #000 48%, rgba(0,0,0,0.85) 50%, transparent 54%,
+    rgba(0,0,0,0.30) 59%, transparent 63%,
+    rgba(0,0,0,0.20) 69%, transparent 73%);
+          mask-image: linear-gradient(115deg,
+    transparent 26%, rgba(0,0,0,0.22) 29%, transparent 33%,
+    rgba(0,0,0,0.32) 38%, transparent 42%,
+    rgba(0,0,0,0.85) 46%, #000 48%, rgba(0,0,0,0.85) 50%, transparent 54%,
+    rgba(0,0,0,0.30) 59%, transparent 63%,
+    rgba(0,0,0,0.20) 69%, transparent 73%);
   -webkit-mask-size: 300% 300%;
           mask-size: 300% 300%;
   -webkit-mask-repeat: no-repeat;
