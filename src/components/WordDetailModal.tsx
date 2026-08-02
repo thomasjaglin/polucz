@@ -425,26 +425,19 @@ export default function WordDetailModal({ entry, flipIn, overlayVisible, onClose
     setEnriching(true)
     setEnrichError(false)
     try {
-      const [enrichRes, lemmaRes] = await Promise.all([
-        fetch('/api/enrich-card', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lemma: entry.id, type: entry.type }),
-        }),
-        fetch('/api/lemmatize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: entry.pl }),
-        }),
-      ])
+      // Enrichment only fills the grammar tables. It deliberately does NOT
+      // re-lemmatize/overwrite `en`: that was replacing the creation-time
+      // translation with a fresh (and, since lemmatize is a stochastic LLM,
+      // often different) canonicalEn. The word's translation is set once at
+      // card creation and left alone.
+      const enrichRes = await fetch('/api/enrich-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lemma: entry.id, type: entry.type }),
+      })
       if (!enrichRes.ok) throw new Error()
       const data = await enrichRes.json()
-      let merged = mergeEnrichment(entry, data)
-      if (lemmaRes.ok) {
-        const lemmaData = await lemmaRes.json()
-        if (lemmaData.canonicalEn) merged = { ...merged, en: lemmaData.canonicalEn }
-      }
-      onEnriched(merged)
+      onEnriched(mergeEnrichment(entry, data))
     } catch {
       setEnrichError(true)
     } finally {
