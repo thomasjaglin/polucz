@@ -5,7 +5,9 @@ const EASE_MIN = 1.3
 export const CONQUERED_INTERVAL = 180
 
 export function isConquered(state: ReviewState): boolean {
-  return state.interval >= CONQUERED_INTERVAL
+  // Explicit conquer only — the SRS interval reaching 180 on its own must NOT
+  // count, or well-reviewed cards would silently "master" and leave the game.
+  return state.conquered === true
 }
 
 function today(): string {
@@ -43,7 +45,7 @@ export function applyHard(state: ReviewState): ReviewState {
 
 // Button — "Conquered": override to very long interval, not a normal SM-2 step
 export function applyConquered(state: ReviewState): ReviewState {
-  return bump(state, CONQUERED_INTERVAL, state.easeFactor + 0.1)
+  return { ...bump(state, CONQUERED_INTERVAL, state.easeFactor + 0.1), conquered: true }
 }
 
 // Button — "Again" (lapse): reset interval, penalise ease factor

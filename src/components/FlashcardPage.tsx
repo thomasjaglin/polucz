@@ -522,7 +522,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     // interval + score) so the deck can be replayed.
     const all = getAllReviews()
     for (const id of Object.keys(all)) {
-      if (isConquered(all[id])) all[id] = { ...all[id], interval: 1, conquerProgress: 0 }
+      if (isConquered(all[id])) all[id] = { ...all[id], conquered: false, interval: 1, conquerProgress: 0 }
     }
     replaceAllReviews(all)
     setQueue(buildDeck())
