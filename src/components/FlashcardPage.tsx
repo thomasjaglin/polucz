@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
 import type { VocabEntry } from '../data/types'
-import { getAllReviews, getReview, saveReview, initReview, resetDueReviews, resetAllReviews } from '../lib/reviewStorage'
-import { getDueCards, applyEasy, applyHard, applyConquered, applyLapse } from '../lib/scheduler'
+import { getAllReviews, getReview, saveReview, initReview, replaceAllReviews } from '../lib/reviewStorage'
+import { applyEasy, applyHard, applyConquered, applyLapse, isConquered } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
@@ -358,16 +358,16 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
 function AllCaughtUp({ onReset }: { onReset: () => void }) {
   return (
     <div className="flex flex-col items-center gap-4 pt-16 text-center">
-      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">check_circle</span>
-      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">All caught up</h2>
-      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">No cards due for review right now.</p>
+      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">military_tech</span>
+      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">All conquered!</h2>
+      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">You've mastered every card.</p>
       <GlassButton
         variant="primary"
         onClick={onReset}
         className="mt-2 px-6 py-3 font-instrument text-[15px]"
       >
         <span className="material-symbols-rounded text-[18px]">replay</span>
-        Review again
+        Play again (resets mastery)
       </GlassButton>
     </div>
   )
@@ -411,7 +411,6 @@ interface Props {
 
 export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const [queue, setQueue] = useState<VocabEntry[]>([])
-  const [totalCount, setTotalCount] = useState(0)
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const [hardMode, setHardMode] = useState(false)
@@ -428,20 +427,27 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   useEffect(() => { setBgHardMode(hardMode) }, [hardMode])
   useEffect(() => () => setBgHardMode(false), [])
 
-  useEffect(() => {
+  // Endless deck of not-yet-conquered cards, shuffled. The flashcard game is
+  // always available to play — SRS due-dates no longer gate it; only conquering
+  // removes a card. conquerProgress ("score") persists across sessions, but the
+  // deck recycles so you can build it up within a single session too.
+  const buildDeck = useCallback(() => {
     const reviews = getAllReviews()
-    const due = getDueCards(cards, reviews)
-    setQueue(due)
-    setTotalCount(due.length)
+    const pool = cards.filter(c => { const r = reviews[c.id]; return !r || !isConquered(r) })
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
+    return pool
   }, [cards])
 
-  // Derived: cards permanently removed from the queue (re-queued "Again" cards don't count)
-  const doneCount = totalCount - queue.length
+  useEffect(() => { setQueue(buildDeck()) }, [buildDeck])
+
+  // Mastery progress (conquered / total) — persistent; drives the top bar.
+  const reviews = getAllReviews()
+  const conqueredCount = cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).length
 
   const current = queue[0] ?? null
   // A card unlocks the swipe-up-hold conquer gesture once it's been left-swiped
   // enough (3 normal / 2 hard, tracked in review state).
-  const conquerable = current ? (getReview(current.id)?.conquerProgress ?? 0) >= CONQUER_THRESHOLD : false
+  const conquerable = current ? (reviews[current.id]?.conquerProgress ?? 0) >= CONQUER_THRESHOLD : false
 
   // Pre-fetch both audio clips while the question side is visible so playback starts instantly on reveal
   useEffect(() => {
@@ -452,10 +458,12 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const advance = useCallback(() => {
     tts.stop()
     animate(x, 0, { duration: 0 })
-    setQueue(q => q.slice(1))
+    // Recycle: when the deck runs out, reshuffle the remaining non-conquered
+    // cards so the game keeps going.
+    setQueue(q => { const next = q.slice(1); return next.length ? next : buildDeck() })
     setRevealed(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [buildDeck])
 
   // Move current card to position ~3 in queue so it comes back soon in this session
   const requeueCurrent = useCallback(() => {
@@ -483,16 +491,14 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   }
 
   function handleReset() {
-    resetDueReviews()  // leaves conquered cards (interval >= 180) untouched
-    let due = getDueCards(cards, getAllReviews())
-    // If nothing non-conquered is due (e.g. everything's already conquered),
-    // fall back to a full reset so "Review again" always brings cards back.
-    if (due.length === 0) {
-      resetAllReviews()
-      due = getDueCards(cards, getAllReviews())
+    // Only reachable when every card is conquered — un-conquer them (reset
+    // interval + score) so the deck can be replayed.
+    const all = getAllReviews()
+    for (const id of Object.keys(all)) {
+      if (isConquered(all[id])) all[id] = { ...all[id], interval: 1, conquerProgress: 0 }
     }
-    setQueue(due)
-    setTotalCount(due.length)
+    replaceAllReviews(all)
+    setQueue(buildDeck())
     setRevealed(false)
   }
 
@@ -545,9 +551,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         bar is lifted into the (empty on this page) header clearance to sit near
         the true top, while the safe-area inset in the padding is preserved. */}
     <div className="animate-fade-in flex h-full w-full flex-col gap-6">
-      {totalCount > 0 && (
+      {cards.length > 0 && (
         <div className="-mt-14">
-          <ProgressBar done={doneCount} total={totalCount} />
+          <ProgressBar done={conqueredCount} total={cards.length} />
         </div>
       )}
 
