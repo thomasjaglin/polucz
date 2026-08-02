@@ -22,10 +22,15 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
     <div className="perspective w-full cursor-pointer" onClick={() => { haptics.tap(); onClick() }}>
       <div
         ref={ref}
-        className="card-inner relative flex w-full flex-col rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        className={`card-inner relative flex w-full flex-col rounded-[36px] transition-transform hover:scale-[1.02] active:scale-[0.98] ${
+          mastered
+            ? 'shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_30px_rgba(255,200,100,0.15),inset_0_0_0_1px_rgba(255,220,150,0.3)]'
+            : 'shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]'
+        }`}
       >
-        <GlassPane borderRadius={36} className="relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5">
-          <div className="flex items-start justify-between gap-3">
+        <GlassPane borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
+          {mastered && <div className="holo-shimmer" aria-hidden="true" />}
+          <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
                 <span lang="pl" className="hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">

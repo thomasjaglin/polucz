@@ -147,3 +147,61 @@ body {
   clip-path: var(--glass-clip, none);
   pointer-events: none;
 }
+
+/* ─── Mastered card holographic effect ─────────────────────────────────────
+   Route A (overlay child, not ::before): the GlassPane content wrapper already
+   owns its ::before for the liquid-glass layer, so the shimmer is a real child
+   <div class="holo-shimmer"> instead. It sits above the glass tint (z-1) and
+   below the card text (which is raised to z-10). See docs/holographic-mastered-spec.md. */
+.holo-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    repeating-conic-gradient(
+      rgba(255, 255, 255, 0.04) 0deg,
+      transparent 1deg,
+      transparent 9deg,
+      rgba(255, 255, 255, 0.04) 10deg
+    ),
+    linear-gradient(
+      115deg,
+      transparent 20%,
+      rgba(255, 210, 80,  0.30) 30%,
+      rgba(255, 105, 180, 0.30) 45%,
+      rgba(100, 200, 255, 0.30) 60%,
+      rgba(120, 255, 160, 0.30) 75%,
+      transparent 85%
+    );
+  background-size: 200% 200%, 200% 200%;
+  mix-blend-mode: color-dodge;
+  opacity: 0.35;                 /* subtle at rest (not 0 → no paint-trigger on scroll) */
+  transition: opacity 0.6s ease;
+  will-change: filter;           /* promote to its own compositor layer */
+  animation: holoShift 4s linear infinite;
+}
+
+/* Intensify on hover/tap, and in a dedicated full-intensity container. */
+.card-mastered:hover .holo-shimmer,
+.card-mastered:active .holo-shimmer,
+.holo-full .holo-shimmer {
+  opacity: 1;
+  animation-duration: 2s;
+}
+
+@keyframes holoShift {
+  0% {
+    filter: hue-rotate(0deg) brightness(1.1) saturate(1.4);
+    background-position: 0% 50%, 0% 50%;
+  }
+  50% {
+    filter: hue-rotate(180deg) brightness(1.2) saturate(1.6);
+    background-position: 100% 50%, 100% 50%;
+  }
+  100% {
+    filter: hue-rotate(360deg) brightness(1.1) saturate(1.4);
+    background-position: 0% 50%, 0% 50%;
+  }
+}
