@@ -115,6 +115,10 @@ export default function App() {
   useEffect(() => { initBackHandler() }, [])
   useEffect(() => { initHoloMotion() }, [])
   useBackClose(!!modalEntry, handleCloseModal)
+  // Android back on any non-home tab returns to the vocab list. Each page's own
+  // sub-screen back (quiz session→selector, audio playback→start) registers on
+  // top of this, so those pop first before this exits the tab.
+  useBackClose(activeId !== 'folder', () => changePage('folder'))
 
   function handleOpenModal(entry: VocabEntry, cardEl: HTMLDivElement | null) {
     activeCardElRef.current = cardEl
@@ -232,7 +236,7 @@ export default function App() {
     if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
     if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} />
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
-    if (activeId === 'question_mark') return <QuizPage onExit={() => changePage('folder')} />
+    if (activeId === 'question_mark') return <QuizPage />
     if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />

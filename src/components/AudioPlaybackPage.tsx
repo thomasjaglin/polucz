@@ -155,6 +155,10 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // Replay from the done screen keeps whichever order was chosen.
   const replay = () => beginPlayback(order)
 
+  // Android back once playback has started (playing or done) → back to the
+  // play-type selection screen; on that screen it falls through to App (→ list).
+  useBackClose(started, () => { tts.stop(); setPhase('idle'); setStarted(false) })
+
   const current = queue[idx] ?? null
   const doubleTap = useDoubleTap(useCallback(() => { if (current) onOpenModal?.(current) }, [current, onOpenModal]))
 
