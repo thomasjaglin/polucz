@@ -37,7 +37,13 @@ async function fetchBlob(text: string, language: 'pl' | 'en', retries = 2): Prom
 export function useTTS() {
   const [state, setState] = useState<AudioState>('idle')
   const abortRef   = useRef(false)
-  const currentRef = useRef<HTMLAudioElement | null>(null)
+  // ONE reused <audio> element for the whole hook. The browser's autoplay policy
+  // blocks play() on a *fresh* element started outside a user gesture, so the
+  // old "new Audio() per clip" made every auto-advanced word silent (only the
+  // gesture-started first word played). A single element, once unlocked by the
+  // first gesture-driven play, keeps playing subsequent clips/words from timers.
+  const audioElRef = useRef<HTMLAudioElement | null>(null)
+  const curUrlRef  = useRef<string | null>(null)   // object URL of the loaded clip, to revoke
   // cancelRef holds a fn that resolves the in-flight playOne promise so stop() can unblock the sequence loop
   const cancelRef  = useRef<(() => void) | null>(null)
   // Blobs are immutable and safe to cache; only the ObjectURL created from them needs revoking
@@ -54,14 +60,15 @@ export function useTTS() {
   useEffect(() => {
     return () => {
       abortRef.current = true
-      currentRef.current?.pause()
+      audioElRef.current?.pause()
       cancelRef.current?.()
+      if (curUrlRef.current) URL.revokeObjectURL(curUrlRef.current)
     }
   }, [])
 
   // Apply speed changes to the clip that's already playing, not just the next.
   useEffect(() => subscribeRate(() => {
-    if (currentRef.current) currentRef.current.playbackRate = getPlaybackRate()
+    if (audioElRef.current) audioElRef.current.playbackRate = getPlaybackRate()
   }), [])
 
   // Three-tier lookup: in-memory (this session) → IndexedDB (persisted across
@@ -89,35 +96,45 @@ export function useTTS() {
 
   const playOne = useCallback((blob: Blob): Promise<void> => {
     return new Promise((resolve, reject) => {
+      // Lazily create the single reused element on first use.
+      let audio = audioElRef.current
+      if (!audio) {
+        audio = new Audio()
+        // Time-stretch, not pitch-shift, so slower/faster keeps a natural voice.
+        // (preservesPitch is the standard prop; webkit* covers older WebViews.)
+        const a = audio as HTMLAudioElement & { preservesPitch?: boolean; webkitPreservesPitch?: boolean }
+        a.preservesPitch = true
+        a.webkitPreservesPitch = true
+        audioElRef.current = audio
+      }
+      const el = audio
+
+      // Point the reused element at this clip; revoke the previous clip's URL.
+      if (curUrlRef.current) URL.revokeObjectURL(curUrlRef.current)
       const url = URL.createObjectURL(blob)
-      const audio = new Audio(url)
-      // Time-stretch, not pitch-shift, so slower/faster keeps a natural voice.
-      // (preservesPitch is the standard prop; webkit* covers older WebViews.)
-      const a = audio as HTMLAudioElement & { preservesPitch?: boolean; webkitPreservesPitch?: boolean }
-      a.preservesPitch = true
-      a.webkitPreservesPitch = true
-      audio.playbackRate = getPlaybackRate()
-      currentRef.current = audio
+      curUrlRef.current = url
+      el.src = url
+      el.playbackRate = getPlaybackRate()
 
       const done = (ok: boolean) => {
         cancelRef.current = null
-        URL.revokeObjectURL(url)
-        if (currentRef.current === audio) currentRef.current = null
+        el.onended = null   // don't let this clip's handlers fire for the next one
+        el.onerror = null
         if (ok) resolve()
         else reject(new Error('Playback failed'))
       }
 
       // Expose a resolve path so stop() can unblock this promise immediately
-      cancelRef.current = () => done(true)
-      audio.onended = () => done(true)
-      audio.onerror = () => done(false)
-      audio.play().catch(() => done(false))
+      cancelRef.current = () => { el.pause(); done(true) }
+      el.onended = () => done(true)
+      el.onerror = () => done(false)
+      el.play().catch(() => done(false))
     })
   }, [])
 
   const stop = useCallback(() => {
     abortRef.current = true
-    currentRef.current?.pause()
+    audioElRef.current?.pause()
     cancelRef.current?.()   // resolves the pending playOne; the sequence loop then hits abortRef and exits
     setState('idle')
   }, [])
