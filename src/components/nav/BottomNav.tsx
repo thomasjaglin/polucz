@@ -18,21 +18,32 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 34 } as const
 export default function BottomNav({ activeId, onChangePage }: Props) {
   const outerRef = useRef<HTMLDivElement | null>(null)
 
-  // Keep the nav pinned to the physical screen bottom when the keyboard opens.
-  // On mobile the visual viewport shrinks and fixed elements float above the
-  // keyboard — hide the nav so it doesn't cover the active input field.
+  // Hide the nav while the on-screen keyboard is open so it doesn't float over
+  // the input. The keyboard shrinks either the visual viewport (browser overlay
+  // mode) OR the whole layout viewport (Android WebView `adjustResize`) — the
+  // old `innerHeight - visualViewport.height` check missed the latter (both
+  // shrink together). Instead compare the current viewport height against the
+  // tallest we've seen (= no keyboard); a big drop means the keyboard is up.
   useEffect(() => {
     const vv = window.visualViewport
-    if (!vv) return
+    let baseline = window.innerHeight
     function update() {
       if (!outerRef.current) return
-      const keyboardH = window.innerHeight - vv!.height
-      const open = keyboardH > 10
+      baseline = Math.max(baseline, window.innerHeight)
+      const h = vv ? vv.height : window.innerHeight
+      // Keyboards are ~250-350px tall; the 120px floor ignores the mobile URL
+      // bar (~60-100px) so it doesn't false-trigger.
+      const open = h < baseline - 120
       outerRef.current.style.opacity = open ? '0' : ''
       outerRef.current.style.pointerEvents = open ? 'none' : ''
     }
-    vv.addEventListener('resize', update)
-    return () => vv.removeEventListener('resize', update)
+    vv?.addEventListener('resize', update)
+    window.addEventListener('resize', update)
+    update()
+    return () => {
+      vv?.removeEventListener('resize', update)
+      window.removeEventListener('resize', update)
+    }
   }, [])
 
   return (
