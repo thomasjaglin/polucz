@@ -3,6 +3,7 @@ import { getSentences } from '../lib/sentenceStorage'
 import { getAllReviews } from '../lib/reviewStorage'
 import { getCards } from '../lib/storage'
 import { getSessionQuestions } from '../lib/quizLogic'
+import { useBackClose } from '../hooks/useBackClose'
 import QuizTypeSelector from './quiz/QuizTypeSelector'
 import QuizSession, { type AnswerRecord } from './quiz/QuizSession'
 import SessionEndScreen from './quiz/SessionEndScreen'
@@ -10,13 +11,18 @@ import type { SentenceEntry, VocabEntry } from '../data/types'
 
 type Screen = 'selector' | 'session' | 'end'
 
-export default function QuizPage() {
+export default function QuizPage({ onExit }: { onExit: () => void }) {
   const [sentences] = useState<SentenceEntry[]>(getSentences)
   const [cards] = useState<VocabEntry[]>(getCards)
   const [reviews] = useState(getAllReviews)
 
   const [screen, setScreen] = useState<Screen>('selector')
   const [quizType, setQuizType] = useState<'declension' | 'conjugation'>('declension')
+
+  // Android back: inside a quiz (session/end) → back to the type selector;
+  // on the selector → leave the quiz for the vocab list.
+  useBackClose(screen !== 'selector', () => setScreen('selector'))
+  useBackClose(screen === 'selector', onExit)
   const [questions, setQuestions] = useState<SentenceEntry[]>([])
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
   const [startTime, setStartTime] = useState(0)

@@ -232,7 +232,7 @@ export default function App() {
     if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
     if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} />
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
-    if (activeId === 'question_mark') return <QuizPage />
+    if (activeId === 'question_mark') return <QuizPage onExit={() => changePage('folder')} />
     if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />
