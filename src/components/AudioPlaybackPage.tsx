@@ -129,16 +129,17 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
 
   // ─── Queue building / start ────────────────────────────────────────────────
-  // Order: 'list' plays the enriched cards in list order (newest first, as on
-  // the folder page); 'new-first' floats never-reviewed cards to the front.
+  // Order: 'list' plays the enriched cards in the order they were added (oldest
+  // first — `cards` is stored oldest→newest); 'new-first' works off the folder
+  // page's newest-first order and floats never-reviewed cards to the front.
   function buildQueue(o: 'list' | 'new-first'): VocabEntry[] {
-    const due = [...cards].reverse().filter(isReady)
     if (o === 'new-first') {
+      const due = [...cards].reverse().filter(isReady)
       const reviews = getAllReviews()
       const isNew = (c: VocabEntry) => { const r = reviews[c.id]; return !r || r.reviewCount === 0 }
       return [...due.filter(isNew), ...due.filter(c => !isNew(c))]
     }
-    return due
+    return cards.filter(isReady)
   }
 
   function beginPlayback(o: 'list' | 'new-first') {
