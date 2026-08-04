@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 // screen. Any component (or non-React code) can call pushToast(); a single
 // <Toaster> rendered in App subscribes and renders them.
 
-export type ToastTone = 'success' | 'error' | 'info'
+export type ToastTone = 'success' | 'error' | 'delete' | 'info'
 export interface Toast { id: number; text: string; tone: ToastTone }
 
 let toasts: Toast[] = []

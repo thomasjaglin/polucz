@@ -97,7 +97,7 @@ export default function App() {
     deleteCard(modalEntry.id)
     setCards(getCards())
     handleCloseModal()
-    pushToast(`${removed} deleted`, 'info')
+    pushToast(`${removed} deleted`, 'delete')
   }
 
   // ─── Modal animation state ───────────────────────────────────────────────
@@ -316,7 +316,7 @@ export default function App() {
       )}
 
       {/* Global toast stack (top of screen) */}
-      <Toaster />
+      <Toaster activeId={activeId} />
     </div>
   )
 }

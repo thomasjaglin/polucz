@@ -2,23 +2,31 @@ import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import GlassPane from './GlassPane'
 import { useToasts, type ToastTone } from '../lib/toastStore'
+import type { PageId } from '../data/types'
 
 const TONE: Record<ToastTone, { pane: string; border: string; icon: string; iconColor: string }> = {
-  success: { pane: 'bg-emerald-400/15', border: 'border-emerald-400/25', icon: 'check_circle', iconColor: 'text-emerald-300' },
-  error:   { pane: 'bg-red-400/15',     border: 'border-red-400/30',     icon: 'error',        iconColor: 'text-red-300' },
-  info:    { pane: 'bg-[#F8FAFC]/10',   border: 'border-[#F8FAFC]/10',   icon: 'info',         iconColor: 'text-[#F8FAFC]/50' },
+  success: { pane: 'bg-emerald-400/20', border: 'border-emerald-400/35', icon: 'check_circle', iconColor: 'text-emerald-300' },
+  error:   { pane: 'bg-red-400/20',     border: 'border-red-400/40',     icon: 'error',        iconColor: 'text-red-300' },
+  delete:  { pane: 'bg-red-400/20',     border: 'border-red-400/35',     icon: 'delete',       iconColor: 'text-red-300' },
+  info:    { pane: 'bg-[#F8FAFC]/10',   border: 'border-[#F8FAFC]/12',   icon: 'info',         iconColor: 'text-[#F8FAFC]/50' },
 }
 
 // Global toast stack, top of the screen. Portalled to <body> so it's positioned
 // against the viewport regardless of any transformed ancestor.
-export default function Toaster() {
+export default function Toaster({ activeId }: { activeId?: PageId }) {
   const toasts = useToasts()
   if (typeof document === 'undefined') return null
+
+  // The vocab list has the download/add/settings buttons in the top strip, so
+  // drop the toasts below them there; every other page uses the usual top inset.
+  const top = activeId === 'folder'
+    ? 'calc(env(safe-area-inset-top) + 4.75rem)'
+    : 'calc(1rem + env(safe-area-inset-top))'
 
   return createPortal(
     <div
       className="pointer-events-none fixed inset-x-0 z-[120] flex flex-col items-center gap-2 px-4"
-      style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+      style={{ top }}
     >
       <AnimatePresence>
         {toasts.map(t => {
