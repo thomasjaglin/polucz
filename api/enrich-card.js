@@ -58,8 +58,10 @@ const ADJECTIVE_SCHEMA = {
       },
       required: ['cases', 'masculine', 'feminine', 'neuter', 'pluralMasc', 'pluralNonMasc'],
     },
+    comparative: { type: 'string' },
+    superlative: { type: 'string' },
   },
-  required: ['declensions'],
+  required: ['declensions', 'comparative', 'superlative'],
 }
 
 const UNKNOWN_SCHEMA = {
@@ -102,6 +104,8 @@ const PROMPTS = {
 - declensions.neuter: 7 neuter singular forms
 - declensions.pluralMasc: 7 masculine personal (virile) plural forms
 - declensions.pluralNonMasc: 7 non-masculine personal (non-virile) plural forms
+- comparative: the comparative form (stopień wyższy) in masculine nominative singular — the synthetic form when it exists (e.g. "większy", "ładniejszy"), otherwise the periphrastic "bardziej <adj>". If the adjective is not gradable (e.g. relational adjectives like "drewniany", "polski", "codzienny"), return an empty string.
+- superlative: the superlative form (stopień najwyższy) in masculine nominative singular (e.g. "największy", "najładniejszy", or "najbardziej <adj>"). If the adjective is not gradable, return an empty string.
 For the accusative masculine singular, use the slash notation "anim/inanim" where the forms differ.`,
 
   unknown: `You are a Polish grammar reference. Given an unclassified Polish word, return a brief grammatical note in the info field. If nothing useful can be said, return an empty string.`,
@@ -128,7 +132,9 @@ function validate(type, parsed) {
       typeof parsed.plAlt === 'string'
   }
   if (type === 'adjective') {
-    return arrays7(parsed.declensions, ['cases', 'masculine', 'feminine', 'neuter', 'pluralMasc', 'pluralNonMasc'])
+    return arrays7(parsed.declensions, ['cases', 'masculine', 'feminine', 'neuter', 'pluralMasc', 'pluralNonMasc']) &&
+      typeof parsed.comparative === 'string' &&
+      typeof parsed.superlative === 'string'
   }
   if (type === 'unknown') {
     return typeof parsed.info === 'string'

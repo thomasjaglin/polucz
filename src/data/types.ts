@@ -74,6 +74,11 @@ export interface AdjectiveDeclensions {
 export interface VocabAdjective extends VocabBase {
   type: 'adjective'
   declensions: AdjectiveDeclensions | null
+  // Degrees of comparison (stopień wyższy / najwyższy), masc. nom. sg. Filled
+  // during enrichment; empty string when the adjective isn't gradable, and
+  // absent on cards enriched before this field existed.
+  comparative?: string
+  superlative?: string
 }
 
 export interface VocabUnknown extends VocabBase {

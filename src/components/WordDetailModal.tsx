@@ -23,7 +23,12 @@ function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): Voca
     return { ...base, declensions: data.declensions as NounDeclensions, plAlt: data.plAlt as string }
   }
   if (base.type === 'adjective') {
-    return { ...base, declensions: data.declensions as AdjectiveDeclensions }
+    return {
+      ...base,
+      declensions: data.declensions as AdjectiveDeclensions,
+      comparative: typeof data.comparative === 'string' ? data.comparative : undefined,
+      superlative: typeof data.superlative === 'string' ? data.superlative : undefined,
+    }
   }
   if (base.type === 'unknown') {
     return { ...base, info: data.info as string }
@@ -213,13 +218,41 @@ function NounSection({ entry }: { entry: VocabNoun }) {
   )
 }
 
+// A single degree-of-comparison row (label + form) for the gradation block.
+function GradeRow({ label, form }: { label: string; form: string }) {
+  return (
+    <div className="flex items-baseline gap-3">
+      <span className="w-[76px] shrink-0 font-instrument text-[13px] text-[#F8FAFC]/40">{label}</span>
+      <span className="font-instrument text-[16px] text-[#B4A0FF]">{form}</span>
+    </div>
+  )
+}
+
 function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
   if (!entry.declensions) return <EnrichingSkeleton />
   const { cases, masculine, feminine, neuter, pluralMasc, pluralNonMasc } = entry.declensions
   const sgRows = cases.map((c, i) => [abbrev(c), masculine[i] ?? '', feminine[i] ?? '', neuter[i] ?? ''])
   const plRows = cases.map((c, i) => [abbrev(c), pluralMasc[i] ?? '', pluralNonMasc[i] ?? ''])
+  // Non-gradable adjectives come back with empty comparative/superlative — skip
+  // the block entirely in that case.
+  const gradable = !!(entry.comparative || entry.superlative)
   return (
     <div className="mb-8 flex w-full flex-col gap-6">
+      {/* Gradation: positive (the lemma), comparative, superlative. */}
+      {gradable && (
+        <>
+          <div className="flex flex-col">
+            <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">stopniowanie</span>
+            <div className="flex flex-col gap-2">
+              <GradeRow label="równy" form={entry.pl} />
+              {entry.comparative && <GradeRow label="wyższy" form={entry.comparative} />}
+              {entry.superlative && <GradeRow label="najwyższy" form={entry.superlative} />}
+            </div>
+          </div>
+          <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
+        </>
+      )}
+
       {/* Singular: cases, m., f., n. */}
       <div className="flex flex-col">
         <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. pojedyncza</span>
