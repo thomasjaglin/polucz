@@ -380,6 +380,44 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
   )
 }
 
+// ─── Mastery badge ─────────────────────────────────────────────────────────────
+
+// Small persistent badge (top-right of the page) showing how many cards have
+// been permanently mastered/conquered. The progress bar now tracks the current
+// run instead, so this keeps lifetime mastery visible at a glance.
+function MasteryBadge({ count }: { count: number }) {
+  return (
+    <div className="inline-flex items-center gap-1.5 rounded-full border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+      <span className="material-symbols-rounded text-[15px] text-[#B4A0FF]/80">military_tech</span>
+      <span className="font-instrument text-[12px] font-medium tabular-nums text-[#F8FAFC]/55">
+        {count} mastered
+      </span>
+    </div>
+  )
+}
+
+// ─── Run-complete state ────────────────────────────────────────────────────────
+
+// Shown once every card in the current run has been rated. Distinct from
+// AllCaughtUp, which appears only when every card is mastered.
+function RunComplete({ reviewed, onRestart }: { reviewed: number; onRestart: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-4 pt-16 text-center">
+      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">task_alt</span>
+      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">Run complete!</h2>
+      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">You reviewed all {reviewed} cards this round.</p>
+      <GlassButton
+        variant="primary"
+        onClick={onRestart}
+        className="mt-2 px-6 py-3 font-instrument text-[15px]"
+      >
+        <span className="material-symbols-rounded text-[18px]">replay</span>
+        Go again
+      </GlassButton>
+    </div>
+  )
+}
+
 // ─── All-caught-up state ───────────────────────────────────────────────────────
 
 function AllCaughtUp({ onReset }: { onReset: () => void }) {
@@ -441,6 +479,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const [hardMode, setHardMode] = useState(false)
+  // Session progress: the distinct cards rated (swiped left/right or conquered —
+  // NOT "Again") during the current run, plus the run's card count. Restarting a
+  // run clears both. This drives the top progress bar.
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(new Set())
+  const [runTotal, setRunTotal] = useState(0)
   const tts = useTTS()
   const x = useMotionValue(0)
   const leftOpacity  = useTransform(x, [-100, 0], [1, 0])
@@ -465,11 +508,28 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     return pool
   }, [cards])
 
-  useEffect(() => { setQueue(buildDeck()) }, [buildDeck])
+  // Start (or restart) a run: reshuffle the non-conquered pool and reset session
+  // progress to zero. The progress bar then fills as cards are rated; exhausting
+  // the run surfaces the "Go again" screen.
+  const startRun = useCallback(() => {
+    const deck = buildDeck()
+    setQueue(deck)
+    setRunTotal(deck.length)
+    setReviewedIds(new Set())
+    setRevealed(false)
+  }, [buildDeck])
 
-  // Mastery progress (conquered / total) — persistent; drives the top bar.
+  useEffect(() => { startRun() }, [startRun])
+
+  const markReviewed = useCallback((id: string) => {
+    setReviewedIds(prev => (prev.has(id) ? prev : new Set(prev).add(id)))
+  }, [])
+
+  // Mastery (conquered / total) — persistent; shown as the top-right badge, and
+  // used to tell a finished run ("Go again") apart from full mastery.
   const reviews = getAllReviews()
   const conqueredCount = cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).length
+  const allConquered = cards.length > 0 && conqueredCount >= cards.length
 
   const current = queue[0] ?? null
   // A card unlocks the swipe-up-hold conquer gesture once it's been left-swiped
@@ -482,15 +542,16 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current?.id])
 
+  // Advance past a rated card: the queue simply shrinks. When it empties the run
+  // is complete (render shows "Go again"). Marking a card reviewed happens in the
+  // rating handlers, so "Again" (a lapse, which requeues) never counts.
   const advance = useCallback(() => {
     tts.stop()
     animate(x, 0, { duration: 0 })
-    // Recycle: when the deck runs out, reshuffle the remaining non-conquered
-    // cards so the game keeps going.
-    setQueue(q => { const next = q.slice(1); return next.length ? next : buildDeck() })
+    setQueue(q => q.slice(1))
     setRevealed(false)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buildDeck])
+  }, [])
 
   // Move current card to position ~3 in queue so it comes back soon in this session
   const requeueCurrent = useCallback(() => {
@@ -525,8 +586,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
       if (isConquered(all[id])) all[id] = { ...all[id], conquered: false, interval: 1, conquerProgress: 0 }
     }
     replaceAllReviews(all)
-    setQueue(buildDeck())
-    setRevealed(false)
+    startRun()
   }
 
   function getOrInit(id: string) {
@@ -535,6 +595,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleEasy() {
     if (!current) return
+    markReviewed(current.id)
     // Got it easily → reset progress toward conquerable.
     saveReview(current.id, { ...applyEasy(getOrInit(current.id)), conquerProgress: 0 })
     advance()
@@ -542,6 +603,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleHard() {
     if (!current) return
+    markReviewed(current.id)
     // Struggled → schedule as hard AND advance toward conquerable (hard mode
     // counts 1.5 so 2 hard-swipes reach the same 3 as 3 normal swipes).
     const st = getOrInit(current.id)
@@ -552,6 +614,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
 
   function handleConquered() {
     if (!current) return
+    markReviewed(current.id)
     haptics.conquered()
     saveReview(current.id, { ...applyConquered(getOrInit(current.id)), conquerProgress: 0 })
     setIsConquering(true)
@@ -579,8 +642,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         the true top, while the safe-area inset in the padding is preserved. */}
     <div className="animate-fade-in flex h-full w-full flex-col gap-6">
       {cards.length > 0 && (
-        <div className="-mt-14">
-          <ProgressBar done={conqueredCount} total={cards.length} />
+        <div className="-mt-14 flex flex-col gap-2">
+          <div className="flex justify-end">
+            <MasteryBadge count={conqueredCount} />
+          </div>
+          <ProgressBar done={reviewedIds.size} total={runTotal} />
         </div>
       )}
 
@@ -616,6 +682,14 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      ) : allConquered ? (
+        <div className="flex flex-1 items-center justify-center">
+          <AllCaughtUp onReset={handleReset} />
+        </div>
+      ) : runTotal > 0 ? (
+        <div className="flex flex-1 items-center justify-center">
+          <RunComplete reviewed={runTotal} onRestart={startRun} />
         </div>
       ) : (
         <div className="flex flex-1 items-center justify-center">
