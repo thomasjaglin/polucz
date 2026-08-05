@@ -501,12 +501,22 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   // always available to play — SRS due-dates no longer gate it; only conquering
   // removes a card. conquerProgress ("score") persists across sessions, but the
   // deck recycles so you can build it up within a single session too.
+  // A signature of *which* cards exist (their ids), so the deck only rebuilds
+  // when cards are actually added/removed — NOT when an unrelated field like
+  // `audioReady` flips. The background audio-prep batch flips that mid-game via
+  // setCards(getCards()), handing down a fresh `cards` array each ~13s; keying
+  // the deck on the id list keeps that from reshuffling and yanking the current
+  // card away (which looked like the card auto-skipping to the next one).
+  const cardsKey = cards.map(c => c.id).join('|')
+
   const buildDeck = useCallback(() => {
     const reviews = getAllReviews()
     const pool = cards.filter(c => { const r = reviews[c.id]; return !r || !isConquered(r) })
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
     return pool
-  }, [cards])
+  // Keyed on the id list, not the array ref (see cardsKey above).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardsKey])
 
   // Start (or restart) a run: reshuffle the non-conquered pool and reset session
   // progress to zero. The progress bar then fills as cards are rated; exhausting
