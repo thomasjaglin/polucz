@@ -10,7 +10,10 @@ import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
+import { useBackClose } from '../hooks/useBackClose'
 import { haptics } from '../lib/haptics'
+import FlashcardGroupSelector from './FlashcardGroupSelector'
+import type { GroupStat } from '../lib/flashcardGroups'
 
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
 
@@ -398,42 +401,29 @@ function MasteryBadge({ count }: { count: number }) {
 
 // ─── Run-complete state ────────────────────────────────────────────────────────
 
-// Shown once every card in the current run has been rated. Distinct from
-// AllCaughtUp, which appears only when every card is mastered.
-function RunComplete({ reviewed, onRestart }: { reviewed: number; onRestart: () => void }) {
+// Shown once every playable card in the current scope has been rated. `reviewed`
+// is 0 only when the scope was already fully mastered (nothing to drill).
+function RunComplete({ reviewed, onRestart, onBack }: { reviewed: number; onRestart: () => void; onBack: () => void }) {
+  const empty = reviewed === 0
   return (
     <div className="flex flex-col items-center gap-4 pt-16 text-center">
-      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">task_alt</span>
-      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">Run complete!</h2>
-      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">You reviewed all {reviewed} cards this round.</p>
-      <GlassButton
-        variant="primary"
-        onClick={onRestart}
-        className="mt-2 px-6 py-3 font-instrument text-[15px]"
-      >
-        <span className="material-symbols-rounded text-[18px]">replay</span>
-        Go again
-      </GlassButton>
-    </div>
-  )
-}
-
-// ─── All-caught-up state ───────────────────────────────────────────────────────
-
-function AllCaughtUp({ onReset }: { onReset: () => void }) {
-  return (
-    <div className="flex flex-col items-center gap-4 pt-16 text-center">
-      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">military_tech</span>
-      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">All conquered!</h2>
-      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">You've mastered every card.</p>
-      <GlassButton
-        variant="primary"
-        onClick={onReset}
-        className="mt-2 px-6 py-3 font-instrument text-[15px]"
-      >
-        <span className="material-symbols-rounded text-[18px]">replay</span>
-        Play again (resets mastery)
-      </GlassButton>
+      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">{empty ? 'military_tech' : 'task_alt'}</span>
+      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">{empty ? 'All mastered here' : 'Run complete!'}</h2>
+      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">
+        {empty ? 'Every card in this group is already mastered.' : `You reviewed all ${reviewed} cards this round.`}
+      </p>
+      <div className="mt-2 flex flex-col items-stretch gap-3">
+        {!empty && (
+          <GlassButton variant="primary" onClick={onRestart} className="px-6 py-3 font-instrument text-[15px]">
+            <span className="material-symbols-rounded text-[18px]">replay</span>
+            Go again
+          </GlassButton>
+        )}
+        <GlassButton variant="secondary" onClick={onBack} className="px-6 py-3 font-instrument text-[15px]">
+          <span className="material-symbols-rounded text-[18px]">grid_view</span>
+          Back to groups
+        </GlassButton>
+      </div>
     </div>
   )
 }
@@ -475,6 +465,11 @@ interface Props {
 }
 
 export default function FlashcardPage({ cards, onOpenModal }: Props) {
+  // Overview-first: the game opens on the group selector, then plays a chosen
+  // scope (a group, or all cards).
+  const [screen, setScreen] = useState<'selector' | 'playing'>('selector')
+  const [scopeCards, setScopeCards] = useState<VocabEntry[]>([])
+  const [scopeLabel, setScopeLabel] = useState('')
   const [queue, setQueue] = useState<VocabEntry[]>([])
   const [isConquering, setIsConquering] = useState(false)
   const [revealed, setRevealed] = useState(false)
@@ -497,49 +492,49 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   useEffect(() => { setBgHardMode(hardMode) }, [hardMode])
   useEffect(() => () => setBgHardMode(false), [])
 
-  // Endless deck of not-yet-conquered cards, shuffled. The flashcard game is
-  // always available to play — SRS due-dates no longer gate it; only conquering
-  // removes a card. conquerProgress ("score") persists across sessions, but the
-  // deck recycles so you can build it up within a single session too.
-  // A signature of *which* cards exist (their ids), so the deck only rebuilds
-  // when cards are actually added/removed — NOT when an unrelated field like
-  // `audioReady` flips. The background audio-prep batch flips that mid-game via
-  // setCards(getCards()), handing down a fresh `cards` array each ~13s; keying
-  // the deck on the id list keeps that from reshuffling and yanking the current
-  // card away (which looked like the card auto-skipping to the next one).
-  const cardsKey = cards.map(c => c.id).join('|')
-
-  const buildDeck = useCallback(() => {
+  // Build a shuffled deck of the not-yet-conquered cards in a subset. Conquered
+  // cards are excluded from play (there's no reason to re-drill mastered words);
+  // they still count toward a group's progress in the selector.
+  function deckFrom(subset: VocabEntry[]): VocabEntry[] {
     const reviews = getAllReviews()
-    const pool = cards.filter(c => { const r = reviews[c.id]; return !r || !isConquered(r) })
+    const pool = subset.filter(c => { const r = reviews[c.id]; return !r || !isConquered(r) })
     for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
     return pool
-  // Keyed on the id list, not the array ref (see cardsKey above).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cardsKey])
+  }
 
-  // Start (or restart) a run: reshuffle the non-conquered pool and reset session
-  // progress to zero. The progress bar then fills as cards are rated; exhausting
-  // the run surfaces the "Go again" screen.
-  const startRun = useCallback(() => {
-    const deck = buildDeck()
+  // Start a run over a chosen scope (a group, or all cards) and switch to play.
+  const startRunFor = useCallback((subset: VocabEntry[], label: string) => {
+    setScopeCards(subset)
+    setScopeLabel(label)
+    const deck = deckFrom(subset)
     setQueue(deck)
     setRunTotal(deck.length)
     setReviewedIds(new Set())
     setRevealed(false)
-  }, [buildDeck])
+    setScreen('playing')
+  }, [])
 
-  useEffect(() => { startRun() }, [startRun])
+  // Restart the current scope (the "Go again" action on the run-complete screen).
+  const restart = useCallback(() => {
+    const deck = deckFrom(scopeCards)
+    setQueue(deck)
+    setRunTotal(deck.length)
+    setReviewedIds(new Set())
+    setRevealed(false)
+  }, [scopeCards])
+
+  // Android back while playing → back to the group selector; on the selector it
+  // falls through to App's tab-level handler (→ vocab list).
+  useBackClose(screen === 'playing', () => { tts.stop(); setScreen('selector') })
 
   const markReviewed = useCallback((id: string) => {
     setReviewedIds(prev => (prev.has(id) ? prev : new Set(prev).add(id)))
   }, [])
 
-  // Mastery (conquered / total) — persistent; shown as the top-right badge, and
-  // used to tell a finished run ("Go again") apart from full mastery.
+  // Mastery (conquered / total) — persistent; shown as the top-right badge and
+  // fed to the selector for per-group stats.
   const reviews = getAllReviews()
   const conqueredCount = cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).length
-  const allConquered = cards.length > 0 && conqueredCount >= cards.length
 
   const current = queue[0] ?? null
   // A card unlocks the swipe-up-hold conquer gesture once it's been left-swiped
@@ -588,15 +583,15 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     setRevealed(false)
   }
 
-  function handleReset() {
-    // Only reachable when every card is conquered — un-conquer them (reset
-    // interval + score) so the deck can be replayed.
+  function handleResetMastery() {
+    // Un-conquer every card (reset interval + score) so the whole deck can be
+    // replayed, then return to the selector to re-pick a scope.
     const all = getAllReviews()
     for (const id of Object.keys(all)) {
       if (isConquered(all[id])) all[id] = { ...all[id], conquered: false, interval: 1, conquerProgress: 0 }
     }
     replaceAllReviews(all)
-    startRun()
+    setScreen('selector')
   }
 
   function getOrInit(id: string) {
@@ -641,6 +636,18 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     requeueCurrent()
   }
 
+  if (screen === 'selector') {
+    return (
+      <FlashcardGroupSelector
+        cards={cards}
+        conqueredCount={conqueredCount}
+        onResetMastery={handleResetMastery}
+        onPlayAll={() => startRunFor(cards, 'All cards')}
+        onPlayGroup={(g: GroupStat) => startRunFor(g.cards, `Words ${g.start}–${g.end}`)}
+      />
+    )
+  }
+
   return (
     <>
       {/* Swipe feedback glows — focal raised to ~40% so they align with the
@@ -651,14 +658,19 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         bar is lifted into the (empty on this page) header clearance to sit near
         the true top, while the safe-area inset in the padding is preserved. */}
     <div className="animate-fade-in flex h-full w-full flex-col gap-6">
-      {cards.length > 0 && (
-        <div className="-mt-14 flex flex-col gap-2">
-          <div className="flex justify-end">
-            <MasteryBadge count={conqueredCount} />
-          </div>
-          <ProgressBar done={reviewedIds.size} total={runTotal} />
+      <div className="-mt-14 flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={() => { tts.stop(); setScreen('selector') }}
+            className="flex items-center gap-1 font-instrument text-[13px] text-[#F8FAFC]/50 transition-colors hover:text-[#F8FAFC]/80"
+          >
+            <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+            {scopeLabel}
+          </button>
+          <MasteryBadge count={conqueredCount} />
         </div>
-      )}
+        <ProgressBar done={reviewedIds.size} total={runTotal} />
+      </div>
 
       {current ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-6">
@@ -693,17 +705,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             )}
           </AnimatePresence>
         </div>
-      ) : allConquered ? (
-        <div className="flex flex-1 items-center justify-center">
-          <AllCaughtUp onReset={handleReset} />
-        </div>
-      ) : runTotal > 0 ? (
-        <div className="flex flex-1 items-center justify-center">
-          <RunComplete reviewed={runTotal} onRestart={startRun} />
-        </div>
       ) : (
         <div className="flex flex-1 items-center justify-center">
-          <AllCaughtUp onReset={handleReset} />
+          <RunComplete reviewed={runTotal} onRestart={restart} onBack={() => { tts.stop(); setScreen('selector') }} />
         </div>
       )}
     </div>
