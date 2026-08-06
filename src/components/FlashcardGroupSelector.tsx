@@ -17,14 +17,14 @@ interface Props {
   onPlayGroup: (g: GroupStat) => void
 }
 
-// Soft per-grade gradients that, laid out mastered → strong → learning, flow into
-// one cohesive cool sweep across the filled bar: violet → indigo → blue → teal,
-// deepening with confidence. `new` stays the empty track. Each segment's end hue
-// meets the next segment's start hue so the seams read as a single gradient.
+// Soft per-grade gradients. The advanced grades run cool and cohesive —
+// mastered → strong flows violet → indigo → blue — while `learning` is a warm
+// orange → red that deliberately contrasts, so early cards stand out from
+// confident ones at a glance. `new` stays the empty track.
 const GRADE_GRADIENT: Record<Exclude<Grade, 'new'>, string> = {
   mastered: 'linear-gradient(90deg, #B4A0FF, #818CF8)',
   strong:   'linear-gradient(90deg, #6366F1, #38BDF8)',
-  learning: 'linear-gradient(90deg, #22D3EE, #5EEAD4)',
+  learning: 'linear-gradient(90deg, #FB923C, #EF4444)',
 }
 
 // Stacked confidence bar: filled segments (mastered | strong | learning) over an
