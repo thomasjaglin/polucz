@@ -162,9 +162,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
               className="w-full border border-[#B4A0FF]/20 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
             >
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#B4A0FF]/15">
-                  <span className="material-symbols-rounded text-[24px] text-[#B4A0FF]">shuffle</span>
-                </div>
+                <span className="material-symbols-rounded shrink-0 text-[28px] text-[#B4A0FF]">shuffle</span>
                 <div className="min-w-0">
                   <div className="font-instrument text-[17px] font-semibold text-[#F8FAFC]/90">Go through everything</div>
                   <div className="font-instrument text-[13px] text-[#F8FAFC]/45">All {playableTotal} cards, shuffled</div>
