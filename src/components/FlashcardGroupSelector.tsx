@@ -17,12 +17,14 @@ interface Props {
   onPlayGroup: (g: GroupStat) => void
 }
 
-// Colours for the stacked grade bar — amber (learning) → green (strong) → purple
-// (mastered), reading as increasing confidence. `new` is the empty track.
-const GRADE_COLOR: Record<Exclude<Grade, 'new'>, string> = {
-  learning: '#FCD34D',
-  strong:   '#34D399',
-  mastered: '#B4A0FF',
+// Soft per-grade gradients that, laid out mastered → strong → learning, flow into
+// one cohesive cool sweep across the filled bar: violet → indigo → blue → teal,
+// deepening with confidence. `new` stays the empty track. Each segment's end hue
+// meets the next segment's start hue so the seams read as a single gradient.
+const GRADE_GRADIENT: Record<Exclude<Grade, 'new'>, string> = {
+  mastered: 'linear-gradient(90deg, #B4A0FF, #818CF8)',
+  strong:   'linear-gradient(90deg, #6366F1, #38BDF8)',
+  learning: 'linear-gradient(90deg, #22D3EE, #5EEAD4)',
 }
 
 // Stacked confidence bar: filled segments (mastered | strong | learning) over an
@@ -33,7 +35,7 @@ function GradedBar({ counts, total }: { counts: Record<Grade, number>; total: nu
     <div className="relative mt-2 flex h-[8px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
       {(['mastered', 'strong', 'learning'] as const).map(g => (
         counts[g] > 0 && (
-          <div key={g} style={{ width: `${pct(counts[g])}%`, background: GRADE_COLOR[g] }} className="h-full" />
+          <div key={g} style={{ width: `${pct(counts[g])}%`, background: GRADE_GRADIENT[g] }} className="h-full" />
         )
       ))}
     </div>
@@ -99,7 +101,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, onResetM
         <div className="min-w-0">
           <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/90">Flashcards</h2>
           <p className="mt-1 font-instrument text-[14px] text-[#F8FAFC]/40">
-            {playableTotal} to review · {conqueredCount} mastered
+            {playableTotal} to review
           </p>
         </div>
         <div className="mb-1 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
@@ -127,7 +129,6 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, onResetM
         <>
           {/* Group-size toggle */}
           <div className="flex items-center gap-3">
-            <span className="font-instrument text-[13px] text-[#F8FAFC]/40">Group size</span>
             <div className="relative flex gap-1 rounded-full p-1">
               <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/[0.03]" />
               {GROUP_SIZES.map(s => (
