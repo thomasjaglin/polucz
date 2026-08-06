@@ -601,8 +601,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   function handleEasy() {
     if (!current) return
     markReviewed(current.id)
-    // Got it easily → reset progress toward conquerable.
-    saveReview(current.id, { ...applyEasy(getOrInit(current.id)), conquerProgress: 0 })
+    // Got it easily → extend the right-swipe streak, reset conquerable progress.
+    const st = getOrInit(current.id)
+    saveReview(current.id, { ...applyEasy(st), conquerProgress: 0, correctStreak: (st.correctStreak ?? 0) + 1 })
     advance()
   }
 
@@ -610,10 +611,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     if (!current) return
     markReviewed(current.id)
     // Struggled → schedule as hard AND advance toward conquerable (hard mode
-    // counts 1.5 so 2 hard-swipes reach the same 3 as 3 normal swipes).
+    // counts 1.5 so 2 hard-swipes reach the same 3 as 3 normal swipes). A
+    // left-swipe breaks the right-swipe streak, so strength drops back.
     const st = getOrInit(current.id)
     const conquerProgress = (st.conquerProgress ?? 0) + (hardMode ? 1.5 : 1)
-    saveReview(current.id, { ...applyHard(st), conquerProgress })
+    saveReview(current.id, { ...applyHard(st), conquerProgress, correctStreak: 0 })
     advance()
   }
 
@@ -632,7 +634,8 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   function handleLapse() {
     if (!current) return
     haptics.repeat()
-    saveReview(current.id, applyLapse(getOrInit(current.id)))
+    // "Again" → full reset, including the right-swipe streak.
+    saveReview(current.id, { ...applyLapse(getOrInit(current.id)), correctStreak: 0 })
     requeueCurrent()
   }
 

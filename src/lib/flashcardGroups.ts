@@ -23,12 +23,12 @@ export function setGroupSize(size: GroupSize) {
 
 // ─── Per-card confidence grade ──────────────────────────────────────────────────
 
-// A card's SRS `interval` is already a confidence signal: a right-swipe
-// (applyEasy) multiplies it by the ease factor (~2.5×), so it climbs fast when a
-// word is known; a left-swipe (applyHard) only nudges it ×1.2, and a lapse resets
-// it to 1. So the interval reflects the right-vs-left swipe balance, and we bucket
-// it into grades. STRONG_INTERVAL ≈ three consecutive right-swipes (1 → ~15).
-const STRONG_INTERVAL = 15
+// Strength is based purely on whether the user has actually been getting the word
+// right: `correctStreak` counts consecutive right-swipes and is reset by a
+// left-swipe or "Again". A word is "strong" once it's been swiped right
+// STRONG_STREAK times in a row — regardless of how long it's been in rotation, so
+// a long-known-but-still-hard word stays "learning".
+const STRONG_STREAK = 3
 
 export type Grade = 'new' | 'learning' | 'strong' | 'mastered'
 
@@ -36,7 +36,7 @@ export function cardGrade(state: ReviewState | undefined): Grade {
   if (!state) return 'new'
   if (isConquered(state)) return 'mastered'
   if (state.reviewCount === 0) return 'new'
-  if (state.interval >= STRONG_INTERVAL) return 'strong'
+  if ((state.correctStreak ?? 0) >= STRONG_STREAK) return 'strong'
   return 'learning'
 }
 
