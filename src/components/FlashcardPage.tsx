@@ -9,6 +9,7 @@ import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import IconButton from './IconButton'
+import HardModeToggle from './HardModeToggle'
 import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
 import { useBackClose } from '../hooks/useBackClose'
@@ -645,6 +646,8 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
       <FlashcardGroupSelector
         cards={cards}
         conqueredCount={conqueredCount}
+        hardMode={hardMode}
+        onToggleHardMode={handleToggleHardMode}
         onResetMastery={handleResetMastery}
         onPlayAll={() => startRunFor(cards, 'All cards')}
         onPlayGroup={(g: GroupStat) => startRunFor(g.cards, `Words ${g.start}–${g.end}`)}
@@ -671,18 +674,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
           <div className="flex items-center gap-2">
             {/* Explicit hard-mode toggle (the two-finger rotate gesture still works
                 too) — flips the prompt to English→Polish. */}
-            <button
-              onClick={handleToggleHardMode}
-              aria-pressed={hardMode}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] transition-colors ${
-                hardMode
-                  ? 'border-[#e879f9]/40 bg-[#e879f9]/15 text-[#F8FAFC]'
-                  : 'border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] text-[#F8FAFC]/55'
-              }`}
-            >
-              <span className="material-symbols-rounded text-[15px]">bolt</span>
-              <span className="font-instrument text-[12px] font-medium">Hard</span>
-            </button>
+            <HardModeToggle active={hardMode} onToggle={handleToggleHardMode} />
             <MasteryBadge count={conqueredCount} />
           </div>
         </div>

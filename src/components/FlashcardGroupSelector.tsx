@@ -8,10 +8,13 @@ import {
 } from '../lib/flashcardGroups'
 import GlassButton from './GlassButton'
 import GlassPane from './GlassPane'
+import HardModeToggle from './HardModeToggle'
 
 interface Props {
   cards: VocabEntry[]
   conqueredCount: number
+  hardMode: boolean
+  onToggleHardMode: () => void
   onResetMastery: () => void
   onPlayAll: () => void
   onPlayGroup: (g: GroupStat) => void
@@ -86,7 +89,7 @@ function GroupRow({ group, onPlay }: { group: GroupStat; onPlay: () => void }) {
   )
 }
 
-export default function FlashcardGroupSelector({ cards, conqueredCount, onResetMastery, onPlayAll, onPlayGroup }: Props) {
+export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode, onToggleHardMode, onResetMastery, onPlayAll, onPlayGroup }: Props) {
   const [size, setSize] = useState<GroupSize>(getGroupSize)
   const reviews = getAllReviews()
   const groups = buildGroups(cards, size, reviews)
@@ -104,9 +107,12 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, onResetM
             {playableTotal} to review
           </p>
         </div>
-        <div className="mb-1 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
-          <span className="material-symbols-rounded text-[15px] text-[#B4A0FF]/80">military_tech</span>
-          <span className="font-instrument text-[12px] font-medium tabular-nums text-[#F8FAFC]/55">{conqueredCount}</span>
+        <div className="mb-1 flex shrink-0 items-center gap-2">
+          <HardModeToggle active={hardMode} onToggle={onToggleHardMode} />
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+            <span className="material-symbols-rounded text-[15px] text-[#B4A0FF]/80">military_tech</span>
+            <span className="font-instrument text-[12px] font-medium tabular-nums text-[#F8FAFC]/55">{conqueredCount}</span>
+          </div>
         </div>
       </div>
 
