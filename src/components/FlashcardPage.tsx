@@ -8,6 +8,7 @@ import { useTTS, type AudioState } from '../lib/useTTS'
 import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
+import IconButton from './IconButton'
 import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
 import { useBackClose } from '../hooks/useBackClose'
@@ -663,13 +664,10 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     <div className="animate-fade-in flex h-full w-full flex-col gap-6">
       <div className="-mt-14 flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
-          <button
-            onClick={() => { tts.stop(); setScreen('selector') }}
-            className="flex items-center gap-1 font-instrument text-[13px] text-[#F8FAFC]/50 transition-colors hover:text-[#F8FAFC]/80"
-          >
-            <span className="material-symbols-rounded text-[18px]">arrow_back</span>
-            {scopeLabel}
-          </button>
+          <div className="flex items-center gap-2">
+            <IconButton icon="arrow_back" onClick={() => { tts.stop(); setScreen('selector') }} />
+            <span className="font-instrument text-[13px] text-[#F8FAFC]/50">{scopeLabel}</span>
+          </div>
           <MasteryBadge count={conqueredCount} />
         </div>
         <ProgressBar done={reviewedIds.size} total={runTotal} />
