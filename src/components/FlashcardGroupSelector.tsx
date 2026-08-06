@@ -9,6 +9,7 @@ import {
 import GlassButton from './GlassButton'
 import GlassPane from './GlassPane'
 import HardModeToggle from './HardModeToggle'
+import FlipOnChange from './FlipOnChange'
 
 interface Props {
   cards: VocabEntry[]
@@ -151,31 +152,35 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
             </div>
           </div>
 
-          {/* Play everything */}
-          <GlassButton
-            onClick={onPlayAll}
-            radius={24}
-            pane="bg-[#B4A0FF]/[0.06]"
-            contentClassName="block w-full text-left"
-            className="w-full border border-[#B4A0FF]/20 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#B4A0FF]/15">
-                <span className="material-symbols-rounded text-[24px] text-[#B4A0FF]">shuffle</span>
+          {/* Play everything — flips with hard mode, echoing the flashcard. */}
+          <FlipOnChange trigger={hardMode} className="w-full">
+            <GlassButton
+              onClick={onPlayAll}
+              radius={24}
+              pane="bg-[#B4A0FF]/[0.06]"
+              contentClassName="block w-full text-left"
+              className="w-full border border-[#B4A0FF]/20 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)]"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#B4A0FF]/15">
+                  <span className="material-symbols-rounded text-[24px] text-[#B4A0FF]">shuffle</span>
+                </div>
+                <div className="min-w-0">
+                  <div className="font-instrument text-[17px] font-semibold text-[#F8FAFC]/90">Go through everything</div>
+                  <div className="font-instrument text-[13px] text-[#F8FAFC]/45">All {playableTotal} cards, shuffled</div>
+                </div>
+                <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] text-[#F8FAFC]/25">chevron_right</span>
               </div>
-              <div className="min-w-0">
-                <div className="font-instrument text-[17px] font-semibold text-[#F8FAFC]/90">Go through everything</div>
-                <div className="font-instrument text-[13px] text-[#F8FAFC]/45">All {playableTotal} cards, shuffled</div>
-              </div>
-              <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] text-[#F8FAFC]/25">chevron_right</span>
-            </div>
-          </GlassButton>
+            </GlassButton>
+          </FlipOnChange>
 
-          {/* Group list */}
+          {/* Group list — each card flips with hard mode, staggered into a cascade. */}
           <div className="flex flex-col gap-3">
             <span className="font-instrument text-[13px] uppercase tracking-wider text-[#F8FAFC]/35">Or pick a group</span>
             {groups.map(g => (
-              <GroupRow key={g.index} group={g} onPlay={() => onPlayGroup(g)} />
+              <FlipOnChange key={g.index} trigger={hardMode} delay={Math.min(g.index * 0.03, 0.3)} className="w-full">
+                <GroupRow group={g} onPlay={() => onPlayGroup(g)} />
+              </FlipOnChange>
             ))}
           </div>
         </>

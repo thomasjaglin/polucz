@@ -1,5 +1,9 @@
+import { motion, AnimatePresence } from 'framer-motion'
+
 // Hard-mode toggle pill used in both the flashcard menu and the in-game header.
-// Hard mode flips the prompt to English→Polish; the pill highlights when active.
+// Hard mode flips the prompt to English→Polish. The label shows the action: it
+// reads "Hard" in easy mode and flips to "Easy" in hard mode (press to switch
+// back). The pill highlights while hard mode is engaged.
 export default function HardModeToggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
   return (
     <button
@@ -12,7 +16,20 @@ export default function HardModeToggle({ active, onToggle }: { active: boolean; 
       }`}
     >
       <span className="material-symbols-rounded text-[15px]">bolt</span>
-      <span className="font-instrument text-[12px] font-medium">Hard</span>
+      <span className="relative inline-block w-[30px] text-left" style={{ perspective: 400 }}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={active ? 'easy' : 'hard'}
+            initial={{ rotateX: -90, opacity: 0 }}
+            animate={{ rotateX: 0, opacity: 1 }}
+            exit={{ rotateX: 90, opacity: 0 }}
+            transition={{ duration: 0.16 }}
+            className="block font-instrument text-[12px] font-medium"
+          >
+            {active ? 'Easy' : 'Hard'}
+          </motion.span>
+        </AnimatePresence>
+      </span>
     </button>
   )
 }
