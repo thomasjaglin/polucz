@@ -572,14 +572,24 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
 
             {/* Top row: type tag + actions */}
             <div className="mb-8 flex w-full items-center justify-between">
-              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
-                <div
-                  className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
-                  dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
-                />
-                <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
-                  {entry.type}
-                </span>
+              <div className="flex items-center gap-2">
+                <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                  <div
+                    className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                    dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
+                  />
+                  <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
+                    {entry.type}
+                  </span>
+                </div>
+                {entry.enriched && (
+                  <span
+                    aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
+                    className="material-symbols-rounded shrink-0 text-[18px] leading-none text-[#B4A0FF]/70"
+                  >
+                    {entry.audioReady ? 'done_all' : 'done'}
+                  </span>
+                )}
               </div>
 
               {confirmDelete ? (
