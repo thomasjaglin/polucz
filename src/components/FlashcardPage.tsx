@@ -668,7 +668,23 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
             <IconButton icon="arrow_back" onClick={() => { tts.stop(); setScreen('selector') }} />
             <span className="font-instrument text-[13px] text-[#F8FAFC]/50">{scopeLabel}</span>
           </div>
-          <MasteryBadge count={conqueredCount} />
+          <div className="flex items-center gap-2">
+            {/* Explicit hard-mode toggle (the two-finger rotate gesture still works
+                too) — flips the prompt to English→Polish. */}
+            <button
+              onClick={handleToggleHardMode}
+              aria-pressed={hardMode}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] transition-colors ${
+                hardMode
+                  ? 'border-[#e879f9]/40 bg-[#e879f9]/15 text-[#F8FAFC]'
+                  : 'border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] text-[#F8FAFC]/55'
+              }`}
+            >
+              <span className="material-symbols-rounded text-[15px]">bolt</span>
+              <span className="font-instrument text-[12px] font-medium">Hard</span>
+            </button>
+            <MasteryBadge count={conqueredCount} />
+          </div>
         </div>
         <ProgressBar done={reviewedIds.size} total={runTotal} />
       </div>
