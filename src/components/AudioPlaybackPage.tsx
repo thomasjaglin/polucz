@@ -281,12 +281,12 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   return (
     <div className="flex h-full flex-col items-center gap-6 pt-2">
 
-      {/* Progress row — shared glass bar with the count on the right. Lifted
-          into the empty header clearance so it sits near the top; the card
-          (flex-1, centred) and bottom controls stay put. The transient status
-          label is intentionally omitted so it can't push other elements down. */}
+      {/* Progress row — shared glass bar with the count on the right, near the
+          top; the card (flex-1, centred) and bottom controls stay put. The
+          transient status label is intentionally omitted so it can't push other
+          elements down. */}
       {totalCount > 0 && (
-        <div className="-mt-14 w-full">
+        <div className="w-full">
           <ProgressBar done={doneCount} total={totalCount} />
         </div>
       )}
@@ -312,7 +312,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            className="-mt-14 flex w-full flex-1 flex-col gap-5"
+            className="flex w-full flex-1 flex-col gap-5"
           >
             {/* Title top-aligned & left, matching the quiz page (icon removed);
                 the play-choice buttons stay centered in the space below. */}

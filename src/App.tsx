@@ -229,6 +229,10 @@ export default function App() {
 
   const showNav = activeId !== 'add_page' && activeId !== 'api_config'
   const page = pages[activeId]
+  // Flashcard / quiz / audio pages render no header content, so they don't need
+  // the full header clearance — give them a small top gap instead of leaving the
+  // empty header space at the top.
+  const compactTop = activeId === 'dynamic_feed' || activeId === 'question_mark' || activeId === 'spatial_audio'
 
   function renderContent() {
     // Glass shader test bench (dev tool) — open with ?lab
@@ -277,7 +281,7 @@ export default function App() {
         <div
           onScroll={handleScroll}
           className="relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col overflow-y-auto px-6 pb-[180px] no-scrollbar"
-          style={{ paddingTop: 'calc(94px + env(safe-area-inset-top))' }}
+          style={{ paddingTop: compactTop ? 'calc(1.25rem + env(safe-area-inset-top))' : 'calc(94px + env(safe-area-inset-top))' }}
         >
           <div
             className="relative z-30 flex h-full w-full flex-col"

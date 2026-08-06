@@ -37,7 +37,7 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
   }, [])
 
   return (
-    <div className="-mt-14 flex flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/90">Session complete</h2>
 
       {/* Score card */}

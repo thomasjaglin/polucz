@@ -48,7 +48,7 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
 
   return (
     // Lift into the empty header clearance so the progress bar sits near the top.
-    <div className="-mt-14 flex flex-col gap-5">
+    <div className="flex flex-col gap-5">
       {/* Progress — shared glass bar with the count on the right */}
       <ProgressBar done={currentIdx + 1} total={questions.length} />
 

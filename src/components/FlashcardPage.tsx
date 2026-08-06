@@ -665,7 +665,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         bar is lifted into the (empty on this page) header clearance to sit near
         the true top, while the safe-area inset in the padding is preserved. */}
     <div className="animate-fade-in flex h-full w-full flex-col gap-6">
-      <div className="-mt-14 flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <IconButton icon="arrow_back" onClick={() => { tts.stop(); setScreen('selector') }} />

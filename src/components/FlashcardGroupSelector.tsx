@@ -101,7 +101,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
   return (
     <div className="animate-fade-in flex w-full flex-col gap-5">
       {/* Header: title + lifetime mastery */}
-      <div className="-mt-14 flex items-end justify-between gap-3">
+      <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/90">Flashcards</h2>
           <p className="mt-1 font-instrument text-[14px] text-[#F8FAFC]/40">

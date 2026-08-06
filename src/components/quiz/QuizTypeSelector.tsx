@@ -9,7 +9,7 @@ export default function QuizTypeSelector({ sentenceCount, onStart }: Props) {
   const hasEnough = sentenceCount >= 4
 
   return (
-    <div className="-mt-14 flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div>
         <h2 className="font-instrument text-[22px] font-semibold text-[#F8FAFC]/90">Quiz Game</h2>
         <p className="mt-1 font-instrument text-[14px] text-[#F8FAFC]/40">
