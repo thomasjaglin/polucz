@@ -13,7 +13,7 @@ import { useDoubleTap } from '../hooks/useDoubleTap'
 import { useBackClose } from '../hooks/useBackClose'
 import { haptics } from '../lib/haptics'
 import FlashcardGroupSelector from './FlashcardGroupSelector'
-import type { GroupStat } from '../lib/flashcardGroups'
+import { scoreRight, scoreLeft, AGAIN_SCORE, type GroupStat } from '../lib/flashcardGroups'
 
 // ─── Drag threshold (fraction of card width) ──────────────────────────────────
 
@@ -601,9 +601,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   function handleEasy() {
     if (!current) return
     markReviewed(current.id)
-    // Got it easily → extend the right-swipe streak, reset conquerable progress.
+    // Got it easily → +1 strength, reset conquerable progress.
     const st = getOrInit(current.id)
-    saveReview(current.id, { ...applyEasy(st), conquerProgress: 0, correctStreak: (st.correctStreak ?? 0) + 1 })
+    saveReview(current.id, { ...applyEasy(st), conquerProgress: 0, strengthScore: scoreRight(st.strengthScore ?? 0) })
     advance()
   }
 
@@ -612,10 +612,10 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     markReviewed(current.id)
     // Struggled → schedule as hard AND advance toward conquerable (hard mode
     // counts 1.5 so 2 hard-swipes reach the same 3 as 3 normal swipes). A
-    // left-swipe breaks the right-swipe streak, so strength drops back.
+    // left-swipe resets strength to 0 (or digs −1 deeper if already negative).
     const st = getOrInit(current.id)
     const conquerProgress = (st.conquerProgress ?? 0) + (hardMode ? 1.5 : 1)
-    saveReview(current.id, { ...applyHard(st), conquerProgress, correctStreak: 0 })
+    saveReview(current.id, { ...applyHard(st), conquerProgress, strengthScore: scoreLeft(st.strengthScore ?? 0) })
     advance()
   }
 
@@ -634,8 +634,8 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   function handleLapse() {
     if (!current) return
     haptics.repeat()
-    // "Again" → full reset, including the right-swipe streak.
-    saveReview(current.id, { ...applyLapse(getOrInit(current.id)), correctStreak: 0 })
+    // "Again" → drop strength into the −3 hole to climb back out of.
+    saveReview(current.id, { ...applyLapse(getOrInit(current.id)), strengthScore: AGAIN_SCORE })
     requeueCurrent()
   }
 

@@ -23,12 +23,20 @@ export function setGroupSize(size: GroupSize) {
 
 // ─── Per-card confidence grade ──────────────────────────────────────────────────
 
-// Strength is based purely on whether the user has actually been getting the word
-// right: `correctStreak` counts consecutive right-swipes and is reset by a
-// left-swipe or "Again". A word is "strong" once it's been swiped right
-// STRONG_STREAK times in a row — regardless of how long it's been in rotation, so
-// a long-known-but-still-hard word stays "learning".
-const STRONG_STREAK = 3
+// Strength is a score driven purely by whether the user gets the word right, not
+// time in rotation. `strengthScore` moves like this:
+//   • right-swipe: +1
+//   • left-swipe:  reset to 0 if the score is currently ≥ 0, otherwise −1 (so a
+//     struggling, already-negative card digs a little deeper)
+//   • "Again":     drops straight to AGAIN_SCORE (−3) — a hole to climb back out of
+// The score is floored at MIN_SCORE. A card is "strong" once it reaches
+// STRONG_SCORE, so a long-known-but-still-hard word stays "learning".
+export const STRONG_SCORE = 3
+export const AGAIN_SCORE = -3
+export const MIN_SCORE = -3
+
+export function scoreRight(s: number): number { return s + 1 }
+export function scoreLeft(s: number): number { return s >= 0 ? 0 : Math.max(MIN_SCORE, s - 1) }
 
 export type Grade = 'new' | 'learning' | 'strong' | 'mastered'
 
@@ -36,7 +44,7 @@ export function cardGrade(state: ReviewState | undefined): Grade {
   if (!state) return 'new'
   if (isConquered(state)) return 'mastered'
   if (state.reviewCount === 0) return 'new'
-  if ((state.correctStreak ?? 0) >= STRONG_STREAK) return 'strong'
+  if ((state.strengthScore ?? 0) >= STRONG_SCORE) return 'strong'
   return 'learning'
 }
 
