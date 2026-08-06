@@ -682,7 +682,10 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
       </div>
 
       {current ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        // Top-anchored (not centered) so revealing the translation grows the card
+        // downward instead of re-centering and pushing it up — the card keeps its
+        // position and the answer expands below it.
+        <div className="flex flex-1 flex-col items-center gap-6 pt-[8vh]">
           <FlashCard
             key={current.id}
             entry={current}
