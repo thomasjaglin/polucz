@@ -444,7 +444,7 @@ function ActionButtons({ conquerable, onConquered, onLapse }: { conquerable: boo
         Again
       </GlassButton>
       {/* Conquered is only offered once the card is conquerable (earned via
-          left-swipes) — the primary way to conquer is the swipe-up-hold. */}
+          right-swipes) — the primary way to conquer is the swipe-up-hold. */}
       {conquerable && (
         <GlassButton
           variant="primary"
@@ -539,8 +539,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   const conqueredCount = cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).length
 
   const current = queue[0] ?? null
-  // A card unlocks the swipe-up-hold conquer gesture once it's been left-swiped
-  // enough (3 normal / 2 hard, tracked in review state).
+  // A card unlocks the swipe-up-hold conquer gesture once it's been right-swiped
+  // (marked easy) enough (3 normal / 2 hard, tracked in review state) — you
+  // conquer what you know. A hard-swipe or "Again" resets that progress.
   const conquerable = current ? (reviews[current.id]?.conquerProgress ?? 0) >= CONQUER_THRESHOLD : false
 
   // Pre-fetch both audio clips while the question side is visible so playback starts instantly on reveal
@@ -603,21 +604,24 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   function handleEasy() {
     if (!current) return
     markReviewed(current.id)
-    // Got it easily → +1 strength, reset conquerable progress.
+    // Got it easily (right-swipe) → +1 strength AND advance toward conquerable:
+    // you unlock the conquer gesture by knowing a card, not by struggling with it.
+    // Hard mode counts 1.5, so 2 right-swipes in hard mode reach the same 3 as
+    // 3 normal ones.
     const st = getOrInit(current.id)
-    saveReview(current.id, { ...applyEasy(st), conquerProgress: 0, strengthScore: scoreRight(st.strengthScore ?? 0) })
+    const conquerProgress = (st.conquerProgress ?? 0) + (hardMode ? 1.5 : 1)
+    saveReview(current.id, { ...applyEasy(st), conquerProgress, strengthScore: scoreRight(st.strengthScore ?? 0) })
     advance()
   }
 
   function handleHard() {
     if (!current) return
     markReviewed(current.id)
-    // Struggled → schedule as hard AND advance toward conquerable (hard mode
-    // counts 1.5 so 2 hard-swipes reach the same 3 as 3 normal swipes). A
-    // left-swipe resets strength to 0 (or digs −1 deeper if already negative).
+    // Struggled (left-swipe) → schedule as hard and reset conquer progress: a miss
+    // means the card isn't mastered yet. Strength also drops (0, or −1 deeper if
+    // already negative).
     const st = getOrInit(current.id)
-    const conquerProgress = (st.conquerProgress ?? 0) + (hardMode ? 1.5 : 1)
-    saveReview(current.id, { ...applyHard(st), conquerProgress, strengthScore: scoreLeft(st.strengthScore ?? 0) })
+    saveReview(current.id, { ...applyHard(st), conquerProgress: 0, strengthScore: scoreLeft(st.strengthScore ?? 0) })
     advance()
   }
 
@@ -636,8 +640,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   function handleLapse() {
     if (!current) return
     haptics.repeat()
-    // "Again" → drop strength into the −3 hole to climb back out of.
-    saveReview(current.id, { ...applyLapse(getOrInit(current.id)), strengthScore: AGAIN_SCORE })
+    // "Again" → reset conquer progress (a clear miss) and drop strength into the
+    // −3 hole to climb back out of.
+    saveReview(current.id, { ...applyLapse(getOrInit(current.id)), conquerProgress: 0, strengthScore: AGAIN_SCORE })
     requeueCurrent()
   }
 
