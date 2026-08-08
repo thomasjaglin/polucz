@@ -75,6 +75,13 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
   const chargeStartRef = useRef(0)
   const lastHapticRef = useRef(0)
   useEffect(() => stopChargeLoop, [])   // stop the charge rAF if the card unmounts mid-hold
+  // On conquer, fling the card up and off-screen so it visibly "swipes up"
+  // instead of resetting to centre. Driven by isConquering so it fires for both
+  // the swipe-up-hold gesture and the Conquered button.
+  useEffect(() => {
+    if (isConquering) animate(y, -Math.round(window.innerHeight * 1.1), { duration: 0.5, ease: 'easeIn' })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConquering])
   // Lags behind hardMode by one animation cycle so content swaps at the midpoint
   const [displayHardMode, setDisplayHardMode] = useState(hardMode)
 
@@ -196,7 +203,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
     stopChargeLoop()
     chargeGlow.set(0)
     trembleX.set(0); trembleR.set(0)
-    animate(y, 0, { type: 'spring', stiffness: 260, damping: 22 })
+    // Don't spring back to centre — the isConquering effect flings the card up.
     onConquered()
   }
 
@@ -631,10 +638,11 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
     haptics.conquered()
     saveReview(current.id, { ...applyConquered(getOrInit(current.id)), conquerProgress: 0 })
     setIsConquering(true)
+    // Let the card fling up (~0.5s) and hold a beat before the next card appears.
     setTimeout(() => {
       setIsConquering(false)
       advance()
-    }, 520)
+    }, 780)
   }
 
   function handleLapse() {
