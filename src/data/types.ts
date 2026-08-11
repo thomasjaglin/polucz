@@ -1,5 +1,12 @@
 export type WordType = 'verb' | 'noun' | 'adjective' | 'unknown'
 
+// Display label for a word type. The stored type stays 'unknown', but it reads
+// as "Other" in the UI. Accepts a string so callers with wider unions (e.g. the
+// translate page's 'adverb') can use it too.
+export function typeLabel(type: string): string {
+  return type === 'unknown' ? 'Other' : type
+}
+
 export type PageId =
   | 'folder'
   | 'translate'

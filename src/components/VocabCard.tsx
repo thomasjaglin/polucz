@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import { tagGradients } from '../data/gradients'
-import type { VocabEntry } from '../data/types'
+import { type VocabEntry, typeLabel } from '../data/types'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
 
@@ -68,7 +68,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] }}
               />
               <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
-                {entry.type}
+                {typeLabel(entry.type)}
               </span>
             </GlassPane>
           </div>

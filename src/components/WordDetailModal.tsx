@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { tagGradients } from '../data/gradients'
-import type {
-  VocabEntry, VocabVerb, VocabNoun, VocabAdjective, VocabUnknown,
-  VerbConjugations, NounDeclensions, AdjectiveDeclensions,
+import {
+  type VocabEntry, type VocabVerb, type VocabNoun, type VocabAdjective, type VocabUnknown,
+  type VerbConjugations, type NounDeclensions, type AdjectiveDeclensions,
+  typeLabel,
 } from '../data/types'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -579,7 +580,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                     dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
                   />
                   <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
-                    {entry.type}
+                    {typeLabel(entry.type)}
                   </span>
                 </div>
                 {entry.enriched && (

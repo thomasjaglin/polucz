@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { VocabEntry } from '../data/types'
+import { type VocabEntry, typeLabel } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
@@ -408,7 +408,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                           </span>
                         </div>
                         <span className="mt-1 flex-shrink-0 rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 font-instrument text-[10px] capitalize text-[#F8FAFC]">
-                          {entry.type}
+                          {typeLabel(entry.type)}
                         </span>
                       </div>
                     </motion.div>
@@ -470,7 +470,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                           />
                         )}
                         <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
-                          {current.type}
+                          {typeLabel(current.type)}
                         </span>
                       </GlassPane>
                     </motion.div>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate, type MotionValue } from 'framer-motion'
 import { tagGradients } from '../data/gradients'
-import type { VocabEntry } from '../data/types'
+import { type VocabEntry, typeLabel } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, replaceAllReviews } from '../lib/reviewStorage'
 import { applyEasy, applyHard, applyConquered, applyLapse, isConquered } from '../lib/scheduler'
 import { useTTS, type AudioState } from '../lib/useTTS'
@@ -316,7 +316,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
                 />
                 <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
-                  {entry.type}
+                  {typeLabel(entry.type)}
                 </span>
               </div>
               {displayHardMode && (

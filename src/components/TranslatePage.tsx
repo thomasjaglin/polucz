@@ -4,7 +4,7 @@ import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
-import type { VocabEntry, WordType } from '../data/types'
+import { type VocabEntry, type WordType, typeLabel } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
 import { haptics } from '../lib/haptics'
@@ -149,7 +149,7 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
   return (
     <div className="flex items-center gap-2 border-b border-[#F8FAFC]/5 py-2.5 last:border-0">
       <span className={`shrink-0 rounded-full border px-2 py-0.5 font-instrument text-[10px] font-medium capitalize ${TYPE_BADGE[word.type] ?? TYPE_BADGE.unknown}`}>
-        {word.type === 'adjective' ? 'adj' : word.type}
+        {word.type === 'adjective' ? 'adj' : typeLabel(word.type)}
       </span>
       <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-[#F8FAFC]/90">{word.lemma}</span>
       {word.gender && <span className="shrink-0 font-instrument text-[13px] italic text-[#e879f9]">{word.gender}</span>}
@@ -522,7 +522,7 @@ export default function TranslatePage({ onAddCard }: Props) {
                       dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
                     />
                     <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-[#F8FAFC]">
-                      {result.type}
+                      {typeLabel(result.type)}
                     </span>
                   </div>
                 </div>
