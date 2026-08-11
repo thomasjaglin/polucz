@@ -24,6 +24,11 @@ interface Props {
 // provider caps at 10/min, so ~13 s/card keeps us safely under it.
 const PREP_SPACING_MS = 13000
 
+// Glassy pill treatment for the prepare-audio modal buttons — mirrors the
+// add-words page buttons: a bright rim + inset highlight over the GlassPane.
+// Pair with radius={999}, a `pane` tint and a border/text colour per button.
+const MODAL_BTN = 'h-[46px] overflow-hidden font-instrument text-[15px] font-semibold border shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)]'
+
 export default function TopHeader({ activeId, onChangePage, onImport, cards, onAudioReady, hidden = false }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -298,10 +303,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                   <div className="h-full rounded-full bg-[#B4A0FF] transition-all" style={{ width: `${(prepProgress.done / Math.max(prepProgress.total, 1)) * 100}%` }} />
                 </div>
                 <div className="mt-1 flex gap-3">
-                  <GlassButton variant="secondary" onClick={() => setPrepConfirm(false)} className="flex-1 py-2.5 font-instrument text-[14px]">
+                  <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-[#F8FAFC]/5" className={`${MODAL_BTN} flex-1 border-[#F8FAFC]/20 text-[#F8FAFC]/80`}>
                     Run in background
                   </GlassButton>
-                  <GlassButton variant="danger" onClick={() => { prepCancel.current = true; setPrepProgress(null); setPrepConfirm(false) }} className="flex-1 py-2.5 font-instrument text-[14px]">
+                  <GlassButton onClick={() => { prepCancel.current = true; setPrepProgress(null); setPrepConfirm(false) }} radius={999} pane="bg-red-400/12" className={`${MODAL_BTN} flex-1 border-red-400/40 text-red-400`}>
                     Stop
                   </GlassButton>
                 </div>
@@ -310,7 +315,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
               <>
                 <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">All caught up</h2>
                 <p className="font-instrument text-[14px] text-[#F8FAFC]/50">Every card already has its audio prepared.</p>
-                <GlassButton variant="secondary" onClick={() => setPrepConfirm(false)} className="mt-1 py-2.5 font-instrument text-[14px]">Close</GlassButton>
+                <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-[#F8FAFC]/5" className={`${MODAL_BTN} mt-1 w-full border-[#F8FAFC]/20 text-[#F8FAFC]/80`}>Close</GlassButton>
               </>
             ) : (
               <>
@@ -319,8 +324,8 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                   Generate and cache audio for <span className="text-[#B4A0FF]">{incompleteCount}</span> {incompleteCount === 1 ? 'card' : 'cards'}. It's rate-limited, so it runs slowly in the background (~{Math.ceil((incompleteCount * PREP_SPACING_MS) / 60000)} min) — you can keep using the app.
                 </p>
                 <div className="mt-1 flex gap-3">
-                  <GlassButton variant="secondary" onClick={() => setPrepConfirm(false)} className="flex-1 py-2.5 font-instrument text-[14px]">Cancel</GlassButton>
-                  <GlassButton variant="primary" onClick={runPrepare} className="flex-1 py-2.5 font-instrument text-[14px]">Prepare</GlassButton>
+                  <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-[#F8FAFC]/5" className={`${MODAL_BTN} flex-1 border-[#F8FAFC]/20 text-[#F8FAFC]/80`}>Cancel</GlassButton>
+                  <GlassButton onClick={runPrepare} radius={999} pane="bg-[#B4A0FF]/15" className={`${MODAL_BTN} flex-1 border-[#B4A0FF]/40 text-[#B4A0FF]`}>Prepare</GlassButton>
                 </div>
               </>
             )}
