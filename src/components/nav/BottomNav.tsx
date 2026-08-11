@@ -34,8 +34,10 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
       // Keyboards are ~250-350px tall; the 120px floor ignores the mobile URL
       // bar (~60-100px) so it doesn't false-trigger.
       const open = h < baseline - 120
-      outerRef.current.style.opacity = open ? '0' : ''
-      outerRef.current.style.pointerEvents = open ? 'none' : ''
+      // display:none (not opacity:0) so the nav's rect collapses to zero — the
+      // shared WebGL canvas draws the nav glass from that rect, and a hidden-but-
+      // present rect would still float the glass up above the keyboard.
+      outerRef.current.style.display = open ? 'none' : ''
     }
     vv?.addEventListener('resize', update)
     window.addEventListener('resize', update)
