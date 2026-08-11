@@ -39,12 +39,12 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                   {entry.pl}
                 </span>
                 {mastered && (
-                  <span className="shrink-0 text-[14px] leading-none text-[#B4A0FF]">★</span>
+                  <span className="holo-icon shrink-0 text-[14px] leading-none">★</span>
                 )}
                 {entry.enriched && (
                   <span
                     aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
-                    className="material-symbols-rounded shrink-0 text-[16px] leading-none text-[#B4A0FF]/70"
+                    className="holo-icon material-symbols-rounded shrink-0 text-[16px] leading-none"
                   >
                     {entry.audioReady ? 'done_all' : 'done'}
                   </span>
