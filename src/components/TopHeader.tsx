@@ -290,8 +290,8 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
       >
         {/* Blurred, dimmed backdrop to focus attention on the modal. */}
         <div className="pointer-events-none absolute inset-0 z-0 bg-black/25 backdrop-blur-lg" />
-        <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[36px] border border-[#F8FAFC]/10 p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.14)]">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.06]" />
+        <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[36px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
           <div className="relative z-10 flex flex-col gap-4">
             {prepProgress ? (
               <>
