@@ -18,7 +18,8 @@ const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n)
 
 function apply() {
   const s = document.documentElement.style
-  s.setProperty('--holo-shift', (cX * 100).toFixed(1) + '%')
+  s.setProperty('--holo-shift', (cX * 100).toFixed(1) + '%')   // X axis (gamma / pointer x)
+  s.setProperty('--holo-y', (cH * 100).toFixed(1) + '%')       // Y axis (beta / pointer y)
   s.setProperty('--holo-edge-angle', (cX * 360).toFixed(0) + 'deg')
   s.setProperty('--holo-hue', ((cH - 0.5) * 240).toFixed(0) + 'deg')
 }
