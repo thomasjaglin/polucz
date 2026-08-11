@@ -350,30 +350,35 @@ body {
    stretched) and masked to the rounded card via border-radius. They parallax in
    opposite directions with the tilt (--holo-shift X / --holo-y Y); a glare rides
    on top. */
+/* All three layers share the same angled light band that sweeps with the tilt
+   (--holo-shift): the foil + colour rays only light up where the band passes, so
+   it reads as an angled light revealing the foil over the gradient — not a moving
+   image. Outside the band the card gradient shows cleanly. */
 .cosmos-holo,
-.cosmos-holo-burn {
+.cosmos-holo-burn,
+.cosmos-rays {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;   /* fixed — the foil doesn't slide */
-  /* The foil is only revealed inside a soft band that sweeps across with the tilt
-     (--holo-shift), so it reads as light catching a holographic foil over the
-     gradient rather than a moving image. Outside the band the gradient shows
-     cleanly. */
   -webkit-mask-image: linear-gradient(105deg,
-    transparent 16%, rgba(0,0,0,0.5) 38%, #000 50%, rgba(0,0,0,0.5) 62%, transparent 84%);
+    transparent 12%, rgba(0,0,0,0.5) 34%, #000 50%, rgba(0,0,0,0.5) 66%, transparent 88%);
           mask-image: linear-gradient(105deg,
-    transparent 16%, rgba(0,0,0,0.5) 38%, #000 50%, rgba(0,0,0,0.5) 62%, transparent 84%);
-  -webkit-mask-size: 220% 100%;
-          mask-size: 220% 100%;
+    transparent 12%, rgba(0,0,0,0.5) 34%, #000 50%, rgba(0,0,0,0.5) 66%, transparent 88%);
+  -webkit-mask-size: 230% 100%;
+          mask-size: 230% 100%;
   -webkit-mask-position: var(--holo-shift, 50%) center;
           mask-position: var(--holo-shift, 50%) center;
   -webkit-mask-repeat: no-repeat;
           mask-repeat: no-repeat;
+}
+/* The two galaxy foil copies — cover-sized (never stretched), fixed position. */
+.cosmos-holo,
+.cosmos-holo-burn {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 .cosmos-holo {
   background-image: url(/holo/cosmos-bottom.png);
@@ -383,6 +388,23 @@ body {
 .cosmos-holo-burn {
   background-image: url(/holo/cosmos-middle.png);
   mix-blend-mode: color-burn;
+  opacity: 0.5;
+}
+/* Prismatic light + colour rays that ride in the same sweeping band, lighting the
+   foil with rainbow streaks as it passes. */
+.cosmos-rays {
+  z-index: 2;
+  background-image: repeating-linear-gradient(105deg,
+    rgba(255, 100, 130, 0.55) 0%,
+    rgba(255, 205, 120, 0.50) 7%,
+    rgba(150, 255, 175, 0.50) 14%,
+    rgba(120, 200, 255, 0.50) 21%,
+    rgba(205, 140, 255, 0.55) 28%,
+    rgba(255, 100, 130, 0.55) 35%);
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  background-position: var(--holo-shift, 50%) center;
+  mix-blend-mode: color-dodge;
   opacity: 0.5;
 }
 
