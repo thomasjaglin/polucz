@@ -350,64 +350,76 @@ body {
    stretched) and masked to the rounded card via border-radius. They parallax in
    opposite directions with the tilt (--holo-shift X / --holo-y Y); a glare rides
    on top. */
-/* All three layers share a TIGHT striped mask of thin diagonal rays that slide
-   with the tilt (--holo-shift). The galaxy foil + colour rays show only inside
-   these thin streaks, so most of the card keeps its plain gradient and the foil
-   is "revealed" as fine rays that sweep as you tilt. */
+/* Irregular prismatic rays — bands of VARIED width + hue (not a uniform repeat,
+   so sliding them actually reads as motion). Authored once and reused as both the
+   colour layer and the foil mask, so the two stay perfectly aligned. Its own
+   transparent gaps ARE the mask (alpha), and it slides with the tilt. */
+:root {
+  --cosmos-rays: linear-gradient(105deg,
+    transparent 0%,
+    rgba(255, 95, 120, 0.80) 4%,
+    transparent 8%,
+    transparent 12%,
+    rgba(255, 195, 105, 0.66) 15%, rgba(255, 170, 85, 0.66) 20%,
+    transparent 25%,
+    rgba(150, 255, 185, 0.58) 29%,
+    transparent 33%,
+    rgba(120, 195, 255, 0.78) 38%, rgba(120, 160, 255, 0.78) 45%,
+    transparent 52%,
+    rgba(210, 140, 255, 0.74) 57%,
+    transparent 62%,
+    rgba(255, 120, 200, 0.62) 68%,
+    transparent 73%,
+    rgba(120, 255, 220, 0.56) 80%,
+    transparent 85%,
+    rgba(255, 210, 120, 0.70) 91%,
+    transparent 96%,
+    rgba(255, 95, 120, 0.78) 100%);
+}
+/* The two galaxy foil copies — cover-sized (never stretched), fixed position,
+   revealed through the ray gradient's alpha (so foil shows inside the rays). */
 .cosmos-holo,
-.cosmos-holo-burn,
-.cosmos-rays {
+.cosmos-holo-burn {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
-  -webkit-mask-image: repeating-linear-gradient(105deg,
-    transparent 0%, transparent 3.4%,
-    rgba(0,0,0,0.7) 4.4%, #000 5%, rgba(0,0,0,0.7) 5.6%,
-    transparent 6.6%, transparent 10%);
-          mask-image: repeating-linear-gradient(105deg,
-    transparent 0%, transparent 3.4%,
-    rgba(0,0,0,0.7) 4.4%, #000 5%, rgba(0,0,0,0.7) 5.6%,
-    transparent 6.6%, transparent 10%);
-  -webkit-mask-position: var(--holo-shift, 50%) center;
-          mask-position: var(--holo-shift, 50%) center;
-  -webkit-mask-repeat: repeat;
-          mask-repeat: repeat;
-}
-/* The two galaxy foil copies — cover-sized (never stretched), fixed position. */
-.cosmos-holo,
-.cosmos-holo-burn {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
+  -webkit-mask-image: var(--cosmos-rays);
+          mask-image: var(--cosmos-rays);
+  -webkit-mask-size: 210% 100%;
+          mask-size: 210% 100%;
+  -webkit-mask-position: var(--holo-shift, 50%) center;
+          mask-position: var(--holo-shift, 50%) center;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
 }
 .cosmos-holo {
   background-image: url(/holo/cosmos-bottom.png);
   mix-blend-mode: color-dodge;
-  opacity: 0.65;
+  opacity: 0.75;
 }
 .cosmos-holo-burn {
   background-image: url(/holo/cosmos-middle.png);
   mix-blend-mode: color-burn;
-  opacity: 0.55;
+  opacity: 0.6;
 }
-/* A broad rainbow behind the streaks so each thin ray picks up a different hue;
-   it slides with the tilt so the colours flow across. */
+/* The colour rays themselves, aligned to the same gradient + slide. */
 .cosmos-rays {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
   z-index: 2;
-  background-image: linear-gradient(105deg,
-    rgba(255, 100, 130, 0.75) 0%,
-    rgba(255, 205, 120, 0.68) 22%,
-    rgba(150, 255, 175, 0.68) 44%,
-    rgba(120, 200, 255, 0.68) 66%,
-    rgba(205, 140, 255, 0.75) 88%,
-    rgba(255, 100, 130, 0.75) 100%);
-  background-size: 260% 100%;
+  background-image: var(--cosmos-rays);
+  background-size: 210% 100%;
   background-repeat: no-repeat;
   background-position: var(--holo-shift, 50%) center;
   mix-blend-mode: color-dodge;
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
 .cosmos-glare {
