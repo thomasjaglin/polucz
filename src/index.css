@@ -165,7 +165,7 @@ body {
   z-index: 1;
   background-image:
     /* metallic specular sheen sweep */
-    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.55) 47%, rgba(255, 240, 210, 0.35) 50%, transparent 60%),
+    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.42) 47%, rgba(255, 240, 210, 0.28) 50%, transparent 60%),
     /* gold + prismatic foil bands */
     repeating-linear-gradient(115deg,
       rgba(255, 215, 120, 0.42) 0%,
@@ -199,7 +199,7 @@ body {
   /* overlay (not color-dodge) so the sparkle takes on the colour of the foil
      beneath it — coloured glints rather than blown-out white. */
   mix-blend-mode: overlay;
-  opacity: 1;
+  opacity: 0.72;                 /* slightly muted so the specks aren't bright white */
   transition: opacity 0.6s ease;
   /* Reveal streaks aligned to the shimmer's sheen (same 115deg / 300% / path /
      duration) so it reads as one light. One bright main band (full sparkle,
@@ -257,10 +257,12 @@ body {
 /* Hover/tap on list cards: full intensity, a touch quicker. Shimmer + glitter
    keep the SAME duration so their shared light stays phase-locked. */
 .card-mastered:hover .holo-shimmer,
-.card-mastered:active .holo-shimmer,
+.card-mastered:active .holo-shimmer {
+  opacity: 1;
+}
 .card-mastered:hover .holo-glitter,
 .card-mastered:active .holo-glitter {
-  opacity: 1;
+  opacity: 0.82;                 /* brighter on interaction but still not blown out */
 }
 .card-mastered:hover .holo-edge,
 .card-mastered:active .holo-edge {
