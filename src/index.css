@@ -301,9 +301,13 @@ body {
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
+  /* Saturated gold→orange filled with mix-blend-screen — same treatment as an
+     active filter tag's colour blob, so it reads substantial rather than a faint
+     transparent wash. */
   background: linear-gradient(135deg,
-    rgba(255, 196, 88, 0.48) 0%,
-    rgba(245, 130, 34, 0.42) 100%);
+    rgba(255, 188, 66, 0.92) 0%,
+    rgba(236, 116, 26, 0.88) 100%);
+  mix-blend-mode: screen;
 }
 .holo-full button::after {
   content: '';
