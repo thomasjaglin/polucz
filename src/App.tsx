@@ -276,7 +276,7 @@ export default function App() {
           display:none zeroes their getBoundingClientRect(), which the
           renderer's existing size check already excludes from the pane list. */}
       <div className={backgroundHidden ? 'hidden' : ''}>
-        <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} cards={cards} onAudioReady={handleAudioReady} hidden={headerHidden} />
+        <TopHeader activeId={activeId} onChangePage={changePage} onImport={() => setCards(getCards())} cards={cards} onAudioReady={handleAudioReady} hidden={headerHidden} onPrepOpenChange={setBackgroundHidden} />
 
         <div
           onScroll={handleScroll}

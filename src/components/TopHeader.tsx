@@ -10,6 +10,7 @@ import { saveSentences } from '../lib/sentenceStorage'
 import { useTTS } from '../lib/useTTS'
 import { pushToast } from '../lib/toastStore'
 import { useBackClose } from '../hooks/useBackClose'
+import { getGlassMode } from '../lib/glassMode'
 
 interface Props {
   activeId: PageId
@@ -18,6 +19,10 @@ interface Props {
   cards: VocabEntry[]
   onAudioReady: (id: string) => void
   hidden?: boolean
+  // Notifies App to hide the background glass panes while the prepare-audio modal
+  // is open, so the modal's own pane wins the renderer's smallest-area pick and
+  // its rim/side light draws (same trick the word-detail modal uses).
+  onPrepOpenChange?: (open: boolean) => void
 }
 
 // Space between cards while preparing audio. Each card is 2 TTS requests; the
@@ -29,7 +34,8 @@ const PREP_SPACING_MS = 13000
 // Pair with radius={999}, a `pane` tint and a border/text colour per button.
 const MODAL_BTN = 'h-[46px] overflow-hidden font-instrument text-[15px] font-semibold border shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)]'
 
-export default function TopHeader({ activeId, onChangePage, onImport, cards, onAudioReady, hidden = false }: Props) {
+export default function TopHeader({ activeId, onChangePage, onImport, cards, onAudioReady, hidden = false, onPrepOpenChange }: Props) {
+  const glassMode = getGlassMode()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const settingsBtnRef = useRef<HTMLButtonElement>(null)
@@ -64,6 +70,9 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
   // Android back closes these overlays instead of exiting the app.
   useBackClose(settingsOpen, () => setSettingsOpen(false))
   useBackClose(prepConfirm, () => setPrepConfirm(false))
+
+  // Hide the background panes while the prepare-audio modal is open (see prop).
+  useEffect(() => { onPrepOpenChange?.(prepConfirm) }, [prepConfirm, onPrepOpenChange])
 
   useEffect(() => {
     if (!settingsOpen) return
@@ -288,8 +297,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         className="fixed inset-0 z-[110] flex items-center justify-center p-6"
         onClick={e => { if (e.target === e.currentTarget && !prepProgress) setPrepConfirm(false) }}
       >
-        {/* Blurred, dimmed backdrop to focus attention on the modal. */}
-        <div className="pointer-events-none absolute inset-0 z-0 bg-black/25 backdrop-blur-lg" />
+        {/* Dimmed backdrop to focus attention on the modal. In webgl mode it's a
+            flat tint only — a backdrop-blur here would blur (and wash out) the
+            per-element glass rim the canvas draws behind the panel. */}
+        <div className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/25' : 'bg-black/25 backdrop-blur-lg'}`} />
         <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[36px] p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
           <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
           <div className="relative z-10 flex flex-col gap-4">
