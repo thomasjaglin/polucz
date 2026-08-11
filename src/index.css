@@ -301,13 +301,8 @@ body {
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
-  /* Saturated gold→orange filled with mix-blend-screen — same treatment as an
-     active filter tag's colour blob, so it reads substantial rather than a faint
-     transparent wash. */
-  background: linear-gradient(135deg,
-    rgba(255, 188, 66, 0.92) 0%,
-    rgba(236, 116, 26, 0.88) 100%);
-  mix-blend-mode: screen;
+  /* Gold gradient from Figma (blurred bronze→orange→gold ellipse blob). */
+  background: url(/holo/button-gold.svg) center / cover no-repeat;
 }
 .holo-full button::after {
   content: '';
@@ -441,4 +436,31 @@ body {
     transparent 55%);
   mix-blend-mode: overlay;
   opacity: 0.6;
+}
+
+/* Glitter (glitter.png: white specks on black → color-dodge glows them). A soft
+   light band sweeps continuously across via an animated mask, so the sparkles
+   twinkle as the band passes. */
+.cosmos-glitter {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+  background: url(/holo/glitter.png) center / cover no-repeat;
+  mix-blend-mode: color-dodge;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(105deg,
+    transparent 28%, rgba(0,0,0,0.55) 44%, #000 50%, rgba(0,0,0,0.55) 56%, transparent 72%);
+          mask-image: linear-gradient(105deg,
+    transparent 28%, rgba(0,0,0,0.55) 44%, #000 50%, rgba(0,0,0,0.55) 56%, transparent 72%);
+  -webkit-mask-size: 300% 100%;
+          mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+  animation: glitterSweep 5.5s linear infinite;
+}
+@keyframes glitterSweep {
+  from { -webkit-mask-position: 0% center;   mask-position: 0% center; }
+  to   { -webkit-mask-position: 100% center; mask-position: 100% center; }
 }

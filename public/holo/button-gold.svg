@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 105.8 77.2697" preserveAspectRatio="none">
+  <defs>
+    <filter id="b" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <g filter="url(#b)">
+    <ellipse cx="38.6998" cy="30.9424" rx="20.3379" ry="11.5" transform="rotate(-25.2336 38.6998 30.9424)" fill="#8A2300"/>
+    <ellipse cx="36.0922" cy="53.5293" rx="4.96858" ry="2.80947" transform="rotate(-25.2336 36.0922 53.5293)" fill="#822101"/>
+    <ellipse cx="34.4" cy="54.8697" rx="26" ry="14" fill="#DD7A40" fill-opacity="0.74"/>
+    <ellipse cx="55.0056" cy="44.9583" rx="19" ry="8" transform="rotate(54.1844 55.0056 44.9583)" fill="#F3C362" fill-opacity="0.56"/>
+    <ellipse cx="78.4" cy="42.8678" rx="10" ry="11" fill="#FFC800"/>
+  </g>
+</svg>

@@ -33,6 +33,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
           {mastered && <div className="cosmos-holo-burn" aria-hidden="true" />}
           {mastered && <div className="cosmos-holo-top" aria-hidden="true" />}
           {mastered && <div className="cosmos-rays" aria-hidden="true" />}
+          {mastered && <div className="cosmos-glitter" aria-hidden="true" />}
           {mastered && <div className="cosmos-glare" aria-hidden="true" />}
           {mastered && <div className="holo-edge" aria-hidden="true" />}
           <div className="relative z-10 flex items-start justify-between gap-3">
