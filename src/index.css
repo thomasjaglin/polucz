@@ -288,18 +288,30 @@ body {
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-/* Golden shine on the mastered modal's action buttons — same tilt principle as
-   the card foil (positioned by --holo-shift), but a warm gold sweep rather than
-   the prismatic one. Sits above each button's glass pane (z-0) and below its
-   content (z-10). */
+/* Mastered modal action buttons: a substantial gold→orange gradient base so they
+   stand out from the neutral glass modal, plus a warm gold shine that sweeps with
+   the tilt (--holo-shift, the same variable that drives the card foil). Layering
+   inside each button: glass pane (z-0) → gold base (z-1) → tilt sweep (z-2) →
+   content/text (z-10). */
 .holo-full button { position: relative; }
-.holo-full button::after {
+.holo-full button::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
+  background: linear-gradient(135deg,
+    rgba(255, 196, 88, 0.48) 0%,
+    rgba(245, 130, 34, 0.42) 100%);
+}
+.holo-full button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
   background: linear-gradient(105deg,
     transparent 40%,
     rgba(255, 210, 120, 0.40) 47%,
