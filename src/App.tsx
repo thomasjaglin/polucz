@@ -309,7 +309,7 @@ export default function App() {
       {overlayMounted && modalEntry && (
         <WordDetailModal
           entry={modalEntry}
-          mastered={(() => { const r = getAllReviews()[modalEntry.id]; return !!r && isConquered(r) })()}
+          mastered={/* TEST (holo-tilt): forced true to preview tilt holo; revert to the isConquered check before merge */ true}
           flipIn={contentFlipIn}
           overlayVisible={overlayVisible}
           onClose={handleCloseModal}
