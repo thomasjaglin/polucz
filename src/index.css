@@ -379,7 +379,8 @@ body {
 /* The two galaxy foil copies — cover-sized (never stretched), fixed position,
    revealed through the ray gradient's alpha (so foil shows inside the rays). */
 .cosmos-holo,
-.cosmos-holo-burn {
+.cosmos-holo-burn,
+.cosmos-holo-top {
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -406,6 +407,12 @@ body {
   background-image: url(/holo/cosmos-middle.png);
   mix-blend-mode: color-burn;
   opacity: 0.6;
+}
+/* Third layer: the fine grain sparkle, color-burn for subtle dark detail. */
+.cosmos-holo-top {
+  background-image: url(/holo/cosmos-top.png);
+  mix-blend-mode: color-burn;
+  opacity: 0.5;
 }
 /* The colour rays themselves, aligned to the same gradient + slide. */
 .cosmos-rays {
