@@ -179,7 +179,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
   const rows = VERB_PERSONS.map((p, i) => [p, present[i] ?? '', past[i] ?? '', past2[i] ?? ''])
   return (
     <>
-      <div className="mb-8 flex w-full flex-col">
+      <div className="mb-4 flex w-full flex-col">
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'present', 'past m.', 'past f.']}
@@ -189,7 +189,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
         />
       </div>
 
-      <div className="my-6 h-[1px] w-full bg-[#F8FAFC]/10" />
+      <div className="my-4 h-[1px] w-full bg-[#F8FAFC]/10" />
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
@@ -237,7 +237,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
   // the block entirely in that case.
   const gradable = !!(entry.comparative || entry.superlative)
   return (
-    <div className="mb-8 flex w-full flex-col gap-6">
+    <div className="mb-4 flex w-full flex-col gap-4">
       {/* Gradation: positive (the lemma), comparative, superlative. */}
       {gradable && (
         <>
@@ -373,7 +373,7 @@ function ExamplesSection({ word }: { word: string }) {
 
   if (examples) {
     return (
-      <div className="mt-6 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-6">
+      <div className="mt-4 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-4">
         <div className="flex items-center justify-between">
           <span className="font-instrument text-[14px] text-[#F8FAFC]/20">
             Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
@@ -406,7 +406,7 @@ function ExamplesSection({ word }: { word: string }) {
       disabled={loading}
       radius={24}
       pane="bg-[#F8FAFC]/5"
-      className="mt-8 w-full py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
+      className="mt-4 w-full py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
     >
       {loading ? (
         <span className="material-symbols-rounded animate-spin text-[#F8FAFC]/40">progress_activity</span>
@@ -665,7 +665,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               <h2 className="mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF]">{entry.en}</h2>
               {/* Secondary senses filled during enrichment */}
               {entry.definitions && entry.definitions.length > 0 && (
-                <p className="mt-1.5 font-instrument text-[14px] leading-snug text-[#F8FAFC]/45">
+                <p className="font-instrument text-[14px] leading-snug text-[#F8FAFC]/45">
                   {entry.definitions.join(' · ')}
                 </p>
               )}
