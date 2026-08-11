@@ -342,28 +342,35 @@ body {
 }
 
 /* ─── Cosmos holographic (poke-holo style) ─────────────────────────────────────
-   A galaxy foil for mastered cards (source art in /public/holo). Two starfield
-   layers parallax-shift in opposite directions with the tilt (--holo-shift X /
-   --holo-y Y); color-dodge turns the black backing transparent so the stars glow
-   over the card. A pointer/tilt "glare" (bright spot) rides on top. */
-.cosmos-holo {
+   A galaxy foil for mastered cards (source art in /public/holo). Two blended
+   copies over the card's own colour gradient: cosmos-bottom (stars on black) with
+   color-dodge lights the stars up and drops the black out; cosmos-middle (colour
+   on white) with color-burn adds the dark/coloured depth and drops the white out.
+   Between them the base gradient still reads. Images are `cover`-sized (never
+   stretched) and masked to the rounded card via border-radius. They parallax in
+   opposite directions with the tilt (--holo-shift X / --holo-y Y); a glare rides
+   on top. */
+.cosmos-holo,
+.cosmos-holo-burn {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
-  background-image:
-    url(/holo/cosmos-top.png),
-    url(/holo/cosmos-bottom.png);
-  background-repeat: repeat, repeat;
-  background-size: 150% 150%, 210% 210%;
-  background-position:
-    var(--holo-shift, 50%) var(--holo-y, 50%),
-    calc(100% - var(--holo-shift, 50%)) calc(100% - var(--holo-y, 50%));
-  background-blend-mode: color-dodge;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.cosmos-holo {
+  background-image: url(/holo/cosmos-bottom.png);
+  background-position: var(--holo-shift, 50%) var(--holo-y, 50%);
   mix-blend-mode: color-dodge;
   opacity: 0.9;
-  filter: brightness(1.15) contrast(1.2) saturate(1.5);
+}
+.cosmos-holo-burn {
+  background-image: url(/holo/cosmos-middle.png);
+  background-position: calc(100% - var(--holo-shift, 50%)) calc(100% - var(--holo-y, 50%));
+  mix-blend-mode: color-burn;
+  opacity: 0.85;
 }
 
 .cosmos-glare {
