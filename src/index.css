@@ -174,11 +174,13 @@ body {
       rgba(150, 255, 190, 0.34) 21%,
       rgba(255, 215, 120, 0.42) 28%);
   background-size: 300% 300%, 220% 220%;
+  /* Position + hue follow the device tilt (see holoMotion.ts) — no auto-loop. */
+  background-position: var(--holo-shift, 50%) 50%, var(--holo-shift, 50%) 50%;
+  filter: hue-rotate(var(--holo-hue, 0deg)) brightness(1.25) saturate(1.75) contrast(1.2);
   mix-blend-mode: color-dodge;
-  opacity: 0.4;                  /* subtle at rest (not 0 → no paint-trigger on scroll) */
+  opacity: 0.4;                  /* subtle at rest */
   transition: opacity 0.6s ease;
   will-change: filter, background-position;
-  animation: holoShift 16s linear infinite;
 }
 
 /* Glitter: a static sparkle grain (SVG fractal noise, thresholded to bright
@@ -217,27 +219,17 @@ body {
     rgba(0,0,0,0.20) 69%, transparent 73%);
   -webkit-mask-size: 300% 300%;
           mask-size: 300% 300%;
+  /* Same tilt-driven position as the sheen so streak + sheen stay one light. */
+  -webkit-mask-position: var(--holo-shift, 50%) 50%;
+          mask-position: var(--holo-shift, 50%) 50%;
   -webkit-mask-repeat: no-repeat;
           mask-repeat: no-repeat;
   will-change: mask-position;
-  animation: holoGlitter 16s linear infinite;   /* must match .holo-shimmer's holoShift */
-}
-/* Mirrors holoShift's background-position path so the streak and the sheen stay
-   phase-locked (both start at mount with equal linear periods). */
-@keyframes holoGlitter {
-  0%   { -webkit-mask-position: 0% 50%;   mask-position: 0% 50%; }
-  50%  { -webkit-mask-position: 100% 50%; mask-position: 100% 50%; }
-  100% { -webkit-mask-position: 0% 50%;   mask-position: 0% 50%; }
 }
 
-/* Light travelling around the card stroke: a rotating gold/prismatic conic
-   gradient masked to a thin border ring. --holo-angle is animated via
-   @property; where unsupported it degrades to a static prismatic border. */
-@property --holo-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
+/* Light travelling around the card stroke: a gold/prismatic conic gradient
+   masked to a thin border ring, its start angle (--holo-edge-angle) set from
+   the device tilt / pointer. */
 .holo-edge {
   position: absolute;
   inset: 0;
@@ -245,7 +237,8 @@ body {
   pointer-events: none;
   z-index: 2;
   padding: 1.5px;
-  background: conic-gradient(from var(--holo-angle),
+  /* Bright point on the border ring follows the tilt (see holoMotion.ts). */
+  background: conic-gradient(from var(--holo-edge-angle, 0deg),
     rgba(255, 225, 150, 0.95),
     rgba(255, 130, 205, 0.85),
     rgba(130, 205, 255, 0.85),
@@ -258,8 +251,7 @@ body {
   mix-blend-mode: screen;
   opacity: 0.85;
   transition: opacity 0.6s ease;
-  will-change: --holo-angle;
-  animation: holoEdge 14s linear infinite;
+  will-change: background;
 }
 
 /* Hover/tap on list cards: full intensity, a touch quicker. Shimmer + glitter
@@ -269,47 +261,21 @@ body {
 .card-mastered:hover .holo-glitter,
 .card-mastered:active .holo-glitter {
   opacity: 1;
-  animation-duration: 9s;
 }
 .card-mastered:hover .holo-edge,
 .card-mastered:active .holo-edge {
   opacity: 1;
-  animation-duration: 8s;
 }
 
 /* Modal / celebration: the foil layers ON TOP of the card's gradient colours —
    kept translucent so the original per-type gradient still reads underneath. */
 .holo-full .holo-shimmer {
   opacity: 0.7;
-  animation-duration: 12s;
-}
-.holo-full .holo-glitter {
-  animation-duration: 12s;   /* matches the shimmer so the light reads as one */
 }
 .holo-full .holo-edge {
   opacity: 1;
-  animation-duration: 11s;
 }
 
-/* Motion boost is applied via each animation's playbackRate (see holoMotion.ts),
-   not a duration swap — changing duration recomputes the phase and jumps, while
-   playbackRate scales the running timeline smoothly. */
-
-@keyframes holoShift {
-  0% {
-    filter: hue-rotate(0deg) brightness(1.15) saturate(1.6) contrast(1.15);
-    background-position: 0% 50%, 0% 50%;
-  }
-  50% {
-    filter: hue-rotate(200deg) brightness(1.35) saturate(2) contrast(1.25);
-    background-position: 100% 50%, 100% 50%;
-  }
-  100% {
-    filter: hue-rotate(360deg) brightness(1.15) saturate(1.6) contrast(1.15);
-    background-position: 0% 50%, 0% 50%;
-  }
-}
-
-@keyframes holoEdge {
-  to { --holo-angle: 360deg; }
-}
+/* The holographic layers are positioned from the device tilt / pointer via CSS
+   variables (see holoMotion.ts) — there are no looping keyframes; the highlight
+   only moves when the phone (or pointer) does. */

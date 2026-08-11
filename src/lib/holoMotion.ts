@@ -1,62 +1,66 @@
-// Speeds up the mastered-card holographic animations on scroll / device
-// movement — smoothly. It never touches animation-duration (which recomputes
-// the phase and visibly jumps); instead it eases each running animation's
-// playbackRate up on activity and back down to 1 when idle. The keyframes loop
-// continuously; only their speed changes, so there's no reset.
+// Drives the mastered-card holographic highlight from the device's TILT (phone)
+// or the pointer position (desktop) instead of playing on a loop — the sheen,
+// glitter and edge light follow how you hold the phone, like a real foil card.
+// It writes smoothed CSS variables on :root that the .holo-* layers read:
+//   --holo-shift       sheen / glitter horizontal position (0%–100%)
+//   --holo-edge-angle  where the bright point sits on the border ring
+//   --holo-hue         hue-rotate applied to the foil
+// Nothing animates while the phone is still.
 
-const SELECTOR = '.holo-shimmer, .holo-glitter, .holo-edge'
-const FAST_RATE = 3.2
-const REST_RATE = 1
-const IDLE_MS = 500        // ease back to rest this long after the last activity
-
+const EASE = 0.16                 // per-frame easing toward the target (0..1)
 let installed = false
-let targetRate = REST_RATE
-let currentRate = REST_RATE
-let lastActivity = 0
+let tX = 0.5, cX = 0.5            // horizontal axis (gamma / pointer x), 0..1
+let tH = 0.5, cH = 0.5            // hue axis (beta / pointer y), 0..1
 let rafId: number | null = null
+let usingTilt = false            // once device tilt fires, ignore the pointer
 
-function apply(rate: number) {
-  document.querySelectorAll<HTMLElement>(SELECTOR).forEach(el => {
-    el.getAnimations().forEach(a => { a.playbackRate = rate })
-  })
+const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n)
+
+function apply() {
+  const s = document.documentElement.style
+  s.setProperty('--holo-shift', (cX * 100).toFixed(1) + '%')
+  s.setProperty('--holo-edge-angle', (cX * 360).toFixed(0) + 'deg')
+  s.setProperty('--holo-hue', ((cH - 0.5) * 240).toFixed(0) + 'deg')
 }
 
 function tick() {
-  if (performance.now() - lastActivity > IDLE_MS) targetRate = REST_RATE
-  // Exponential ease toward the target rate — smooth acceleration/deceleration.
-  currentRate += (targetRate - currentRate) * 0.1
-  if (Math.abs(currentRate - targetRate) < 0.01) currentRate = targetRate
-  apply(currentRate)
-  if (currentRate !== REST_RATE || targetRate !== REST_RATE) {
-    rafId = requestAnimationFrame(tick)
-  } else {
-    rafId = null   // settled at rest; new cards mount at playbackRate 1 already
+  cX += (tX - cX) * EASE
+  cH += (tH - cH) * EASE
+  apply()
+  if (Math.abs(tX - cX) < 0.0008 && Math.abs(tH - cH) < 0.0008) {
+    cX = tX; cH = tH; apply()
+    rafId = null            // settled — nothing moves until the next input
+    return
   }
+  rafId = requestAnimationFrame(tick)
 }
 
-function boost() {
-  lastActivity = performance.now()
-  targetRate = FAST_RATE
-  if (rafId == null) rafId = requestAnimationFrame(tick)
-}
+function kick() { if (rafId == null) rafId = requestAnimationFrame(tick) }
 
 export function initHoloMotion() {
   if (installed) return
   installed = true
+  apply()
 
-  // Page content scrolls inside an overflow container, and scroll events don't
-  // bubble — capture on document to catch it from any scroller.
-  document.addEventListener('scroll', boost, { capture: true, passive: true })
-
-  // Device movement (Android WebView fires devicemotion without a permission
-  // prompt; desktop/unsupported never triggers this path). Threshold on rotation
-  // rate so resting gravity / tiny jitter doesn't keep it always-on.
-  if (typeof window !== 'undefined' && 'ondevicemotion' in window) {
-    window.addEventListener('devicemotion', (e) => {
-      const r = e.rotationRate
-      if (!r) return
-      const mag = Math.abs(r.alpha ?? 0) + Math.abs(r.beta ?? 0) + Math.abs(r.gamma ?? 0)
-      if (mag > 60) boost()
+  // Device tilt (Android WebView fires this without a permission prompt; desktop
+  // supports the API but never fires it, so it harmlessly no-ops there). gamma is
+  // left/right lean, beta is front/back.
+  if (typeof window !== 'undefined' && 'ondeviceorientation' in window) {
+    window.addEventListener('deviceorientation', e => {
+      if (e.gamma == null && e.beta == null) return
+      usingTilt = true
+      tX = clamp01(((e.gamma ?? 0) + 40) / 80)   // -40°..40° → 0..1
+      tH = clamp01(((e.beta ?? 45) - 15) / 75)   //  15°..90° → 0..1
+      kick()
     }, { passive: true })
   }
+
+  // Desktop fallback so the effect is visible/testable without a gyroscope.
+  // Suppressed once real tilt data arrives (a phone touch also fires pointers).
+  window.addEventListener('pointermove', e => {
+    if (usingTilt) return
+    tX = clamp01(e.clientX / window.innerWidth)
+    tH = clamp01(e.clientY / window.innerHeight)
+    kick()
+  }, { passive: true })
 }
