@@ -357,24 +357,24 @@ body {
 :root {
   --cosmos-rays: linear-gradient(105deg,
     transparent 0%,
-    rgba(255, 95, 120, 0.80) 4%,
-    transparent 8%,
-    transparent 12%,
-    rgba(255, 195, 105, 0.66) 15%, rgba(255, 170, 85, 0.66) 20%,
-    transparent 25%,
-    rgba(150, 255, 185, 0.58) 29%,
-    transparent 33%,
-    rgba(120, 195, 255, 0.78) 38%, rgba(120, 160, 255, 0.78) 45%,
-    transparent 52%,
-    rgba(210, 140, 255, 0.74) 57%,
-    transparent 62%,
-    rgba(255, 120, 200, 0.62) 68%,
-    transparent 73%,
-    rgba(120, 255, 220, 0.56) 80%,
-    transparent 85%,
-    rgba(255, 210, 120, 0.70) 91%,
-    transparent 96%,
-    rgba(255, 95, 120, 0.78) 100%);
+    rgba(255, 95, 120, 0.62) 4%,
+    transparent 7%,
+    transparent 13%,
+    rgba(255, 185, 95, 0.52) 16%,
+    transparent 20%,
+    rgba(150, 255, 185, 0.46) 28%,
+    transparent 32%,
+    rgba(120, 180, 255, 0.60) 40%,
+    transparent 45%,
+    rgba(210, 140, 255, 0.56) 54%,
+    transparent 59%,
+    rgba(255, 120, 200, 0.50) 66%,
+    transparent 71%,
+    rgba(120, 255, 220, 0.44) 78%,
+    transparent 82%,
+    rgba(255, 205, 115, 0.54) 89%,
+    transparent 94%,
+    rgba(255, 95, 120, 0.60) 100%);
 }
 /* The two galaxy foil copies — cover-sized (never stretched), fixed position,
    revealed through the ray gradient's alpha (so foil shows inside the rays). */
@@ -426,7 +426,7 @@ body {
   background-repeat: no-repeat;
   background-position: var(--holo-shift, 50%) center;
   mix-blend-mode: color-dodge;
-  opacity: 0.65;
+  opacity: 0.55;
 }
 
 .cosmos-glare {
