@@ -307,9 +307,12 @@ body {
   border-radius: inherit;
   pointer-events: none;
   z-index: 1;
-  /* Gold gradient from Figma (blurred bronze→orange→gold ellipse blob), stretched
-     to fill the button. */
-  background: url(/holo/button-gold.svg) center / 100% 100% no-repeat;
+  /* Gold gradient from Figma (blurred bronze→orange→gold ellipse blob) over an
+     OPAQUE gold base — the opaque base masks the cosmos holo from showing through
+     the button's glass, so the button reads as clean gold. */
+  background:
+    url(/holo/button-gold.svg) center / 100% 100% no-repeat,
+    linear-gradient(105deg, #7A2000 0%, #C4671F 42%, #E7B23F 78%, #FFC800 100%);
 }
 .holo-full button::after {
   content: '';
