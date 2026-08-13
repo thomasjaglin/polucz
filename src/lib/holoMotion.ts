@@ -22,6 +22,12 @@ function apply() {
   s.setProperty('--holo-y', (cH * 100).toFixed(1) + '%')       // Y axis (beta / pointer y)
   s.setProperty('--holo-edge-angle', (cX * 360).toFixed(0) + 'deg')
   s.setProperty('--holo-hue', ((cH - 0.5) * 240).toFixed(0) + 'deg')
+  // pokemon-cards-css pointer variables (drive the cosmos shine + glare).
+  s.setProperty('--pointer-x', (cX * 100).toFixed(1) + '%')
+  s.setProperty('--pointer-y', (cH * 100).toFixed(1) + '%')
+  s.setProperty('--pointer-from-left', cX.toFixed(3))
+  s.setProperty('--pointer-from-top', cH.toFixed(3))
+  s.setProperty('--pointer-from-center', Math.min(1, Math.hypot(cX - 0.5, cH - 0.5) * 2).toFixed(3))
 }
 
 function tick() {

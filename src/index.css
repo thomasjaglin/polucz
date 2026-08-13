@@ -353,117 +353,102 @@ body {
    colour layer and the foil mask, so the two stay perfectly aligned. Its own
    transparent gaps ARE the mask (alpha), and it slides with the tilt. */
 :root {
-  --cosmos-rays: linear-gradient(105deg,
-    transparent 0%,
-    rgba(255, 95, 120, 0.62) 4%,
-    transparent 7%,
-    transparent 13%,
-    rgba(255, 185, 95, 0.52) 16%,
-    transparent 20%,
-    rgba(150, 255, 185, 0.46) 28%,
-    transparent 32%,
-    rgba(120, 180, 255, 0.60) 40%,
-    transparent 45%,
-    rgba(210, 140, 255, 0.56) 54%,
-    transparent 59%,
-    rgba(255, 120, 200, 0.50) 66%,
-    transparent 71%,
-    rgba(120, 255, 220, 0.44) 78%,
-    transparent 82%,
-    rgba(255, 205, 115, 0.54) 89%,
-    transparent 94%,
-    rgba(255, 95, 120, 0.60) 100%);
+  --card-opacity: 1;
+  /* The 82° holographic rainbow, reused across all three shine layers. --space
+     (set on .cosmos-shine) controls the band width. From poke-holo. */
+  --cosmos-rainbow: repeating-linear-gradient(82deg,
+    hsl(53, 65%, 60%)  calc(var(--space, 4%) * 1),
+    hsl(93, 56%, 50%)  calc(var(--space, 4%) * 2),
+    hsl(176, 54%, 49%) calc(var(--space, 4%) * 3),
+    hsl(228, 59%, 55%) calc(var(--space, 4%) * 4),
+    hsl(283, 60%, 55%) calc(var(--space, 4%) * 5),
+    hsl(326, 59%, 51%) calc(var(--space, 4%) * 6),
+    hsl(326, 59%, 51%) calc(var(--space, 4%) * 7),
+    hsl(283, 60%, 55%) calc(var(--space, 4%) * 8),
+    hsl(228, 59%, 55%) calc(var(--space, 4%) * 9),
+    hsl(176, 54%, 49%) calc(var(--space, 4%) * 10),
+    hsl(93, 56%, 50%)  calc(var(--space, 4%) * 11),
+    hsl(53, 65%, 60%)  calc(var(--space, 4%) * 12));
 }
-/* The two galaxy foil copies — cover-sized (never stretched), fixed position,
-   revealed through the ray gradient's alpha (so foil shows inside the rays). */
-.cosmos-holo,
-.cosmos-holo-burn,
-.cosmos-holo-top {
+/* ─── Cosmos holo shine, adapted from pokemon-cards-css (cosmos-holo.css) ──────
+   Three layers (the element + its ::before/::after). Each is a cosmos galaxy
+   image blended WITH the 82° rainbow via background-blend-mode; the rainbow moves
+   with the pointer at a different rate per layer (parallax). mix-blend then
+   composites each whole layer over the card. Pointer vars come from holoMotion.ts. */
+.cosmos-shine,
+.cosmos-shine::before,
+.cosmos-shine::after {
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  background-size: cover, 400% 900%, cover;
+}
+.cosmos-shine {
+  --space: 4%;
   z-index: 1;
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
-  -webkit-mask-image: var(--cosmos-rays);
-          mask-image: var(--cosmos-rays);
-  -webkit-mask-size: 210% 100%;
-          mask-size: 210% 100%;
-  -webkit-mask-position: var(--holo-shift, 50%) center;
-          mask-position: var(--holo-shift, 50%) center;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-}
-.cosmos-holo {
-  background-image: url(/holo/cosmos-bottom.png);
+  background-image:
+    url(/holo/cosmos-bottom.png),
+    var(--cosmos-rainbow),
+    radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+      hsla(180, 100%, 89%, 0.5) 5%, hsla(180, 14%, 57%, 0.3) 40%, hsl(0, 0%, 0%) 130%);
+  background-blend-mode: color-burn, multiply;
+  background-position:
+    center center,
+    calc(10% + (var(--pointer-from-left, 0.5) * 80%)) calc(10% + (var(--pointer-from-top, 0.5) * 80%)),
+    center center;
+  filter: brightness(1) contrast(1) saturate(0.8);
   mix-blend-mode: color-dodge;
-  opacity: 0.75;
 }
-.cosmos-holo-burn {
-  background-image: url(/holo/cosmos-middle.png);
-  mix-blend-mode: color-burn;
-  opacity: 0.6;
-}
-/* Third layer: the fine grain sparkle, color-burn for subtle dark detail. */
-.cosmos-holo-top {
-  background-image: url(/holo/cosmos-top.png);
-  mix-blend-mode: color-burn;
-  opacity: 0.5;
-}
-/* The colour rays themselves, aligned to the same gradient + slide. */
-.cosmos-rays {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
+.cosmos-shine::before {
   z-index: 2;
-  background-image: var(--cosmos-rays);
-  background-size: 210% 100%;
-  background-repeat: no-repeat;
-  background-position: var(--holo-shift, 50%) center;
-  mix-blend-mode: color-dodge;
-  opacity: 0.55;
-}
-
-.cosmos-glare {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 2;
-  background: radial-gradient(farthest-corner circle at var(--holo-shift, 50%) var(--holo-y, 50%),
-    rgba(255, 255, 255, 0.32) 8%,
-    rgba(255, 235, 200, 0.12) 26%,
-    transparent 55%);
+  background-image:
+    url(/holo/cosmos-middle.png),
+    var(--cosmos-rainbow);
+  background-blend-mode: lighten, multiply;
+  background-position:
+    center center,
+    calc(15% + (var(--pointer-from-left, 0.5) * 70%)) calc(15% + (var(--pointer-from-top, 0.5) * 70%));
+  filter: brightness(1.25) contrast(1.75) saturate(0.8);
   mix-blend-mode: overlay;
-  opacity: 0.6;
+}
+.cosmos-shine::after {
+  z-index: 3;
+  background-image:
+    url(/holo/cosmos-top.png),
+    var(--cosmos-rainbow);
+  background-blend-mode: multiply, multiply;
+  background-position:
+    center center,
+    calc(20% + (var(--pointer-from-left, 0.5) * 60%)) calc(20% + (var(--pointer-from-top, 0.5) * 60%));
+  filter: brightness(1.25) contrast(1.75) saturate(0.8);
+  mix-blend-mode: multiply;
 }
 
-/* Glitter (glitter.png: white specks on black → color-dodge glows them). A soft
-   light band sweeps continuously across via an animated mask, so the sparkles
-   twinkle as the band passes. */
-.cosmos-glitter {
+/* Pointer glare — two radial highlights following the tilt point. */
+.cosmos-glare,
+.cosmos-glare::after {
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  z-index: 3;
-  background: url(/holo/glitter.png) center / cover no-repeat;
-  mix-blend-mode: color-dodge;
-  opacity: 0.5;
-  -webkit-mask-image: linear-gradient(105deg,
-    transparent 28%, rgba(0,0,0,0.55) 44%, #000 50%, rgba(0,0,0,0.55) 56%, transparent 72%);
-          mask-image: linear-gradient(105deg,
-    transparent 28%, rgba(0,0,0,0.55) 44%, #000 50%, rgba(0,0,0,0.55) 56%, transparent 72%);
-  -webkit-mask-size: 300% 100%;
-          mask-size: 300% 100%;
-  -webkit-mask-repeat: no-repeat;
-          mask-repeat: no-repeat;
-  animation: glitterSweep 5.5s linear infinite;
 }
-@keyframes glitterSweep {
-  from { -webkit-mask-position: 0% center;   mask-position: 0% center; }
-  to   { -webkit-mask-position: 100% center; mask-position: 100% center; }
+.cosmos-glare {
+  z-index: 4;
+  background-image: radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    hsla(204, 100%, 95%, 0.8) 5%, hsla(250, 15%, 20%, 1) 150%);
+  filter: brightness(0.75) contrast(2) saturate(2);
+  mix-blend-mode: overlay;
+  opacity: calc(var(--card-opacity, 1) * (0.25 + var(--pointer-from-center, 0.3)));
 }
+.cosmos-glare::after {
+  z-index: 1;
+  background-image: radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    hsl(280, 100%, 96%) 5%, hsl(0, 0%, 10%) 60%);
+  filter: brightness(0.75) contrast(2.5) saturate(2);
+  mix-blend-mode: soft-light;
+  opacity: calc(1 - var(--pointer-from-top, 0.5) * 0.75);
+}
+

@@ -566,11 +566,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
             {/* Holographic shimmer for mastered words — sits above the glass
                 (z-0) and below the content (z-10). */}
-            {mastered && <div className="cosmos-holo" aria-hidden="true" />}
-            {mastered && <div className="cosmos-holo-burn" aria-hidden="true" />}
-            {mastered && <div className="cosmos-holo-top" aria-hidden="true" />}
-            {mastered && <div className="cosmos-rays" aria-hidden="true" />}
-            {mastered && <div className="cosmos-glitter" aria-hidden="true" />}
+            {mastered && <div className="cosmos-shine" aria-hidden="true" />}
             {mastered && <div className="cosmos-glare" aria-hidden="true" />}
             {mastered && <div className="holo-edge" aria-hidden="true" />}
             <div className="relative z-10 flex flex-col p-8">

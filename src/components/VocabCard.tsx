@@ -29,11 +29,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
         }`}
       >
         <GlassPane borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
-          {mastered && <div className="cosmos-holo" aria-hidden="true" />}
-          {mastered && <div className="cosmos-holo-burn" aria-hidden="true" />}
-          {mastered && <div className="cosmos-holo-top" aria-hidden="true" />}
-          {mastered && <div className="cosmos-rays" aria-hidden="true" />}
-          {mastered && <div className="cosmos-glitter" aria-hidden="true" />}
+          {mastered && <div className="cosmos-shine" aria-hidden="true" />}
           {mastered && <div className="cosmos-glare" aria-hidden="true" />}
           {mastered && <div className="holo-edge" aria-hidden="true" />}
           <div className="relative z-10 flex items-start justify-between gap-3">
