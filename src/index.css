@@ -392,16 +392,16 @@ body {
 .cosmos-shine {
   --space: 4%;
   z-index: 1;
+  /* No black radial "reveal circle" here (poke uses it to gate the holo to the
+     pointer over bright card art) — we want the colour gradient always visible,
+     so the galaxy+rainbow sit over the whole card. */
   background-image:
     url(/holo/cosmos-bottom.png),
-    var(--cosmos-rainbow),
-    radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-      hsla(180, 100%, 89%, 0.5) 5%, hsla(180, 14%, 57%, 0.3) 40%, hsl(0, 0%, 0%) 130%);
-  background-blend-mode: color-burn, multiply;
+    var(--cosmos-rainbow);
+  background-blend-mode: color-burn;
   background-position:
     center center,
-    calc(10% + (var(--pointer-from-left, 0.5) * 80%)) calc(10% + (var(--pointer-from-top, 0.5) * 80%)),
-    center center;
+    calc(10% + (var(--pointer-from-left, 0.5) * 80%)) calc(10% + (var(--pointer-from-top, 0.5) * 80%));
   filter: brightness(1) contrast(1) saturate(0.8);
   mix-blend-mode: color-dodge;
 }

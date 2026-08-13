@@ -13,6 +13,15 @@ import { getGlassMode } from '../lib/glassMode'
 import { useBackClose } from '../hooks/useBackClose'
 import { pushToast } from '../lib/toastStore'
 
+// Full-coverage per-type gradient shown behind the holo on mastered cards — the
+// always-visible "illustration" the cosmos foil sits on (poke-holo's card art).
+const MASTERED_BASE: Record<string, string> = {
+  verb: 'linear-gradient(135deg, #9B4FB0, #3A3AB5 55%, #1FB4CC)',
+  noun: 'linear-gradient(135deg, #8A2E2E, #D07A2A 55%, #A0A830)',
+  adjective: 'linear-gradient(135deg, #1A5A30, #2AA840 55%, #145A3A)',
+  unknown: 'linear-gradient(135deg, #3A3A44, #5A5A66)',
+}
+
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const definitions = Array.isArray(data.definitions) ? (data.definitions as string[]) : entry.definitions
   const base = { ...entry, enriched: true, definitions }
@@ -541,6 +550,11 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
           <div className={`relative flex w-full flex-col rounded-[36px] ${mastered ? 'card-mastered holo-full' : ''}`}>
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
             <div className="absolute inset-0 overflow-hidden rounded-[36px]">
+              {/* Mastered: a solid per-type gradient base so the holo always has a
+                  colourful "illustration" to sit on (not black). */}
+              {mastered && (
+                <div className="absolute inset-0" style={{ background: MASTERED_BASE[entry.type] ?? MASTERED_BASE.unknown }} />
+              )}
               {entry.type === 'verb' && (
                 <>
                   <div className="absolute left-[-5%] top-[-10%] h-[55%] w-[65%] rounded-full bg-[#8C3FA0]/80 blur-3xl mix-blend-screen" />
