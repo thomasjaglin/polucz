@@ -387,7 +387,9 @@ body {
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background-size: cover, 400% 900%, cover;
+  /* cosmos image scaled down (tiles) so the stars read smaller; rainbow kept big. */
+  background-size: 50%, 400% 900%, cover;
+  background-repeat: repeat;
 }
 .cosmos-shine {
   --space: 4%;
