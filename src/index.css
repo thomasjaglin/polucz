@@ -430,29 +430,3 @@ body {
   mix-blend-mode: multiply;
 }
 
-/* Pointer glare — two radial highlights following the tilt point. */
-.cosmos-glare,
-.cosmos-glare::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-}
-.cosmos-glare {
-  z-index: 4;
-  background-image: radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-    hsla(204, 100%, 95%, 0.8) 5%, hsla(250, 15%, 20%, 1) 150%);
-  filter: brightness(0.75) contrast(2) saturate(2);
-  mix-blend-mode: overlay;
-  opacity: calc(var(--card-opacity, 1) * (0.25 + var(--pointer-from-center, 0.3)));
-}
-.cosmos-glare::after {
-  z-index: 1;
-  background-image: radial-gradient(farthest-corner circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
-    hsl(280, 100%, 96%) 5%, hsl(0, 0%, 10%) 60%);
-  filter: brightness(0.75) contrast(2.5) saturate(2);
-  mix-blend-mode: soft-light;
-  opacity: calc(1 - var(--pointer-from-top, 0.5) * 0.75);
-}
-
