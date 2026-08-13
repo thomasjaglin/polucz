@@ -286,6 +286,10 @@ body {
    bright foil (applies to both the list card and the holo-full modal card). */
 .card-mastered {
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
+  /* Contain the holo mix-blend layers to the card's own stack (the blob gradient
+     "illustration" + glass), so the cosmos effect composites over that rather than
+     the page/modal backdrop behind it — like poke-holo's isolated card front. */
+  isolation: isolate;
 }
 
 /* Mastered modal action buttons: a substantial gold→orange gradient base so they
