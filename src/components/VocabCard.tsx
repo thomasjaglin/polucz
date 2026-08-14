@@ -43,7 +43,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
           <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
-                <span lang="pl" className="hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC]">
+                <span lang="pl" className={`hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC] ${mastered ? 'holo-text' : ''}`}>
                   {entry.pl}
                 </span>
                 {mastered && (

@@ -656,7 +656,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             <div className="mb-8 flex flex-col gap-1">
               <div className="flex min-w-0 items-start gap-3">
                 <h1 lang="pl" className="hyphens-auto break-words font-instrument text-[42px] font-bold leading-none tracking-tight text-[#F8FAFC]">
-                  {entry.pl}
+                  {mastered ? <span className="holo-text">{entry.pl}</span> : entry.pl}
                   {entry.type === 'noun' && (
                     <span className="ml-3 text-[24px] font-medium italic text-[#e879f9]">{entry.gender}</span>
                   )}

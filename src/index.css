@@ -377,9 +377,10 @@ body {
 /* Iridescent, tilt-reactive fill for the mastered star and the populate/audio
    ticks — a prismatic gradient clipped to the glyph, swept by --holo-shift so it
    shimmers as the phone tilts (or the pointer moves on desktop). */
-.holo-icon {
+.holo-icon,
+.holo-text {
   /* Mostly white with a soft iridescent band that sweeps across on tilt
-     (--holo-shift) — clipped to the glyph. */
+     (--holo-shift) — clipped to the glyph/text. */
   background: linear-gradient(110deg,
     #ffffff 0%, #ffffff 40%,
     #ffe6b0 45%, #ffb8e6 48%, #b0dcff 50%, #bfffd6 52%, #ffe6b0 55%,
