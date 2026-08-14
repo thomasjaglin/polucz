@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import { tagGradients } from '../data/gradients'
 import {
   type VocabEntry, type VocabVerb, type VocabNoun, type VocabAdjective, type VocabUnknown,
@@ -555,7 +555,10 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
           </GlassButton>
         <div className={`relative w-full rounded-[36px] ${mastered ? 'shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_30px_rgba(255,200,100,0.15),inset_0_0_0_1px_rgba(255,220,150,0.3)]' : 'shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]'}`}>
 
-          <div className={`relative flex w-full flex-col rounded-[36px] ${mastered ? 'card-mastered holo-full' : ''}`}>
+          <div
+            className={`relative flex w-full flex-col rounded-[36px] ${mastered ? 'card-mastered holo-full' : ''}`}
+            style={mastered ? ({ '--tag-img': `url(${TAG_IMG[entry.type] ?? TAG_IMG.unknown})` } as CSSProperties) : undefined}
+          >
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
             <div className="absolute inset-0 overflow-hidden rounded-[36px]">
               {/* Mastered: a solid per-type gradient base so the holo always has a
