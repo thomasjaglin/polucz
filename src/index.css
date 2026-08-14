@@ -378,9 +378,13 @@ body {
    ticks — a prismatic gradient clipped to the glyph, swept by --holo-shift so it
    shimmers as the phone tilts (or the pointer moves on desktop). */
 .holo-icon {
-  background: linear-gradient(115deg,
-    #ffd98a 0%, #ff9ed2 25%, #9bcbff 50%, #a6ffc4 75%, #ffd98a 100%);
-  background-size: 300% 100%;
+  /* Mostly white with a soft iridescent band that sweeps across on tilt
+     (--holo-shift) — clipped to the glyph. */
+  background: linear-gradient(110deg,
+    #ffffff 0%, #ffffff 40%,
+    #ffe6b0 45%, #ffb8e6 48%, #b0dcff 50%, #bfffd6 52%, #ffe6b0 55%,
+    #ffffff 60%, #ffffff 100%);
+  background-size: 260% 100%;
   background-position: var(--holo-shift, 50%) center;
   -webkit-background-clip: text;
           background-clip: text;
