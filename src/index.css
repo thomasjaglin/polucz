@@ -390,6 +390,9 @@ body {
           background-clip: text;
   -webkit-text-fill-color: transparent;
           color: transparent;
+  /* Cancel the inherited card-mastered dark text-shadow (it shows as a dark band
+     on the transparent-filled glyph). */
+  text-shadow: none;
 }
 
 /* ─── Cosmos holographic (poke-holo style) ─────────────────────────────────────
