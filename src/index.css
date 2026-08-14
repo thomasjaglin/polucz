@@ -308,9 +308,16 @@ body {
   pointer-events: none;
   z-index: 1;
   /* Per-type colour image (--tag-img, set on the card from the word type) fills
-     the button and masks the cosmos holo behind its glass. Falls back to the
-     Figma gold gradient if no type image is set. */
-  background: var(--tag-img, url(/holo/button-gold.svg)) center / cover no-repeat;
+     the button and masks the cosmos holo behind its glass; the glitter texture is
+     color-dodged on top so its white specks sparkle over the colour. Falls back to
+     the Figma gold gradient if no type image is set. */
+  background-image:
+    url(/holo/glitter.png),
+    var(--tag-img, url(/holo/button-gold.svg));
+  background-size: 40% auto, cover;
+  background-position: center, center;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: color-dodge, normal;
 }
 .holo-full button::after {
   content: '';
