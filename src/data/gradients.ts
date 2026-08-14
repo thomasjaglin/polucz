@@ -33,3 +33,11 @@ export const masteredBase: Record<string, string> = {
   adjective: 'linear-gradient(135deg, #1A5A30, #2AA840 55%, #145A3A)',
   unknown: 'linear-gradient(135deg, #3A3A44, #5A5A66)',
 }
+
+// Per-type colour-fill images used for the type tag (and buttons) on mastered cards.
+export const tagImages: Record<string, string> = {
+  verb: '/tags/Verb.png',
+  noun: '/tags/Noun.png',
+  adjective: '/tags/Adj.png',
+  unknown: '/tags/Other.png',
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
-import { tagGradients, masteredBase } from '../data/gradients'
+import { tagGradients, masteredBase, tagImages } from '../data/gradients'
 import {
   type VocabEntry, type VocabVerb, type VocabNoun, type VocabAdjective, type VocabUnknown,
   type VerbConjugations, type NounDeclensions, type AdjectiveDeclensions,
@@ -12,14 +12,6 @@ import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
 import { useBackClose } from '../hooks/useBackClose'
 import { pushToast } from '../lib/toastStore'
-
-// Per-type colour-fill images for the type tag on mastered cards.
-const TAG_IMG: Record<string, string> = {
-  verb: '/tags/Verb.png',
-  noun: '/tags/Noun.png',
-  adjective: '/tags/Adj.png',
-  unknown: '/tags/Other.png',
-}
 
 function mergeEnrichment(entry: VocabEntry, data: Record<string, unknown>): VocabEntry {
   const definitions = Array.isArray(data.definitions) ? (data.definitions as string[]) : entry.definitions
@@ -548,7 +540,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
 
           <div
             className={`relative flex w-full flex-col rounded-[36px] ${mastered ? 'card-mastered holo-full' : ''}`}
-            style={mastered ? ({ '--tag-img': `url(${TAG_IMG[entry.type] ?? TAG_IMG.unknown})` } as CSSProperties) : undefined}
+            style={mastered ? ({ '--tag-img': `url(${tagImages[entry.type] ?? tagImages.unknown})` } as CSSProperties) : undefined}
           >
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}
             <div className="absolute inset-0 overflow-hidden rounded-[36px]">
@@ -591,7 +583,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               <div className="flex items-center gap-2">
                 <div
                   className={`relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] ${mastered ? 'tag-holo bg-cover bg-center' : 'bg-[#F8FAFC]/10'}`}
-                  style={mastered ? { backgroundImage: `url(${TAG_IMG[entry.type] ?? TAG_IMG.unknown})` } : undefined}
+                  style={mastered ? { backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` } : undefined}
                 >
                   {!mastered && (
                     <div

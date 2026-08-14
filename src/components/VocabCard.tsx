@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { tagGradients, masteredBase } from '../data/gradients'
+import { tagGradients, masteredBase, tagImages } from '../data/gradients'
 import { type VocabEntry, typeLabel } from '../data/types'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
@@ -70,15 +70,26 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 )}
               </div>
             </div>
-            <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+            {mastered ? (
               <div
-                className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
-                dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] }}
-              />
-              <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
-                {typeLabel(entry.type)}
-              </span>
-            </GlassPane>
+                className="tag-holo relative mt-1 flex flex-shrink-0 items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-cover bg-center px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]"
+                style={{ backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` }}
+              >
+                <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-white">
+                  {typeLabel(entry.type)}
+                </span>
+              </div>
+            ) : (
+              <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                <div
+                  className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
+                  dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] }}
+                />
+                <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
+                  {typeLabel(entry.type)}
+                </span>
+              </GlassPane>
+            )}
           </div>
         </GlassPane>
       </div>
