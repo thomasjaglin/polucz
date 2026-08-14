@@ -595,6 +595,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                     {typeLabel(entry.type)}
                   </span>
                 </div>
+                {mastered && (
+                  <span className="holo-icon shrink-0 text-[16px] leading-none">★</span>
+                )}
                 {entry.enriched && (
                   <span
                     aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
