@@ -24,3 +24,12 @@ export const activeSvgMask = `
     </defs>
   </svg>
 `
+
+// Per-type solid gradient used as the coloured background/"illustration" behind
+// the cosmos holo on mastered cards (vocab list + word modal).
+export const masteredBase: Record<string, string> = {
+  verb: 'linear-gradient(135deg, #9B4FB0, #3A3AB5 55%, #1FB4CC)',
+  noun: 'linear-gradient(135deg, #8A2E2E, #D07A2A 55%, #A0A830)',
+  adjective: 'linear-gradient(135deg, #1A5A30, #2AA840 55%, #145A3A)',
+  unknown: 'linear-gradient(135deg, #3A3A44, #5A5A66)',
+}

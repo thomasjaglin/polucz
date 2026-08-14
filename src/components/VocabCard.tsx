@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { tagGradients } from '../data/gradients'
+import { tagGradients, masteredBase } from '../data/gradients'
 import { type VocabEntry, typeLabel } from '../data/types'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
@@ -29,6 +29,15 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
         }`}
       >
         <GlassPane borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
+          {/* Per-type colour base (same as the modal) so the cosmos holo has a
+              colourful "illustration" to sit on — mastered cards only. */}
+          {mastered && (
+            <div
+              className="absolute inset-0 z-0 rounded-[36px]"
+              aria-hidden="true"
+              style={{ background: masteredBase[entry.type] ?? masteredBase.unknown }}
+            />
+          )}
           {mastered && <div className="cosmos-shine" aria-hidden="true" />}
           {mastered && <div className="holo-edge" aria-hidden="true" />}
           <div className="relative z-10 flex items-start justify-between gap-3">
