@@ -300,6 +300,13 @@ body {
 /* overflow-hidden clips the gold blob (and the sweep) to the rounded button so it
    can't overstep — the small icon buttons don't set it themselves. */
 .holo-full button { position: relative; overflow: hidden; }
+/* Mastered-modal button labels + icons: white with a slight black outline so they
+   stay legible over the colour/glitter face. */
+.holo-full button,
+.holo-full button * {
+  color: #fff;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.6), 0 1px 1px rgba(0, 0, 0, 0.5);
+}
 .holo-full button::before {
   content: '';
   position: absolute;
