@@ -599,7 +599,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             <div className="mb-8 flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
-                  className={`relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] ${mastered ? 'bg-cover bg-center' : 'bg-[#F8FAFC]/10'}`}
+                  className={`relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] ${mastered ? 'tag-holo bg-cover bg-center' : 'bg-[#F8FAFC]/10'}`}
                   style={mastered ? { backgroundImage: `url(${TAG_IMG[entry.type] ?? TAG_IMG.unknown})` } : undefined}
                 >
                   {!mastered && (
