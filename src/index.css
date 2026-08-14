@@ -343,6 +343,34 @@ body {
           mask-repeat: no-repeat;
 }
 
+/* Active filter tags: the same glitter-through-the-tilt-light effect as the
+   mastered buttons — static glitter texture revealed only inside a soft band that
+   sweeps with --holo-shift. Sits above the tag colour (z-0) and below the label
+   (z-10). */
+.tag-holo {
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.45);
+}
+.tag-holo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background: url(/holo/glitter.png) center / 55% auto repeat;
+  mix-blend-mode: color-dodge;
+  -webkit-mask-image: linear-gradient(105deg,
+    transparent 34%, rgba(0,0,0,0.55) 46%, #000 50%, rgba(0,0,0,0.55) 54%, transparent 66%);
+          mask-image: linear-gradient(105deg,
+    transparent 34%, rgba(0,0,0,0.55) 46%, #000 50%, rgba(0,0,0,0.55) 54%, transparent 66%);
+  -webkit-mask-size: 260% 100%;
+          mask-size: 260% 100%;
+  -webkit-mask-position: var(--holo-shift, 50%) center;
+          mask-position: var(--holo-shift, 50%) center;
+  -webkit-mask-repeat: no-repeat;
+          mask-repeat: no-repeat;
+}
+
 /* Iridescent, tilt-reactive fill for the mastered star and the populate/audio
    ticks — a prismatic gradient clipped to the glyph, swept by --holo-shift so it
    shimmers as the phone tilts (or the pointer moves on desktop). */
