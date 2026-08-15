@@ -334,7 +334,7 @@ function putCachedExamples(word: string, data: ExampleData) {
   try { localStorage.setItem(exampleKey(word), JSON.stringify(data)) } catch { /* ignore */ }
 }
 
-function ExamplesSection({ word }: { word: string }) {
+function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }) {
   const [loading, setLoading] = useState(false)
   // Seed from cache so a previously-fetched card shows its examples instantly
   // (no button, no refetch).
@@ -385,7 +385,7 @@ function ExamplesSection({ word }: { word: string }) {
     return (
       <div className="mt-4 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-4">
         <div className="flex items-center justify-between">
-          <span className="font-instrument text-[14px] text-[#F8FAFC]/20">
+          <span className={`font-instrument text-[14px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/20'}`}>
             Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
           </span>
           <button
@@ -685,7 +685,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 </button>
               </div>
               {entry.type === 'noun' && (
-                <h3 className="mb-1 mt-1 font-instrument text-[20px] leading-none text-[#F8FAFC]/40">{entry.plAlt}</h3>
+                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{entry.plAlt}</h3>
               )}
               <h2 className={`mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF] ${mastered ? 'holo-outline-white' : ''}`}>{entry.en}</h2>
               {/* Secondary senses filled during enrichment */}
@@ -703,7 +703,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             {entry.type === 'unknown'   && <FallbackSection entry={entry} />}
 
             {/* Translation via DeepL */}
-            <ExamplesSection word={entry.pl} />
+            <ExamplesSection word={entry.pl} mastered={mastered} />
             </div>
           </div>
         </div>
