@@ -29,12 +29,14 @@ export default function MasteredLightBands() {
 
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-visible">
-      {/* Wider, warmer fan — clockwise. */}
+      {/* Wider, warmer fan — clockwise. The -50% centering is applied as motion
+          values (x/y), not Tailwind classes, so it composes with the animated
+          rotate/scale instead of being overwritten by them. */}
       <motion.div
-        className="absolute left-1/2 top-1/2 h-[180%] w-[180%] -translate-x-1/2 -translate-y-1/2"
+        className="absolute left-1/2 top-1/2 h-[180%] w-[180%]"
         style={{ background: RAYS_A, WebkitMaskImage: MASK, maskImage: MASK, mixBlendMode: 'screen' }}
-        initial={{ opacity: 0, scale: 0.75, rotate: 0 }}
-        animate={{ opacity: 0.9, scale: 1, rotate: 360 }}
+        initial={{ opacity: 0, scale: 0.75, rotate: 0, x: '-50%', y: '-50%' }}
+        animate={{ opacity: 0.9, scale: 1, rotate: 360, x: '-50%', y: '-50%' }}
         transition={{
           opacity: { duration: 0.9, ease: 'easeOut' },
           scale: { duration: 1.0, ease: 'easeOut' },
@@ -43,10 +45,10 @@ export default function MasteredLightBands() {
       />
       {/* Finer, whiter fan — counter-rotating and slower, for a shifting shimmer. */}
       <motion.div
-        className="absolute left-1/2 top-1/2 h-[170%] w-[170%] -translate-x-1/2 -translate-y-1/2"
+        className="absolute left-1/2 top-1/2 h-[170%] w-[170%]"
         style={{ background: RAYS_B, WebkitMaskImage: MASK, maskImage: MASK, mixBlendMode: 'screen' }}
-        initial={{ opacity: 0, scale: 0.8, rotate: 0 }}
-        animate={{ opacity: 0.7, scale: 1, rotate: -360 }}
+        initial={{ opacity: 0, scale: 0.8, rotate: 0, x: '-50%', y: '-50%' }}
+        animate={{ opacity: 0.7, scale: 1, rotate: -360, x: '-50%', y: '-50%' }}
         transition={{
           opacity: { duration: 1.1, ease: 'easeOut' },
           scale: { duration: 1.1, ease: 'easeOut' },
