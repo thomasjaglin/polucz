@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion'
 import SearchBar from './SearchBar'
 import FilterTag from './FilterTag'
 import VocabCard from './VocabCard'
@@ -62,6 +62,21 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   const countLabel = filtered.length === cards.length
     ? `${cards.length} ${wordNoun(cards.length)}`
     : `${filtered.length} ${wordNoun(filtered.length)} out of ${cards.length}`
+
+  // List motion: cards cascade in on mount/filter (staggerChildren), fade+scale
+  // out when filtered away, and the `layout` prop glides the survivors up to
+  // close the gap. Reduced motion collapses to an instant opacity-only swap.
+  const listContainer: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: reduce ? 0 : 0.04 } },
+  }
+  const listItem: Variants = reduce
+    ? { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0 } }, exit: { opacity: 0, transition: { duration: 0 } } }
+    : {
+        hidden: { opacity: 0, y: 12 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.33, 1, 0.68, 1] } },
+        exit: { opacity: 0, scale: 0.96, transition: { duration: 0.15, ease: 'easeIn' } },
+      }
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6">
@@ -130,23 +145,36 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
       </div>
 
       {/* Vocab list */}
-      <div className="flex flex-col gap-4">
-        {filtered.length === 0 ? (
-          <p className="mt-8 text-center font-instrument text-[16px] text-[#F8FAFC]/40">
-            No cards match your search.
-          </p>
-        ) : (
-          filtered.map(entry => (
-            <VocabCard
+      <motion.div className="flex flex-col gap-4" variants={listContainer} initial="hidden" animate="visible">
+        <AnimatePresence mode="popLayout">
+          {filtered.map(entry => (
+            <motion.div
               key={entry.id}
-              ref={el => { cardRefs.current.set(entry.id, el) }}
-              entry={entry}
-              mastered={masteredIds.has(entry.id)}
-              onClick={() => onOpenModal(entry, cardRefs.current.get(entry.id) ?? null)}
-            />
-          ))
+              layout
+              variants={listItem}
+              exit="exit"
+              className="w-full"
+            >
+              <VocabCard
+                ref={el => { cardRefs.current.set(entry.id, el) }}
+                entry={entry}
+                mastered={masteredIds.has(entry.id)}
+                onClick={() => onOpenModal(entry, cardRefs.current.get(entry.id) ?? null)}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        {filtered.length === 0 && (
+          <motion.p
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-8 text-center font-instrument text-[16px] text-[#F8FAFC]/40"
+          >
+            No cards match your search.
+          </motion.p>
         )}
-      </div>
+      </motion.div>
 
       {/* Clearance so the last card sits above the bottom nav */}
       <div aria-hidden="true" className="h-[120px] shrink-0" />
