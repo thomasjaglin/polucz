@@ -395,10 +395,11 @@ body {
      on the transparent-filled glyph). */
   text-shadow: none;
 }
-/* The word (not the icons) gets a slight black OUTER outline. text-shadow can't
-   be used with background-clip:text (it paints over the clipped gradient and
-   blacks it out); drop-shadow filters shadow the composited gradient text and sit
-   behind it, so the white/iridescent fill stays and only the silhouette is edged. */
+/* Slight black OUTER outline on the word AND the icons. text-shadow can't be used
+   with background-clip:text (it paints over the clipped gradient and blacks it
+   out); drop-shadow filters shadow the composited gradient glyph and sit behind
+   it, so the white/iridescent fill stays and only the silhouette is edged. */
+.holo-icon,
 .holo-text {
   filter:
     drop-shadow(0.6px 0 0 rgba(0, 0, 0, 0.5))
