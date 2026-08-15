@@ -43,11 +43,8 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   }
 
   const reviews = getAllReviews()
-  // TEST (holo-tilt branch): treat every card as mastered so the holographic tilt
-  // effect is visible without conquering. Set back to false before merging.
-  const MASTER_ALL = true
   const masteredIds = new Set(
-    cards.filter(c => { if (MASTER_ALL) return true; const r = reviews[c.id]; return r && isConquered(r) }).map(c => c.id)
+    cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).map(c => c.id)
   )
 
   const q = searchQuery.toLowerCase()
