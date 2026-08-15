@@ -64,8 +64,8 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 </span>
                 {meta && (
                   <>
-                    <span className="text-[#F8FAFC]/20">·</span>
-                    <span className="font-instrument text-[13px] italic text-[#F8FAFC]/40">{meta}</span>
+                    <span className={mastered ? 'text-white' : 'text-[#F8FAFC]/20'}>·</span>
+                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{meta}</span>
                   </>
                 )}
               </div>
