@@ -395,6 +395,12 @@ body {
      on the transparent-filled glyph). */
   text-shadow: none;
 }
+/* The word (not the icons) gets a slight black outline. paint-order draws the
+   stroke behind the gradient fill so it reads as an outline, not eating the glyph. */
+.holo-text {
+  -webkit-text-stroke: 0.7px rgba(0, 0, 0, 0.5);
+  paint-order: stroke fill;
+}
 
 /* ─── Cosmos holographic (poke-holo style) ─────────────────────────────────────
    A galaxy foil for mastered cards (source art in /public/holo). Two blended
