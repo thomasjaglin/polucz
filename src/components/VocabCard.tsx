@@ -59,7 +59,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 )}
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80">
+                <span className={`font-instrument text-[18px] font-medium leading-snug text-[#B4A0FF]/80 ${mastered ? 'holo-outline-white' : ''}`}>
                   {entry.en}
                 </span>
                 {meta && (

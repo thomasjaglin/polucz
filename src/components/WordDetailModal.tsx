@@ -201,7 +201,7 @@ function VerbSection({ entry, mastered }: { entry: VocabVerb; mastered: boolean 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
           <span className={`font-instrument text-[15px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{entry.otherForm.label}</span>
-          <span className="font-instrument text-[18px] italic text-[#B4A0FF]">{entry.otherForm.word}</span>
+          <span className={`font-instrument text-[18px] italic text-[#B4A0FF] ${mastered ? 'holo-outline-white' : ''}`}>{entry.otherForm.word}</span>
         </div>
       )}
     </>
@@ -231,7 +231,7 @@ function GradeRow({ label, form, mastered }: { label: string; form: string; mast
   return (
     <div className="flex items-baseline gap-3">
       <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{label}</span>
-      <span className="font-instrument text-[16px] text-[#B4A0FF]">{form}</span>
+      <span className={`font-instrument text-[16px] text-[#B4A0FF] ${mastered ? 'holo-outline-white' : ''}`}>{form}</span>
     </div>
   )
 }
@@ -687,7 +687,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               {entry.type === 'noun' && (
                 <h3 className="mb-1 mt-1 font-instrument text-[20px] leading-none text-[#F8FAFC]/40">{entry.plAlt}</h3>
               )}
-              <h2 className="mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF]">{entry.en}</h2>
+              <h2 className={`mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF] ${mastered ? 'holo-outline-white' : ''}`}>{entry.en}</h2>
               {/* Secondary senses filled during enrichment */}
               {entry.definitions && entry.definitions.length > 0 && (
                 <p className="font-instrument text-[14px] leading-snug text-[#F8FAFC]/45">
