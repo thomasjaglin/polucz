@@ -8,6 +8,7 @@ import {
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import MasteredBurst from './MasteredBurst'
+import MasteredLightBands from './MasteredLightBands'
 import { useTTS } from '../lib/useTTS'
 import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
@@ -550,6 +551,10 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             <span className="material-symbols-rounded text-[28px]">close</span>
           </GlassButton>
         <div className={`relative w-full rounded-[36px] ${mastered ? 'shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_30px_rgba(255,200,100,0.15),inset_0_0_0_1px_rgba(255,220,150,0.3)]' : 'shadow-[0_16px_64px_rgba(0,0,0,0.6),inset_0_0_0_1px_rgba(255,255,255,0.12)]'}`}>
+
+          {/* Persistent golden light rays behind the card (spin in on open, keep
+              turning while open). Rendered before the card so it sits behind it. */}
+          {mastered && <MasteredLightBands />}
 
           {/* One-shot star burst + light bloom when a mastered card opens. */}
           {mastered && <MasteredBurst />}
