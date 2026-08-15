@@ -14,6 +14,9 @@ import { motion, useReducedMotion } from 'framer-motion'
 // black outline) as the mastered-card star/tick icons — so the burst matches the
 // card. Each star's rotation rotates its clipped gradient too, varying the sheen.
 
+// Small dot sparks — warm golds through to white.
+const DOT_COLORS = ['#ffd77a', '#ffca4d', '#ffe6b0', '#fff3d6', '#ffffff']
+
 export default function MasteredBurst() {
   const reduce = useReducedMotion()
 
@@ -37,6 +40,29 @@ export default function MasteredBurst() {
         delay: Math.random() * 0.1,
         rot: (Math.random() - 0.5) * 200,
         dur: 0.8 + Math.random() * 0.3,
+      }
+    })
+  }, [])
+
+  // Smaller dot sparks: scattered (fully random angle), starting nearer the
+  // centre and flung further out as a fine gold/white spray between the stars.
+  const dots = useMemo(() => {
+    const N = 30
+    return Array.from({ length: N }, (_, i) => {
+      const angle = Math.random() * Math.PI * 2
+      const startR = 28 + Math.random() * 20         // % from centre
+      const travel = 100 + Math.random() * 150       // px outward
+      const size = 3 + Math.random() * 5
+      return {
+        id: i,
+        leftPct: 50 + Math.cos(angle) * startR,
+        topPct: 50 + Math.sin(angle) * startR,
+        dx: Math.cos(angle) * travel,
+        dy: Math.sin(angle) * travel,
+        size,
+        color: DOT_COLORS[i % DOT_COLORS.length],
+        delay: Math.random() * 0.14,
+        dur: 0.7 + Math.random() * 0.4,
       }
     })
   }, [])
@@ -75,6 +101,26 @@ export default function MasteredBurst() {
         >
           ★
         </motion.span>
+      ))}
+      {/* Smaller gold/white dot sparks scattered between the stars. */}
+      {dots.map(d => (
+        <motion.span
+          key={`dot-${d.id}`}
+          className="absolute rounded-full"
+          style={{
+            left: `${d.leftPct}%`,
+            top: `${d.topPct}%`,
+            marginLeft: -d.size / 2,
+            marginTop: -d.size / 2,
+            width: d.size,
+            height: d.size,
+            background: d.color,
+            boxShadow: `0 0 ${d.size * 1.6}px ${d.color}`,
+          }}
+          initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+          animate={{ x: d.dx, y: d.dy, scale: [0, 1, 0.3], opacity: [0, 1, 0] }}
+          transition={{ duration: d.dur, delay: d.delay, ease: [0.22, 1, 0.36, 1] }}
+        />
       ))}
     </div>
   )
