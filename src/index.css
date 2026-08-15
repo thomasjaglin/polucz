@@ -237,13 +237,17 @@ body {
   pointer-events: none;
   z-index: 2;
   padding: 1.5px;
-  /* Bright point on the border ring follows the tilt (see holoMotion.ts). */
-  background: conic-gradient(from var(--holo-edge-angle, 0deg),
-    rgba(255, 225, 150, 0.95),
-    rgba(255, 130, 205, 0.85),
-    rgba(130, 205, 255, 0.85),
-    rgba(150, 255, 195, 0.85),
-    rgba(255, 225, 150, 0.95));
+  /* Same iridescent sweep as the main word (.holo-text): a prismatic band slides
+     horizontally along the ring as the phone tilts (--holo-shift) rather than a
+     point rotating around it. */
+  background: linear-gradient(110deg,
+    rgba(255, 225, 150, 0.95) 0%, rgba(255, 225, 150, 0.95) 30%,
+    rgba(255, 130, 205, 0.9) 42%,
+    rgba(130, 205, 255, 0.9) 50%,
+    rgba(150, 255, 195, 0.9) 58%,
+    rgba(255, 225, 150, 0.95) 70%, rgba(255, 225, 150, 0.95) 100%);
+  background-size: 260% 100%;
+  background-position: var(--holo-shift, 50%) center;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
           mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
@@ -408,21 +412,10 @@ body {
     drop-shadow(0 -0.6px 0 rgba(0, 0, 0, 0.5));
 }
 
-/* Purple accent text on mastered cards — keeps its violet identity but gets the
-   SAME iridescent sweep as the main word (.holo-text): a purple base with a
-   prismatic band that slides across on --holo-shift, clipped to the glyph, plus
-   the matching crisp black outline via drop-shadow. */
+/* Same crisp black outline as the main word (.holo-text), for the purple accent
+   words on mastered cards — the text keeps its colour. Cancels the inherited soft
+   card-mastered text-shadow and uses drop-shadow so it matches exactly. */
 .holo-outline {
-  background: linear-gradient(110deg,
-    #b4a0ff 0%, #b4a0ff 40%,
-    #d8c0ff 45%, #ffb8e6 48%, #a0dcff 50%, #bfffd6 52%, #d8c0ff 55%,
-    #b4a0ff 60%, #b4a0ff 100%);
-  background-size: 260% 100%;
-  background-position: var(--holo-shift, 50%) center;
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-          color: transparent;
   text-shadow: none;
   filter:
     drop-shadow(0.6px 0 0 rgba(0, 0, 0, 0.5))
