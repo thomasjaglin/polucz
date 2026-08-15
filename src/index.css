@@ -395,20 +395,16 @@ body {
      on the transparent-filled glyph). */
   text-shadow: none;
 }
-/* The word (not the icons) gets a slight black OUTER outline. A crisp
-   multi-directional text-shadow (0 blur) sits behind the gradient fill, so only
-   the outer silhouette shows the dark — unlike text-stroke, which outlines every
-   stroke of each glyph. */
+/* The word (not the icons) gets a slight black OUTER outline. text-shadow can't
+   be used with background-clip:text (it paints over the clipped gradient and
+   blacks it out); drop-shadow filters shadow the composited gradient text and sit
+   behind it, so the white/iridescent fill stays and only the silhouette is edged. */
 .holo-text {
-  text-shadow:
-    0.7px 0 0 rgba(0, 0, 0, 0.55),
-    -0.7px 0 0 rgba(0, 0, 0, 0.55),
-    0 0.7px 0 rgba(0, 0, 0, 0.55),
-    0 -0.7px 0 rgba(0, 0, 0, 0.55),
-    0.5px 0.5px 0 rgba(0, 0, 0, 0.5),
-    -0.5px 0.5px 0 rgba(0, 0, 0, 0.5),
-    0.5px -0.5px 0 rgba(0, 0, 0, 0.5),
-    -0.5px -0.5px 0 rgba(0, 0, 0, 0.5);
+  filter:
+    drop-shadow(0.6px 0 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(-0.6px 0 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0.6px 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(0 -0.6px 0 rgba(0, 0, 0, 0.5));
 }
 
 /* ─── Cosmos holographic (poke-holo style) ─────────────────────────────────────
