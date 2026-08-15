@@ -7,7 +7,9 @@ import { motion, useReducedMotion } from 'framer-motion'
 // pointer-events-none, and blends as light (screen) over the dark scrim. Under
 // reduced motion it degrades to a static gold glow (no rotation).
 
-const MASK = 'radial-gradient(circle at center, #000 20%, rgba(0,0,0,0.55) 46%, transparent 72%)'
+// closest-side so the fade always completes before the (square) div's edges —
+// on a rectangle a farthest-corner circle leaves a hard cut on the narrow axis.
+const MASK = 'radial-gradient(circle closest-side at center, #000 22%, rgba(0,0,0,0.5) 48%, transparent 80%)'
 
 const RAYS_A =
   'repeating-conic-gradient(from 0deg, rgba(255,208,115,0) 0deg, rgba(255,208,115,0.34) 7deg, rgba(255,208,115,0) 15deg, rgba(255,208,115,0) 28deg)'
@@ -21,8 +23,8 @@ export default function MasteredLightBands() {
     return (
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[150%] w-[150%] -translate-x-1/2 -translate-y-1/2 rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255,210,120,0.22) 0%, transparent 65%)', mixBlendMode: 'screen' }}
+        className="pointer-events-none absolute left-1/2 top-1/2 w-[200%] aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{ background: 'radial-gradient(circle closest-side, rgba(255,210,120,0.22) 0%, transparent 70%)', mixBlendMode: 'screen' }}
       />
     )
   }
@@ -33,7 +35,7 @@ export default function MasteredLightBands() {
           values (x/y), not Tailwind classes, so it composes with the animated
           rotate/scale instead of being overwritten by them. */}
       <motion.div
-        className="absolute left-1/2 top-1/2 h-[180%] w-[180%]"
+        className="absolute left-1/2 top-1/2 w-[220%] aspect-square"
         style={{ background: RAYS_A, WebkitMaskImage: MASK, maskImage: MASK, mixBlendMode: 'screen' }}
         initial={{ opacity: 0, scale: 0.75, rotate: 0, x: '-50%', y: '-50%' }}
         animate={{ opacity: 0.9, scale: 1, rotate: 360, x: '-50%', y: '-50%' }}
@@ -45,7 +47,7 @@ export default function MasteredLightBands() {
       />
       {/* Finer, whiter fan — counter-rotating and slower, for a shifting shimmer. */}
       <motion.div
-        className="absolute left-1/2 top-1/2 h-[170%] w-[170%]"
+        className="absolute left-1/2 top-1/2 w-[200%] aspect-square"
         style={{ background: RAYS_B, WebkitMaskImage: MASK, maskImage: MASK, mixBlendMode: 'screen' }}
         initial={{ opacity: 0, scale: 0.8, rotate: 0, x: '-50%', y: '-50%' }}
         animate={{ opacity: 0.7, scale: 1, rotate: -360, x: '-50%', y: '-50%' }}
