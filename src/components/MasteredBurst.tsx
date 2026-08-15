@@ -2,31 +2,40 @@ import { useMemo } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 
 // A one-shot celebration that plays when a MASTERED word's modal opens: a warm
-// radial light bloom expands from the card centre while iridescent star
-// particles explode outward and fade. Purely decorative + pointer-events-none,
-// GPU-only (transform/opacity), and skipped entirely under reduced motion. It
-// plays once because the modal mounts fresh on each open.
+// radial light bloom fills and overflows the whole card while iridescent star
+// particles emanate from around the card's perimeter and fly outward past its
+// edges (so they read to the sides / top / bottom, not on top of the content).
+// Purely decorative + pointer-events-none, GPU-only (transform/opacity), and
+// skipped under reduced motion. It plays once because the modal mounts fresh on
+// each open. The host div is `absolute inset-0` over the card with overflow
+// visible, so percentages below are relative to the card box.
 
 const STAR_COLORS = ['#ffe6b0', '#ffb8e6', '#b0dcff', '#bfffd6', '#ffffff']
 
 export default function MasteredBurst() {
   const reduce = useReducedMotion()
 
-  // Randomised once per mount: even ring of stars with jittered angle/distance.
+  // Randomised once per mount: stars spread around an ellipse near the card's
+  // edge (startR % of the card box, so it follows the card's tall aspect) and
+  // then travel further outward along the same angle, spilling past the edges.
   const stars = useMemo(() => {
-    const N = 16
+    const N = 22
     return Array.from({ length: N }, (_, i) => {
-      const angle = (i / N) * Math.PI * 2 + (Math.random() - 0.5) * 0.4
-      const dist = 130 + Math.random() * 90
+      const angle = (i / N) * Math.PI * 2 + (Math.random() - 0.5) * 0.28
+      const startR = 40 + Math.random() * 9          // % from centre → near the edge
+      const travel = 70 + Math.random() * 110        // px outward beyond the edge
+      const size = 11 + Math.random() * 15
       return {
         id: i,
-        x: Math.cos(angle) * dist,
-        y: Math.sin(angle) * dist,
-        size: 10 + Math.random() * 14,
+        leftPct: 50 + Math.cos(angle) * startR,
+        topPct: 50 + Math.sin(angle) * startR,
+        dx: Math.cos(angle) * travel,
+        dy: Math.sin(angle) * travel,
+        size,
         color: STAR_COLORS[i % STAR_COLORS.length],
-        delay: Math.random() * 0.08,
+        delay: Math.random() * 0.1,
         rot: (Math.random() - 0.5) * 200,
-        dur: 0.75 + Math.random() * 0.25,
+        dur: 0.8 + Math.random() * 0.3,
       }
     })
   }, [])
@@ -34,26 +43,35 @@ export default function MasteredBurst() {
   if (reduce) return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-visible">
-      {/* Warm light bloom */}
+    <div className="pointer-events-none absolute inset-0 z-20 overflow-visible">
+      {/* Warm light bloom — an ellipse that fills the whole card and spills a
+          little past every edge. */}
       <motion.div
-        className="absolute h-[320px] w-[320px] rounded-full"
+        className="absolute inset-[-12%] rounded-[48px]"
         style={{
           background:
-            'radial-gradient(circle, rgba(255,220,150,0.55) 0%, rgba(255,180,230,0.28) 42%, transparent 70%)',
+            'radial-gradient(ellipse at center, rgba(255,220,150,0.5) 0%, rgba(255,180,230,0.22) 45%, transparent 72%)',
         }}
-        initial={{ scale: 0.2, opacity: 0 }}
-        animate={{ scale: [0.2, 1.3, 1.7], opacity: [0, 0.85, 0] }}
-        transition={{ duration: 0.95, ease: 'easeOut', times: [0, 0.28, 1] }}
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: [0, 0.9, 0], scale: [0.85, 1.06, 1.14] }}
+        transition={{ duration: 1.0, ease: 'easeOut', times: [0, 0.3, 1] }}
       />
-      {/* Exploding star particles */}
+      {/* Star particles bursting outward from around the perimeter. */}
       {stars.map(s => (
         <motion.span
           key={s.id}
           className="absolute leading-none"
-          style={{ color: s.color, fontSize: s.size, textShadow: '0 0 6px currentColor' }}
+          style={{
+            left: `${s.leftPct}%`,
+            top: `${s.topPct}%`,
+            marginLeft: -s.size / 2,
+            marginTop: -s.size / 2,
+            color: s.color,
+            fontSize: s.size,
+            textShadow: '0 0 6px currentColor',
+          }}
           initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
-          animate={{ x: s.x, y: s.y, scale: [0, 1.2, 0.4], opacity: [0, 1, 0], rotate: s.rot }}
+          animate={{ x: s.dx, y: s.dy, scale: [0, 1.2, 0.4], opacity: [0, 1, 0], rotate: s.rot }}
           transition={{ duration: s.dur, delay: s.delay, ease: [0.22, 1, 0.36, 1] }}
         >
           ★
