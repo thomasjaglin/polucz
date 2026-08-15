@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import SearchBar from './SearchBar'
 import FilterTag from './FilterTag'
 import VocabCard from './VocabCard'
@@ -22,6 +23,7 @@ interface Props {
 }
 
 export default function VocabListPage({ cards, onOpenModal }: Props) {
+  const reduce = useReducedMotion()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Record<FilterKey, boolean>>({
@@ -87,16 +89,39 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                 className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
               >
                 <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
-                <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/70">
-                  {searchOpen ? 'close' : 'search'}
-                </span>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={searchOpen ? 'close' : 'search'}
+                    initial={reduce ? false : { rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={reduce ? { opacity: 0 } : { rotate: 90, opacity: 0 }}
+                    transition={{ duration: reduce ? 0 : 0.18, ease: 'easeOut' }}
+                    className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/70"
+                  >
+                    {searchOpen ? 'close' : 'search'}
+                  </motion.span>
+                </AnimatePresence>
               </button>
             </div>
 
-            {/* Expanded search field — below the tag row */}
-            {searchOpen && (
-              <SearchBar value={searchQuery} onChange={setSearchQuery} autoFocus />
-            )}
+            {/* Expanded search field — unfolds below the tag row (height + fade)
+                instead of snapping in and shoving the count label. */}
+            <AnimatePresence initial={false}>
+              {searchOpen && (
+                <motion.div
+                  key="search"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={reduce
+                    ? { duration: 0 }
+                    : { height: { duration: 0.28, ease: [0.33, 1, 0.68, 1] }, opacity: { duration: 0.2, ease: 'easeOut' } }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <SearchBar value={searchQuery} onChange={setSearchQuery} autoFocus />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Total / filtered card count */}
             <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-[#F8FAFC]/40">{countLabel}</p>

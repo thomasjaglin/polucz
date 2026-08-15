@@ -183,6 +183,16 @@ export default function App() {
     if (id === activeId) return
     setHeaderHidden(false)
     lastScrollY.current = 0
+    // Give the page-content view transition a direction: horizontal slide that
+    // matches the swipe/nav order when both pages sit in pageOrder, else fall
+    // back to the default vertical slide (add/api pages, non-adjacent jumps).
+    const from = pageOrder.indexOf(activeId)
+    const to = pageOrder.indexOf(id)
+    if (from !== -1 && to !== -1) {
+      document.documentElement.dataset.pageDir = to > from ? 'forward' : 'back'
+    } else {
+      delete document.documentElement.dataset.pageDir
+    }
     if ('startViewTransition' in document) {
       document.startViewTransition(() => {
         flushSync(() => setActiveId(id))

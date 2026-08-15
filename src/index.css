@@ -49,6 +49,36 @@ body {
   animation: vt-slide-in 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) both;
 }
 
+/* Directional variant: when moving between adjacent swipe pages, slide
+   horizontally in the travel direction (data-page-dir set in changePage) —
+   forward (later page) exits left / enters from the right, back is mirrored.
+   Higher specificity than the vertical rules above, so it wins when present. */
+@keyframes vt-slide-out-left  { to   { opacity: 0; transform: translateX(-24px); } }
+@keyframes vt-slide-in-right  { from { opacity: 0; transform: translateX(24px);  } }
+@keyframes vt-slide-out-right { to   { opacity: 0; transform: translateX(24px);  } }
+@keyframes vt-slide-in-left   { from { opacity: 0; transform: translateX(-24px); } }
+:root[data-page-dir="forward"]::view-transition-old(page-content) {
+  animation: vt-slide-out-left 0.2s ease-in both;
+}
+:root[data-page-dir="forward"]::view-transition-new(page-content) {
+  animation: vt-slide-in-right 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+:root[data-page-dir="back"]::view-transition-old(page-content) {
+  animation: vt-slide-out-right 0.2s ease-in both;
+}
+:root[data-page-dir="back"]::view-transition-new(page-content) {
+  animation: vt-slide-in-left 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) both;
+}
+
+/* Reduced motion: drop the slide entirely, keep a gentle opacity-only crossfade
+   (!important to beat the directional rules' specificity). */
+@keyframes vt-fade-out { to   { opacity: 0; } }
+@keyframes vt-fade-in  { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  :root::view-transition-old(page-content) { animation: vt-fade-out 0.15s linear both !important; }
+  :root::view-transition-new(page-content) { animation: vt-fade-in  0.15s linear both !important; }
+}
+
 /* Page gradient: linger a bit longer so the colour wash is visible */
 ::view-transition-old(page-gradient),
 ::view-transition-new(page-gradient) {
