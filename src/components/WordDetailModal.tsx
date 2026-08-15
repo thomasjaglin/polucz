@@ -402,7 +402,10 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
           {examples.map((ex, i) => (
             <div key={i} className="flex flex-col gap-1">
               <p className="font-instrument text-[17px] leading-snug text-[#F8FAFC]/90">{ex.pl}</p>
-              <p className={`font-instrument text-[14px] italic leading-snug text-[#B4A0FF]/70 ${mastered ? 'holo-outline' : ''}`}>{ex.en}</p>
+              {/* Smallest purple copy: keep the soft inherited card-mastered
+                  text-shadow (same as the small white grammar text) rather than
+                  the heavier crisp drop-shadow outline used on the larger words. */}
+              <p className="font-instrument text-[14px] italic leading-snug text-[#B4A0FF]/70">{ex.en}</p>
             </div>
           ))}
         </div>
