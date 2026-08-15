@@ -88,7 +88,7 @@ function TipBubble({ text }: { text: string }) {
 // alignment (the failure mode of the old side-by-side flex stacks). Alternating
 // rows get a faint band so the eye can track across on a narrow screen.
 function ParadigmGrid({
-  colTemplate, headers, kinds, rows, size = 15, tips,
+  colTemplate, headers, kinds, rows, size = 15, tips, mastered = false,
 }: {
   colTemplate: string
   headers: string[]
@@ -98,6 +98,9 @@ function ParadigmGrid({
   // Optional abbreviation → full-word map; label cells whose text has an entry
   // become tappable and reveal the full word in a tooltip.
   tips?: Record<string, string>
+  // On mastered cards the text is full white and the zebra rows more opaque, for
+  // legibility over the colourful holo background.
+  mastered?: boolean
 }) {
   const [openKey, setOpenKey] = useState<string | null>(null)
   // Auto-dismiss the tooltip so there's no outside-tap handling to manage.
@@ -118,7 +121,7 @@ function ParadigmGrid({
             key={key}
             onClick={tip ? () => { haptics.tap(); setOpenKey(open ? null : key) } : undefined}
             className={[
-              'relative px-2 pb-2.5 font-instrument text-[12px] leading-tight text-[#F8FAFC]/40',
+              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`,
               tip ? 'cursor-pointer select-none' : '',
             ].join(' ')}
           >
@@ -147,9 +150,11 @@ function ParadigmGrid({
                 'relative min-w-0 py-1.5 break-words hyphens-auto font-instrument leading-tight',
                 // Tighten the gap between the label column and the values by
                 // trimming the label cell's right padding.
-                isLabel ? 'pl-2 pr-0.5 text-[#F8FAFC]/45' : 'px-2 italic text-[#F8FAFC]/85',
+                isLabel
+                  ? `pl-2 pr-0.5 ${mastered ? 'text-white' : 'text-[#F8FAFC]/45'}`
+                  : `px-2 italic ${mastered ? 'text-white' : 'text-[#F8FAFC]/85'}`,
                 tip ? 'cursor-pointer select-none' : '',
-                zebra ? 'bg-[#F8FAFC]/[0.04]' : '',
+                zebra ? (mastered ? 'bg-[#F8FAFC]/[0.1]' : 'bg-[#F8FAFC]/[0.04]') : '',
                 zebra && c === 0 ? 'rounded-l-[8px]' : '',
                 zebra && c === row.length - 1 ? 'rounded-r-[8px]' : '',
               ].join(' ')}
@@ -174,7 +179,7 @@ function EnrichingSkeleton() {
   )
 }
 
-function VerbSection({ entry }: { entry: VocabVerb }) {
+function VerbSection({ entry, mastered }: { entry: VocabVerb; mastered: boolean }) {
   if (!entry.conjugations) return <EnrichingSkeleton />
   const { present, past, past2 } = entry.conjugations
   const rows = VERB_PERSONS.map((p, i) => [p, present[i] ?? '', past[i] ?? '', past2[i] ?? ''])
@@ -187,6 +192,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
           kinds={['label', 'value', 'value', 'value']}
           rows={rows}
           tips={ABBREV_TIP}
+          mastered={mastered}
         />
       </div>
 
@@ -194,7 +200,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
-          <span className="font-instrument text-[15px] text-[#F8FAFC]/40">{entry.otherForm.label}</span>
+          <span className={`font-instrument text-[15px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{entry.otherForm.label}</span>
           <span className="font-instrument text-[18px] italic text-[#B4A0FF]">{entry.otherForm.word}</span>
         </div>
       )}
@@ -202,7 +208,7 @@ function VerbSection({ entry }: { entry: VocabVerb }) {
   )
 }
 
-function NounSection({ entry }: { entry: VocabNoun }) {
+function NounSection({ entry, mastered }: { entry: VocabNoun; mastered: boolean }) {
   if (!entry.declensions) return <EnrichingSkeleton />
   const { cases, singular, plural } = entry.declensions
   const rows = cases.map((c, i) => [abbrev(c), singular[i] ?? '', plural[i] ?? ''])
@@ -214,22 +220,23 @@ function NounSection({ entry }: { entry: VocabNoun }) {
         kinds={['label', 'value', 'value']}
         rows={rows}
         tips={ABBREV_TIP}
+        mastered={mastered}
       />
     </div>
   )
 }
 
 // A single degree-of-comparison row (label + form) for the gradation block.
-function GradeRow({ label, form }: { label: string; form: string }) {
+function GradeRow({ label, form, mastered }: { label: string; form: string; mastered: boolean }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className="w-[76px] shrink-0 font-instrument text-[13px] text-[#F8FAFC]/40">{label}</span>
+      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{label}</span>
       <span className="font-instrument text-[16px] text-[#B4A0FF]">{form}</span>
     </div>
   )
 }
 
-function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
+function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered: boolean }) {
   if (!entry.declensions) return <EnrichingSkeleton />
   const { cases, masculine, feminine, neuter, pluralMasc, pluralNonMasc } = entry.declensions
   const sgRows = cases.map((c, i) => [abbrev(c), masculine[i] ?? '', feminine[i] ?? '', neuter[i] ?? ''])
@@ -243,11 +250,11 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
       {gradable && (
         <>
           <div className="flex flex-col">
-            <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">stopniowanie</span>
+            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>stopniowanie</span>
             <div className="flex flex-col gap-2">
-              <GradeRow label="równy" form={entry.pl} />
-              {entry.comparative && <GradeRow label="wyższy" form={entry.comparative} />}
-              {entry.superlative && <GradeRow label="najwyższy" form={entry.superlative} />}
+              <GradeRow label="równy" form={entry.pl} mastered={mastered} />
+              {entry.comparative && <GradeRow label="wyższy" form={entry.comparative} mastered={mastered} />}
+              {entry.superlative && <GradeRow label="najwyższy" form={entry.superlative} mastered={mastered} />}
             </div>
           </div>
           <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
@@ -256,7 +263,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
 
       {/* Singular: cases, m., f., n. */}
       <div className="flex flex-col">
-        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. pojedyncza</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>l. pojedyncza</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.', 'f.', 'n.']}
@@ -264,6 +271,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
           rows={sgRows}
           size={13}
           tips={ABBREV_TIP}
+          mastered={mastered}
         />
       </div>
 
@@ -271,7 +279,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
 
       {/* Plural: cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
-        <span className="mb-3 font-instrument text-[12px] uppercase tracking-wider text-[#F8FAFC]/40">l. mnoga</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>l. mnoga</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.os.', 'nm.os.']}
@@ -279,6 +287,7 @@ function AdjectiveSection({ entry }: { entry: VocabAdjective }) {
           rows={plRows}
           size={13}
           tips={ABBREV_TIP}
+          mastered={mastered}
         />
       </div>
     </div>
@@ -688,9 +697,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             </div>
 
             {/* Type-specific grammatical detail */}
-            {entry.type === 'verb'      && <VerbSection entry={entry} />}
-            {entry.type === 'noun'      && <NounSection entry={entry} />}
-            {entry.type === 'adjective' && <AdjectiveSection entry={entry} />}
+            {entry.type === 'verb'      && <VerbSection entry={entry} mastered={mastered} />}
+            {entry.type === 'noun'      && <NounSection entry={entry} mastered={mastered} />}
+            {entry.type === 'adjective' && <AdjectiveSection entry={entry} mastered={mastered} />}
             {entry.type === 'unknown'   && <FallbackSection entry={entry} />}
 
             {/* Translation via DeepL */}
