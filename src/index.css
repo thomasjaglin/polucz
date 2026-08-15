@@ -395,11 +395,20 @@ body {
      on the transparent-filled glyph). */
   text-shadow: none;
 }
-/* The word (not the icons) gets a slight black outline. paint-order draws the
-   stroke behind the gradient fill so it reads as an outline, not eating the glyph. */
+/* The word (not the icons) gets a slight black OUTER outline. A crisp
+   multi-directional text-shadow (0 blur) sits behind the gradient fill, so only
+   the outer silhouette shows the dark — unlike text-stroke, which outlines every
+   stroke of each glyph. */
 .holo-text {
-  -webkit-text-stroke: 0.7px rgba(0, 0, 0, 0.5);
-  paint-order: stroke fill;
+  text-shadow:
+    0.7px 0 0 rgba(0, 0, 0, 0.55),
+    -0.7px 0 0 rgba(0, 0, 0, 0.55),
+    0 0.7px 0 rgba(0, 0, 0, 0.55),
+    0 -0.7px 0 rgba(0, 0, 0, 0.55),
+    0.5px 0.5px 0 rgba(0, 0, 0, 0.5),
+    -0.5px 0.5px 0 rgba(0, 0, 0, 0.5),
+    0.5px -0.5px 0 rgba(0, 0, 0, 0.5),
+    -0.5px -0.5px 0 rgba(0, 0, 0, 0.5);
 }
 
 /* ─── Cosmos holographic (poke-holo style) ─────────────────────────────────────
