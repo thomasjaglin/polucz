@@ -9,8 +9,10 @@ import { motion, useReducedMotion } from 'framer-motion'
 // skipped under reduced motion. It plays once because the modal mounts fresh on
 // each open. The host div is `absolute inset-0` over the card with overflow
 // visible, so percentages below are relative to the card box.
-
-const STAR_COLORS = ['#ffe6b0', '#ffb8e6', '#b0dcff', '#bfffd6', '#ffffff']
+//
+// The stars carry `.holo-icon` — the same white + iridescent shine (and crisp
+// black outline) as the mastered-card star/tick icons — so the burst matches the
+// card. Each star's rotation rotates its clipped gradient too, varying the sheen.
 
 export default function MasteredBurst() {
   const reduce = useReducedMotion()
@@ -32,7 +34,6 @@ export default function MasteredBurst() {
         dx: Math.cos(angle) * travel,
         dy: Math.sin(angle) * travel,
         size,
-        color: STAR_COLORS[i % STAR_COLORS.length],
         delay: Math.random() * 0.1,
         rot: (Math.random() - 0.5) * 200,
         dur: 0.8 + Math.random() * 0.3,
@@ -60,15 +61,13 @@ export default function MasteredBurst() {
       {stars.map(s => (
         <motion.span
           key={s.id}
-          className="absolute leading-none"
+          className="holo-icon absolute leading-none"
           style={{
             left: `${s.leftPct}%`,
             top: `${s.topPct}%`,
             marginLeft: -s.size / 2,
             marginTop: -s.size / 2,
-            color: s.color,
             fontSize: s.size,
-            textShadow: '0 0 6px currentColor',
           }}
           initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
           animate={{ x: s.dx, y: s.dy, scale: [0, 1.2, 0.4], opacity: [0, 1, 0], rotate: s.rot }}
