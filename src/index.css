@@ -408,17 +408,16 @@ body {
     drop-shadow(0 -0.6px 0 rgba(0, 0, 0, 0.5));
 }
 
-/* White outline for the purple accent words on mastered cards — overrides the
-   inherited dark card-mastered text-shadow (plain coloured text, so a crisp
-   multi-directional text-shadow works). */
-.holo-outline-white {
-  text-shadow:
-    0.6px 0 0 rgba(255, 255, 255, 0.85),
-    -0.6px 0 0 rgba(255, 255, 255, 0.85),
-    0 0.6px 0 rgba(255, 255, 255, 0.85),
-    0 -0.6px 0 rgba(255, 255, 255, 0.85),
-    0.5px 0.5px 0 rgba(255, 255, 255, 0.7),
-    -0.5px -0.5px 0 rgba(255, 255, 255, 0.7);
+/* Same crisp black outline as the main word (.holo-text), for the purple accent
+   words on mastered cards — the text keeps its colour. Cancels the inherited soft
+   card-mastered text-shadow and uses drop-shadow so it matches exactly. */
+.holo-outline {
+  text-shadow: none;
+  filter:
+    drop-shadow(0.6px 0 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(-0.6px 0 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0.6px 0 rgba(0, 0, 0, 0.5))
+    drop-shadow(0 -0.6px 0 rgba(0, 0, 0, 0.5));
 }
 
 /* ─── Cosmos holographic (poke-holo style) ─────────────────────────────────────
