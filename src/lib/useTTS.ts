@@ -1,7 +1,29 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
+import { TextToSpeech } from '@capacitor-community/text-to-speech'
 import { apiUrl } from './apiBase'
 import { getCachedClip, putCachedClip } from './audioCache'
 import { getPlaybackRate, subscribeRate } from './playbackRate'
+
+// On Android the device's own speech engine does the talking. It needs no key,
+// no network and no preparation, and it works whichever LLM the user picked —
+// Claude has no audio API at all, so tying pronunciation to the chosen provider
+// would have left some users with no speech.
+//
+// Clips generated earlier by Gemini are still preferred when they're already in
+// the cache: they sound better, and there's no reason to discard work already
+// done. Only the browser build still reaches for api/tts.
+const USE_NATIVE_TTS = Capacitor.isNativePlatform()
+
+const LANG_TAG = { pl: 'pl-PL', en: 'en-US' } as const
+
+function speakNative(text: string, language: 'pl' | 'en'): Promise<void> {
+  return TextToSpeech.speak({
+    text,
+    lang: LANG_TAG[language],
+    rate: getPlaybackRate(),
+  })
+}
 
 export type AudioState = 'idle' | 'loading' | 'playing' | 'error'
 
@@ -95,6 +117,17 @@ export function useTTS() {
     return blob
   }, [])
 
+  // Memory → IndexedDB, no network. Used by the native path to prefer a clip
+  // that already exists over synthesising a new one.
+  const getCachedBlob = useCallback(async (text: string, language: 'pl' | 'en'): Promise<Blob | null> => {
+    const key = `${language}:${text}`
+    const mem = cache.current.get(key)
+    if (mem) return mem
+    const persisted = await getCachedClip(key)
+    if (persisted) cache.current.set(key, persisted)
+    return persisted ?? null
+  }, [])
+
   const playOne = useCallback((blob: Blob): Promise<void> => {
     return new Promise((resolve, reject) => {
       // Lazily create the single reused element on first use.
@@ -136,6 +169,7 @@ export function useTTS() {
   const stop = useCallback(() => {
     abortRef.current = true
     audioElRef.current?.pause()
+    if (USE_NATIVE_TTS) TextToSpeech.stop().catch(() => {})
     cancelRef.current?.()   // resolves the pending playOne; the sequence loop then hits abortRef and exits
     setState('idle')
   }, [])
@@ -143,6 +177,9 @@ export function useTTS() {
   // Silent pre-fetch for both clips — populates the cache. Returns true only if
   // both clips are now cached (used to mark a card "audio-ready").
   const prefetch = useCallback(async (pl: string, en: string): Promise<boolean> => {
+    // Nothing to prepare natively — the device engine is always available, so a
+    // card is audio-ready the moment it exists.
+    if (USE_NATIVE_TTS) return true
     try {
       await Promise.all([getBlob(pl, 'pl'), getBlob(en, 'en')])
       return true
@@ -156,16 +193,24 @@ export function useTTS() {
     abortRef.current = false
     setState('loading')
     try {
-      const [plBlob, enBlob] = await Promise.all([getBlob(pl, 'pl'), getBlob(en, 'en')])
+      // Resolve each utterance to a cached clip where one exists. Natively that
+      // is the only lookup — nothing is fetched — so playback starts at once;
+      // in the browser this is the existing fetch-and-persist path.
+      const resolve = USE_NATIVE_TTS ? getCachedBlob : getBlob
+      const [plBlob, enBlob] = await Promise.all([resolve(pl, 'pl'), resolve(en, 'en')])
       if (abortRef.current) return
       setState('playing')
 
       // PL → 1 s → EN → 1 s → PL → 1 s → EN
       // The gap uses cancelRef so stop() can unblock it immediately (same as playOne)
-      const clips = [plBlob, enBlob, plBlob, enBlob]
+      const clips: [Blob | null, string, 'pl' | 'en'][] = [
+        [plBlob, pl, 'pl'], [enBlob, en, 'en'], [plBlob, pl, 'pl'], [enBlob, en, 'en'],
+      ]
       for (let i = 0; i < clips.length; i++) {
         if (abortRef.current) return
-        await playOne(clips[i])
+        const [blob, text, lang] = clips[i]
+        if (blob) await playOne(blob)
+        else await speakNative(text, lang)
         if (i < clips.length - 1 && !abortRef.current) {
           await new Promise<void>(resolve => {
             const t = setTimeout(resolve, 1000)
@@ -180,7 +225,7 @@ export function useTTS() {
     } catch {
       if (!abortRef.current) setState('error')
     }
-  }, [stop, getBlob, playOne])
+  }, [stop, getBlob, getCachedBlob, playOne])
 
   return { state, stop, prefetch, playSequence }
 }
