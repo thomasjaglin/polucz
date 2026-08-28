@@ -8,8 +8,8 @@ interface Props {
   id: WordType | 'mastered'
   label: string
   active: boolean
-  /** Highlighted "only this" state — currently just Mastered, which is the one
-   *  filter whose solo can't be expressed by the plain on/off toggles. */
+  /** Highlighted "only this" state, set by a long press. A tap on a soloed tag
+   *  clears the whole filter bar rather than toggling just itself. */
   soloed?: boolean
   onToggle: () => void
   onLongPress: () => void

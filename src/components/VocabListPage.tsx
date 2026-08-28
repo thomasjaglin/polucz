@@ -31,42 +31,49 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   })
   const cardRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
 
-  // "Only mastered" — the one filter whose solo the plain on/off toggles can't
-  // express, since `mastered: true` means "don't hide them", not "show only
-  // them". The type tags need no such state: soloing one is just an ordinary
-  // filter combination, so their long press sets the toggles and stops there.
-  const [masteredOnly, setMasteredOnly] = useState(false)
+  // Which tag, if any, is soloed by a long press — highlighted, and the only
+  // one whose cards show. One slot, so there's never a stacked state to reason
+  // about. It also carries the "only mastered" filter, which is the one thing
+  // the on/off toggles can't express on their own: `mastered: true` means
+  // "don't hide them", not "show only them".
+  const [soloed, setSoloed] = useState<FilterKey | null>(null)
+
+  const ALL_ON: Record<FilterKey, boolean> = { noun: true, verb: true, adjective: true, mastered: true }
 
   function toggleFilter(id: FilterKey) {
-    // Tapping the highlighted Mastered tag leaves the mode. Without this the
-    // tap would clear activeFilters.mastered while masteredOnly still held, and
-    // the two would cancel out to an empty list.
-    if (id === 'mastered' && masteredOnly) {
-      setMasteredOnly(false)
+    // A tap on the highlighted tag is the way out of a solo, and it clears the
+    // whole bar rather than just that tag. Leaving the tag to toggle itself off
+    // instead would strand a solo'd Mastered on an empty list, since the flag
+    // would still hold while its own tag said to hide mastered cards.
+    if (soloed === id) {
+      setSoloed(null)
+      setActiveFilters(ALL_ON)
       return
     }
+    // Touching any other tag ends the solo too — it is no longer the only
+    // thing showing, so it must stop claiming to be.
+    if (soloed !== null) setSoloed(null)
     setActiveFilters(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
-  // One solo at a time: a type long press drops the Mastered solo and vice
-  // versa, so there's never a stacked state to reason about.
   function soloFilter(id: FilterKey) {
-    if (id === 'mastered') {
-      setMasteredOnly(on => {
-        // Entering shows every mastered card, so reset the type toggles rather
-        // than silently carrying a previous selection into the new mode.
-        if (!on) setActiveFilters({ noun: true, verb: true, adjective: true, mastered: true })
-        return !on
-      })
+    // Long-pressing what's already soloed is the same exit as tapping it, so
+    // the highlighted tag always returns you to everything, however it's pressed.
+    if (soloed === id) {
+      setSoloed(null)
+      setActiveFilters(ALL_ON)
       return
     }
-    setMasteredOnly(false)
-    setActiveFilters(prev => ({
+    setSoloed(id)
+    // Mastered cuts across the types, so its solo shows every mastered card and
+    // resets the type toggles rather than carrying a stale selection in. A type
+    // solo only speaks for the types, and leaves Mastered as it found it.
+    setActiveFilters(prev => id === 'mastered' ? ALL_ON : {
       noun: id === 'noun',
       verb: id === 'verb',
       adjective: id === 'adjective',
-      mastered: prev.mastered, // orthogonal to type — a long press leaves it be
-    }))
+      mastered: prev.mastered,
+    })
   }
 
   function toggleSearch() {
@@ -83,7 +90,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
 
   const q = searchQuery.toLowerCase()
   const filtered = [...cards].reverse().filter(v => {
-    if (masteredOnly && !masteredIds.has(v.id)) return false
+    if (soloed === 'mastered' && !masteredIds.has(v.id)) return false
     if ((v.type === 'noun' || v.type === 'verb' || v.type === 'adjective') && !activeFilters[v.type as WordType & FilterKey]) return false
     if (masteredIds.has(v.id) && !activeFilters.mastered) return false
     return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
@@ -126,7 +133,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                     id={f.id}
                     label={f.label}
                     active={activeFilters[f.id]}
-                    soloed={f.id === 'mastered' && masteredOnly}
+                    soloed={soloed === f.id}
                     onToggle={() => toggleFilter(f.id)}
                     onLongPress={() => soloFilter(f.id)}
                   />
