@@ -114,6 +114,16 @@ html.theme-light .kube-glass-bg::after {
 .card-cv {
   content-visibility: auto;
   contain-intrinsic-size: auto 96px;
+  /* content-visibility brings paint containment, and paint containment clips to
+     this element's border box — square, unless it has a radius of its own. The
+     card's own rounded clip is inside that box and does not survive it, so the
+     pane's blurred, brightened backdrop gets painted to the full rectangle and
+     each card sits in a lighter block with hard corners.
+     Only cards that have been scrolled through show it, which is what makes it
+     look intermittent: the first screenful is never skipped, so it never
+     acquires the containment clip. Matching the card's radius here rounds the
+     containment box and the corners go with it. */
+  border-radius: 36px;
 }
 
 /* ─── Page fade-in animation ──────────────────────────────── */
