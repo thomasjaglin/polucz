@@ -180,7 +180,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
             </AnimatePresence>
 
             {/* Total / filtered card count */}
-            <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-ink/40">{countLabel}</p>
+            <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-ink/55">{countLabel}</p>
           </div>
         </div>
       </div>

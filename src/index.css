@@ -8,6 +8,7 @@
    once while each alpha keeps the meaning it was tuned with. */
 :root {
   --ink-rgb: 248 250 252;
+  --accent-rgb: 180 160 255;   /* #B4A0FF — light lavender, for dark surfaces */
   --page-bg: #121212;
   /* The base wash AppBackground paints under the page gradient. */
   --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(18, 18, 18, 0.99) 62.02%, rgba(18, 18, 18, 0.65) 100%);
@@ -18,6 +19,9 @@
 
 html.theme-light {
   --ink-rgb: 15 23 42;              /* slate-900 — dark enough to read on the wash */
+  /* The lavender reads at ~2.5:1 on a light card — the same hue has to go
+     deep to carry the same meaning at a legible contrast. */
+  --accent-rgb: 76 43 184;
   --page-bg: #F7F4F1;               /* warm off-white; a pure white reads clinical under glass */
   --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(255, 253, 251, 0.92) 62.02%, rgba(247, 244, 241, 0.75) 100%);
   --nav-scrim: linear-gradient(to top, #F7F4F1 14%, rgba(247, 244, 241, 0.72) 42%, transparent 100%);
@@ -64,10 +68,25 @@ html.theme-light .glass-raise-sm {
    Applied to ::before (which already carries the backdrop-filter) so it sits
    under content and needs no !important to beat the utility class. */
 html.theme-light .kube-glass-bg::before {
-  /* Enough white to keep dark text readable over any part of the gradient, but
-     thin enough that the colour behind still comes through — at 0.55 the panes
-     were opaque and the glass read as flat white. */
-  background-color: rgba(255, 255, 255, 0.32);
+  /* Barely there. A white overlay is the wrong tool for readability here: every
+     percent of it is a percent of the backdrop you stop seeing, so buying
+     contrast that way costs exactly the transparency the glass is for.
+     Brightness on the backdrop-filter buys the same contrast for free — it
+     lifts what is already behind the pane instead of covering it, and saturate
+     keeps the colour from washing out as it lifts. So the fill stays near-clear
+     and the filter does the work. */
+  background-color: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(10px) saturate(155%) brightness(1.14);
+  backdrop-filter: blur(10px) saturate(155%) brightness(1.14);
+}
+
+/* Mid-scroll the blur is dropped for cost (see .is-scrolling below). Keep the
+   brightness: it is carrying the text contrast now, and losing it would dim
+   every card for as long as a flick lasts. */
+html.theme-light .is-scrolling .kube-glass-bg::before,
+html.theme-light.is-scrolling .kube-glass-bg::before {
+  -webkit-backdrop-filter: saturate(155%) brightness(1.14);
+  backdrop-filter: saturate(155%) brightness(1.14);
 }
 
 /* The painted depth pass assumes a dark surround: a bright top highlight reads
@@ -78,9 +97,9 @@ html.theme-light .kube-glass-bg::after {
     linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 45%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 30%, rgba(15, 23, 42, 0.04) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    inset 0 0 0 1px rgba(15, 23, 42, 0.06),
-    inset 0 -1px 2px rgba(15, 23, 42, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.1),
+    inset 0 -1px 2px rgba(15, 23, 42, 0.06);
 }
 
 /* ─── Font ────────────────────────────────────────────────── */
