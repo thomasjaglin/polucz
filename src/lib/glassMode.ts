@@ -1,5 +1,8 @@
 // Which renderer paints the liquid glass. See docs/liquid-glass-webgl-plan.md.
 //
+// NOTE (css-glass-only branch): detect() is pinned to 'css' — see below.
+// The other two modes are still fully wired and reachable via ?glass=.
+//
 // - 'svg'   — Chromium: SVG feDisplacementMap alongside backdrop-filter.
 //             Refracts real DOM, so it stays the preferred path where it works.
 // - 'webgl' — Safari/Firefox: a WebGL2 canvas renders the background and the
@@ -20,13 +23,22 @@ function detect(): GlassMode {
   const q = new URLSearchParams(window.location.search).get('glass')
   if (q === 'svg' || q === 'webgl' || q === 'css') return q
 
-  // EXPERIMENT (this branch): WebGL is the primary renderer wherever
-  // available — the point of the branch is judging the shader glass as the
-  // real experience. `?glass=svg` restores the SVG path for comparison.
-  const canvas = document.createElement('canvas')
-  if (canvas.getContext('webgl2')) return 'webgl'
-
-  return isChromium() ? 'svg' : 'css'
+  // EXPERIMENT (this branch): 'css' everywhere, unconditionally — the point of
+  // the branch is judging the whole app in the cheap painted-glass style the
+  // vocab list already uses, and measuring what that buys on a real phone.
+  //
+  // This drops the GlassCanvas entirely (App only mounts it in webgl mode), so
+  // the shader-only showcase effects go with it: the translate page's gradient
+  // blob + disc and the logo refraction. Every page falls back to its DOM
+  // gradient (see PageGradient) and every pane to backdrop-filter + the painted
+  // rim in index.css. Nothing else regresses — each `mode === 'webgl'` check in
+  // the app already has a working non-webgl branch.
+  //
+  // `?glass=webgl` and `?glass=svg` above still force the old renderers, but only
+  // in a browser: the packaged Capacitor app loads https://localhost/ with no
+  // query string and no address bar, so comparing modes on-device means a
+  // rebuild (or a persisted dev toggle, which this branch doesn't add).
+  return 'css'
 }
 
 export function getGlassMode(): GlassMode {
