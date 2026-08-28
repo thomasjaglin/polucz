@@ -31,8 +31,42 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   })
   const cardRefs = useRef<Map<string, HTMLDivElement | null>>(new Map())
 
+  // "Only mastered" — the one filter whose solo the plain on/off toggles can't
+  // express, since `mastered: true` means "don't hide them", not "show only
+  // them". The type tags need no such state: soloing one is just an ordinary
+  // filter combination, so their long press sets the toggles and stops there.
+  const [masteredOnly, setMasteredOnly] = useState(false)
+
   function toggleFilter(id: FilterKey) {
+    // Tapping the highlighted Mastered tag leaves the mode. Without this the
+    // tap would clear activeFilters.mastered while masteredOnly still held, and
+    // the two would cancel out to an empty list.
+    if (id === 'mastered' && masteredOnly) {
+      setMasteredOnly(false)
+      return
+    }
     setActiveFilters(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  // One solo at a time: a type long press drops the Mastered solo and vice
+  // versa, so there's never a stacked state to reason about.
+  function soloFilter(id: FilterKey) {
+    if (id === 'mastered') {
+      setMasteredOnly(on => {
+        // Entering shows every mastered card, so reset the type toggles rather
+        // than silently carrying a previous selection into the new mode.
+        if (!on) setActiveFilters({ noun: true, verb: true, adjective: true, mastered: true })
+        return !on
+      })
+      return
+    }
+    setMasteredOnly(false)
+    setActiveFilters(prev => ({
+      noun: id === 'noun',
+      verb: id === 'verb',
+      adjective: id === 'adjective',
+      mastered: prev.mastered, // orthogonal to type — a long press leaves it be
+    }))
   }
 
   function toggleSearch() {
@@ -49,6 +83,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
 
   const q = searchQuery.toLowerCase()
   const filtered = [...cards].reverse().filter(v => {
+    if (masteredOnly && !masteredIds.has(v.id)) return false
     if ((v.type === 'noun' || v.type === 'verb' || v.type === 'adjective') && !activeFilters[v.type as WordType & FilterKey]) return false
     if (masteredIds.has(v.id) && !activeFilters.mastered) return false
     return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
@@ -80,7 +115,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
       {/* Search + filter glass card */}
       <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
         <div className="relative flex w-full flex-col gap-4 rounded-[36px] p-4">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+          <GlassPane forceCss borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
           <div className="relative z-10 flex flex-col gap-3.5">
             {/* Filter tags + collapsed search toggle */}
             <div className="flex items-center justify-between gap-2">
@@ -91,7 +126,9 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                     id={f.id}
                     label={f.label}
                     active={activeFilters[f.id]}
+                    soloed={f.id === 'mastered' && masteredOnly}
                     onToggle={() => toggleFilter(f.id)}
+                    onLongPress={() => soloFilter(f.id)}
                   />
                 ))}
               </div>
@@ -100,7 +137,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                 aria-label={searchOpen ? 'Close search' : 'Open search'}
                 className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
               >
-                <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
+                <GlassPane forceCss borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={searchOpen ? 'close' : 'search'}
@@ -150,7 +187,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
               layout
               variants={listItem}
               exit="exit"
-              className="w-full"
+              className="card-cv w-full"
             >
               <VocabCard
                 ref={el => { cardRefs.current.set(entry.id, el) }}
