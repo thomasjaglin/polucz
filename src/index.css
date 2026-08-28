@@ -604,8 +604,22 @@ html.theme-light .holo-glitter {
   mix-blend-mode: overlay;
   opacity: 0.68;
 }
+/* cosmos-shine is the modal's extra layer — the list card never renders it,
+   which is why the modal came out paler than the cards despite sharing a base.
+   Its top layer dodges, and dodging a saturated light base drives it to white,
+   so the colour underneath is bleached out of it. Overlay keeps the texture
+   without clipping the base away. The inner layers already overlay/multiply and
+   are fine either way. */
 html.theme-light .cosmos-shine {
-  opacity: 0.6;
+  mix-blend-mode: overlay;
+  opacity: 0.55;
+}
+
+/* The modal turns the sweep up (.holo-full .holo-shimmer) for the same reason
+   it reads well on a dark card. Over a saturated light base that much white
+   sweep washes it, so the modal takes the same weight as a list card. */
+html.theme-light .holo-full .holo-shimmer {
+  opacity: 0.55;
 }
 
 /* The modal's round buttons carry white glyphs with a dark shadow so they read
