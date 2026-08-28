@@ -6,6 +6,11 @@ export const pages: Record<PageId, PageConfig> = {
     icon: 'folder',
     desc: 'Browse and manage your vocabulary.',
     gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#4A0101"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#8B0909"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#C82A2A"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#F57D7D"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>`,
+    // Light counterpart. The dark stack screen-blends a dark→white ramp to make
+    // a bright core; on a light page screen only washes toward white, so this
+    // multiplies a white→tinted ramp instead — same geometry, inverted ends, so
+    // the colour still gathers in the middle rather than at the edges.
+    gradientLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-[0.55] blur-[36px] mix-blend-multiply transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#FFFFFF"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#FFF0EE"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#FFDAD6"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#FFC4BE"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="#FFB3AC"/></svg>`,
   },
   translate: {
     title: 'Translate',

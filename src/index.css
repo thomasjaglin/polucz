@@ -2,10 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme tokens ────────────────────────────────────────── */
+/* Raw channels, so Tailwind's opacity modifiers keep working through the token
+   (text-ink/70, border-ink/20). Flipping these flips every foreground colour at
+   once while each alpha keeps the meaning it was tuned with. */
+:root {
+  --ink-rgb: 248 250 252;
+  --page-bg: #121212;
+  /* The base wash AppBackground paints under the page gradient. */
+  --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(18, 18, 18, 0.99) 62.02%, rgba(18, 18, 18, 0.65) 100%);
+  /* Fades the scrolling list into the page base behind the floating nav, so it
+     has to end on the same colour the page does — see App.tsx. */
+  --nav-scrim: linear-gradient(to top, #121212 14%, rgba(18, 18, 18, 0.72) 42%, transparent 100%);
+}
+
+html.theme-light {
+  --ink-rgb: 15 23 42;              /* slate-900 — dark enough to read on the wash */
+  --page-bg: #F7F4F1;               /* warm off-white; a pure white reads clinical under glass */
+  --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(255, 253, 251, 0.92) 62.02%, rgba(247, 244, 241, 0.75) 100%);
+  --nav-scrim: linear-gradient(to top, #F7F4F1 14%, rgba(247, 244, 241, 0.72) 42%, transparent 100%);
+}
+
 /* ─── Global body ─────────────────────────────────────────── */
 body {
-  background-color: #121212;
+  background-color: var(--page-bg);
   overflow: hidden;
+}
+
+/* Theme-swapped siblings: both are in the DOM, CSS picks one, so switching is
+   a class on <html> with nothing to re-render. */
+.theme-light-only { display: none; }
+html.theme-light .theme-light-only { display: flex; }
+html.theme-light .theme-dark-only { display: none; }
+
+/* ─── Glass elevation ─────────────────────────────────────── */
+/* The lift under a glass surface: a drop shadow plus a hairline ring. On dark
+   the ring is white (a lit edge catching light from above); on light a white
+   ring is invisible against the page, so it inverts to a faint dark line and
+   the drop shadow lightens — a 25% black shadow that reads as depth on near-
+   black reads as grime on off-white. Named classes rather than inline
+   arbitrary values because these are the two things that must change per
+   theme, and a utility string can't. */
+.glass-raise {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+.glass-raise-sm {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+html.theme-light .glass-raise {
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.10), inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+html.theme-light .glass-raise-sm {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10), inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+/* ─── Light-mode glass ────────────────────────────────────── */
+/* Dark glass works by letting a bright backdrop show through a nearly-clear
+   pane: bg-ink/[0.02] over a dark page. Invert the ink and that same 2% becomes
+   a dark smear on a light page, so the pane needs a white wash instead of a
+   darker one — glass on light reads as frost, not tint.
+   Applied to ::before (which already carries the backdrop-filter) so it sits
+   under content and needs no !important to beat the utility class. */
+html.theme-light .kube-glass-bg::before {
+  background-color: rgba(255, 255, 255, 0.55);
+}
+
+/* The painted depth pass assumes a dark surround: a bright top highlight reads
+   as a lit edge there, but as a washed-out smudge on white. Light mode wants
+   the opposite emphasis — a soft dark rim doing the work the highlight did. */
+html.theme-light .kube-glass-bg::after {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 45%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0) 30%, rgba(15, 23, 42, 0.04) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(15, 23, 42, 0.06),
+    inset 0 -1px 2px rgba(15, 23, 42, 0.05);
 }
 
 /* ─── Font ────────────────────────────────────────────────── */

@@ -3,6 +3,7 @@ import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
+import { getTheme, setTheme, type Theme } from '../lib/theme'
 import { MODELS, PROVIDERS, clearDeepLKey, clearLlmConfig, getDeepLKey, getLlmConfig, saveDeepLKey, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 px-2 font-instrument text-[13px] font-medium uppercase tracking-wider text-[#F8FAFC]/40">
+      <h2 className="mb-2 px-2 font-instrument text-[13px] font-medium uppercase tracking-wider text-ink/40">
         {title}
       </h2>
       <GlassCard contentClassName="flex flex-col p-6">{children}</GlassCard>
@@ -28,8 +29,8 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <p className="font-instrument text-[16px] text-[#F8FAFC]/70">{label}</p>
-        {hint && <p className="mt-0.5 font-instrument text-[13px] text-[#F8FAFC]/35">{hint}</p>}
+        <p className="font-instrument text-[16px] text-ink/70">{label}</p>
+        {hint && <p className="mt-0.5 font-instrument text-[13px] text-ink/35">{hint}</p>}
       </div>
       {children}
     </div>
@@ -52,23 +53,40 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [deeplStored, setDeeplStored] = useState<string | null>(() => getDeepLKey())
   const [deeplEditing, setDeeplEditing] = useState(() => getDeepLKey() === null)
   const [deeplKey, setDeeplKey] = useState('')
+  const [theme, setThemeState] = useState<Theme>(() => getTheme())
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
-      <h1 className="px-2 font-instrument text-[24px] font-semibold text-[#F8FAFC]">App settings</h1>
+      <h1 className="px-2 font-instrument text-[24px] font-semibold text-ink">App settings</h1>
 
       <Section title="Appearance">
-        {/* Placeholder until the light theme exists. Deliberately inert rather
-            than a toggle that moves and changes nothing — the caption says so
-            instead of leaving the control to imply it works. */}
-        <Row label="Theme" hint="Light mode isn't built yet">
+        {/* Live. The hint names the scope rather than the control implying the
+            whole app is themed — only the vocabulary list is, so far. */}
+        <Row label="Theme" hint="Light mode currently covers the vocabulary list">
           <div
-            aria-disabled
-            className="pointer-events-none flex shrink-0 items-center gap-1 rounded-full border border-[#F8FAFC]/10 p-1 opacity-50"
+            role="radiogroup"
+            aria-label="Theme"
+            className="flex shrink-0 items-center gap-1 rounded-full border border-ink/10 p-1"
           >
-            <span className="rounded-full px-3 py-1 font-instrument text-[13px] text-[#F8FAFC]/40">Light</span>
-            <span className="rounded-full bg-[#F8FAFC]/15 px-3 py-1 font-instrument text-[13px] text-[#F8FAFC]">Dark</span>
+            {(['light', 'dark'] as Theme[]).map(t => (
+              <button
+                key={t}
+                role="radio"
+                aria-checked={theme === t}
+                onClick={() => {
+                  if (theme === t) return
+                  setTheme(t)
+                  setThemeState(t)
+                  haptics.tap()
+                }}
+                className={`rounded-full px-3 py-1 font-instrument text-[13px] capitalize transition-colors ${
+                  theme === t ? 'bg-ink/15 text-ink' : 'text-ink/40'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
           </div>
         </Row>
       </Section>
@@ -85,22 +103,24 @@ export default function ApiConfigPage({ onSave }: Props) {
               localStorage.setItem('polucz_haptics', next ? 'true' : 'false')
               if (next) haptics.tap()
             }}
-            className={`relative h-[28px] w-[48px] shrink-0 rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-[#F8FAFC]/10 bg-[#F8FAFC]/10'}`}
+            className={`relative h-[28px] w-[48px] shrink-0 rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-ink/10 bg-ink/10'}`}
           >
-            <span className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-[#F8FAFC] transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
+            <span // The knob is a surface riding on the track, not text — it stays light in
+            // both themes rather than flipping with the ink token.
+            className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-white shadow-sm transition-all ${hapticsOn ? 'left-[24px]' : 'left-[3px]'}`} />
           </button>
         </Row>
       </Section>
 
       <Section title="API">
-        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-[#F8FAFC]/40">
+        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-ink/40">
           Run the app's language features through your own LLM. Without a key here the
           app uses the server's own, so this is optional.
         </p>
 
-        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">Provider</h3>
-        <div className="relative mb-5 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">Provider</h3>
+        <div className="relative mb-5 w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/10 transition-colors group-focus-within:bg-ink/15" />
           <select
             value={provider}
             disabled={!editing}
@@ -111,14 +131,14 @@ export default function ApiConfigPage({ onSave }: Props) {
               // leave a name the new provider will 404 on.
               setModel(MODELS[next][0] ?? '')
             }}
-            className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
+            className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-ink outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
           >
             {PROVIDERS.map(p => (
-              <option key={p.id} value={p.id} className="bg-[#1a1a1a] text-[#F8FAFC]">{p.label}</option>
+              <option key={p.id} value={p.id} className="bg-[--page-bg] text-ink">{p.label}</option>
             ))}
           </select>
           {editing && (
-            <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
+            <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-ink/50">
               expand_more
             </span>
           )}
@@ -126,7 +146,7 @@ export default function ApiConfigPage({ onSave }: Props) {
 
         {provider === 'openai-compatible' && (
           <>
-            <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">Base URL</h3>
+            <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">Base URL</h3>
             <GlassInput
               placeholder="https://api.groq.com/openai/v1"
               value={baseUrl}
@@ -137,22 +157,22 @@ export default function ApiConfigPage({ onSave }: Props) {
           </>
         )}
 
-        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">Model</h3>
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">Model</h3>
         {MODELS[provider].length > 0 ? (
-          <div className="relative mb-5 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
+          <div className="relative mb-5 w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
+            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/10 transition-colors group-focus-within:bg-ink/15" />
             <select
               value={model}
               disabled={!editing}
               onChange={e => setModel(e.target.value)}
-              className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
+              className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-ink outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
             >
               {MODELS[provider].map(m => (
-                <option key={m} value={m} className="bg-[#1a1a1a] text-[#F8FAFC]">{m}</option>
+                <option key={m} value={m} className="bg-[--page-bg] text-ink">{m}</option>
               ))}
             </select>
             {editing && (
-              <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
+              <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-ink/50">
                 expand_more
               </span>
             )}
@@ -169,7 +189,7 @@ export default function ApiConfigPage({ onSave }: Props) {
           />
         )}
 
-        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">API Key</h3>
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">API Key</h3>
         <GlassInput
           type="password"
           placeholder="Paste API Key..."
@@ -190,10 +210,10 @@ export default function ApiConfigPage({ onSave }: Props) {
                   setModel(stored.model)
                   setBaseUrl(stored.baseUrl)
                 }}
-                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
               >
-                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-                <span className="relative z-10 font-instrument text-[16px] text-[#F8FAFC]/70">Cancel</span>
+                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+                <span className="relative z-10 font-instrument text-[16px] text-ink/70">Cancel</span>
               </button>
             )}
             <button
@@ -214,10 +234,10 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.tap()
                 onSave()
               }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save Configuration</span>
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Save Configuration</span>
             </button>
           </div>
         ) : (
@@ -229,10 +249,10 @@ export default function ApiConfigPage({ onSave }: Props) {
                 setEditing(true)
                 setApiKey('')
               }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Change API key</span>
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Change API key</span>
             </button>
             <button
               onClick={() => {
@@ -246,22 +266,22 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.destructive()
               }}
               aria-label="Remove saved key"
-              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-              <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/60">delete</span>
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="material-symbols-rounded relative z-10 text-[20px] text-ink/60">delete</span>
             </button>
           </div>
         )}
       </Section>
 
       <Section title="Translation">
-        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-[#F8FAFC]/40">
+        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-ink/40">
           The translate page uses DeepL, which is a separate service from the LLM above
           and needs its own key. Free-tier keys end in <span className="font-mono">:fx</span>.
         </p>
 
-        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">DeepL API Key</h3>
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">DeepL API Key</h3>
         <GlassInput
           type="password"
           placeholder="Paste DeepL API Key..."
@@ -276,10 +296,10 @@ export default function ApiConfigPage({ onSave }: Props) {
             {deeplStored && (
               <button
                 onClick={() => { setDeeplEditing(false); setDeeplKey('') }}
-                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
               >
-                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-                <span className="relative z-10 font-instrument text-[16px] text-[#F8FAFC]/70">Cancel</span>
+                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+                <span className="relative z-10 font-instrument text-[16px] text-ink/70">Cancel</span>
               </button>
             )}
             <button
@@ -292,20 +312,20 @@ export default function ApiConfigPage({ onSave }: Props) {
                 setDeeplEditing(false)
                 haptics.tap()
               }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save DeepL key</span>
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Save DeepL key</span>
             </button>
           </div>
         ) : (
           <div className="flex gap-3">
             <button
               onClick={() => { setDeeplEditing(true); setDeeplKey('') }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Change DeepL key</span>
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Change DeepL key</span>
             </button>
             <button
               onClick={() => {
@@ -316,10 +336,10 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.destructive()
               }}
               aria-label="Remove saved DeepL key"
-              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-              <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/60">delete</span>
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="material-symbols-rounded relative z-10 text-[20px] text-ink/60">delete</span>
             </button>
           </div>
         )}

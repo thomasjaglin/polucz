@@ -201,11 +201,11 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
               aria-label={`Preparing audio ${prepProgress.done} of ${prepProgress.total}`}
               className="relative flex h-[42px] items-center gap-2 rounded-full px-4 shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)] transition-all hover:scale-105 active:scale-95"
             >
-              <GlassPane borderRadius={21} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/[0.02]" />
-              <span className="relative z-10 font-instrument text-[13px] font-medium tabular-nums text-[#F8FAFC]/80">
+              <GlassPane borderRadius={21} className="absolute inset-0 z-0 rounded-full bg-ink/[0.02]" />
+              <span className="relative z-10 font-instrument text-[13px] font-medium tabular-nums text-ink/80">
                 {prepProgress.done}/{prepProgress.total}
               </span>
-              <span className="material-symbols-rounded relative z-10 animate-spin text-[18px] text-[#F8FAFC]">progress_activity</span>
+              <span className="material-symbols-rounded relative z-10 animate-spin text-[18px] text-ink">progress_activity</span>
             </button>
           ) : (
             <IconButton icon="download_for_offline" onClick={() => setPrepConfirm(true)} />
@@ -220,27 +220,27 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
             {settingsOpen && (
               <div
                 ref={dropdownRef}
-                className="absolute right-0 top-[50px] z-[100] w-[200px] overflow-hidden rounded-[24px] border border-[#F8FAFC]/10 shadow-2xl"
+                className="absolute right-0 top-[50px] z-[100] w-[200px] overflow-hidden rounded-[24px] border border-ink/10 shadow-2xl"
               >
                 <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/60" />
                 <div className="relative z-10 flex flex-col">
                 <button
                   onClick={handleImportClick}
-                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/80 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]"
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
                 >
                   <span className="material-symbols-rounded text-[18px]">download</span>
                   Import JSON
                 </button>
                 <button
                   onClick={handleExport}
-                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/80 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]"
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
                 >
                   <span className="material-symbols-rounded text-[18px]">upload</span>
                   Export JSON
                 </button>
                 <button
                   onClick={handleCopyToClipboard}
-                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-[#F8FAFC]/10"
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-ink/10"
                   style={{ color: copyLabel === 'copied' ? '#86efac' : copyLabel === 'error' ? '#f87171' : 'rgba(248,250,252,0.5)' }}
                 >
                   <span className="material-symbols-rounded text-[18px]">
@@ -251,7 +251,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 <button
                   onClick={handleSyncSentences}
                   disabled={syncState === 'loading'}
-                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-[#F8FAFC]/10 disabled:pointer-events-none"
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-ink/10 disabled:pointer-events-none"
                   style={{ color: syncState === 'done' ? '#86efac' : syncState === 'error' ? '#f87171' : 'rgba(248,250,252,0.8)' }}
                 >
                   <span className={`material-symbols-rounded text-[18px]${syncState === 'loading' ? ' animate-spin' : ''}`}>
@@ -261,14 +261,14 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 </button>
                 <button
                   onClick={() => { onChangePage('api_config'); setSettingsOpen(false) }}
-                  className="flex w-full items-center gap-3 border-b border-[#F8FAFC]/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/80 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]"
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
                 >
                   <span className="material-symbols-rounded text-[18px]">settings</span>
                   App settings
                 </button>
                 <button
                   onClick={() => { window.location.href = '/?lab' }}
-                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-[#F8FAFC]/50 transition-colors hover:bg-[#F8FAFC]/10 hover:text-[#F8FAFC]/80"
+                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/50 transition-colors hover:bg-ink/10 hover:text-ink/80"
                 >
                   <span className="material-symbols-rounded text-[18px]">science</span>
                   Glass lab
@@ -302,19 +302,19 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
             per-element glass rim the canvas draws behind the panel. */}
         <div className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/25' : 'bg-black/25 backdrop-blur-lg'}`} />
         <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[36px] p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/[0.02]" />
           <div className="relative z-10 flex flex-col gap-4">
             {prepProgress ? (
               <>
-                <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">Preparing audio…</h2>
-                <p className="font-instrument text-[14px] text-[#F8FAFC]/50">
+                <h2 className="font-instrument text-[20px] font-semibold text-ink/90">Preparing audio…</h2>
+                <p className="font-instrument text-[14px] text-ink/50">
                   {prepProgress.done} / {prepProgress.total} cards. This keeps running in the background — you can close this and keep using the app.
                 </p>
-                <div className="h-[4px] w-full overflow-hidden rounded-full bg-[#F8FAFC]/10">
+                <div className="h-[4px] w-full overflow-hidden rounded-full bg-ink/10">
                   <div className="h-full rounded-full bg-[#B4A0FF] transition-all" style={{ width: `${(prepProgress.done / Math.max(prepProgress.total, 1)) * 100}%` }} />
                 </div>
                 <div className="mt-1 flex gap-3">
-                  <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-[#F8FAFC]/5" className={`${MODAL_BTN} flex-1 border-[#F8FAFC]/20 text-[#F8FAFC]/80`}>
+                  <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} flex-1 border-ink/20 text-ink/80`}>
                     Run in background
                   </GlassButton>
                   <GlassButton onClick={() => { prepCancel.current = true; setPrepProgress(null); setPrepConfirm(false) }} radius={999} pane="bg-red-400/12" className={`${MODAL_BTN} flex-1 border-red-400/40 text-red-400`}>
@@ -324,18 +324,18 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
               </>
             ) : incompleteCount === 0 ? (
               <>
-                <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">All caught up</h2>
-                <p className="font-instrument text-[14px] text-[#F8FAFC]/50">Every card already has its audio prepared.</p>
-                <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-[#F8FAFC]/5" className={`${MODAL_BTN} mt-1 w-full border-[#F8FAFC]/20 text-[#F8FAFC]/80`}>Close</GlassButton>
+                <h2 className="font-instrument text-[20px] font-semibold text-ink/90">All caught up</h2>
+                <p className="font-instrument text-[14px] text-ink/50">Every card already has its audio prepared.</p>
+                <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} mt-1 w-full border-ink/20 text-ink/80`}>Close</GlassButton>
               </>
             ) : (
               <>
-                <h2 className="font-instrument text-[20px] font-semibold text-[#F8FAFC]/90">Prepare audio</h2>
-                <p className="font-instrument text-[14px] text-[#F8FAFC]/50">
+                <h2 className="font-instrument text-[20px] font-semibold text-ink/90">Prepare audio</h2>
+                <p className="font-instrument text-[14px] text-ink/50">
                   Generate and cache audio for <span className="text-[#B4A0FF]">{incompleteCount}</span> {incompleteCount === 1 ? 'card' : 'cards'}. It's rate-limited, so it runs slowly in the background (~{Math.ceil((incompleteCount * PREP_SPACING_MS) / 60000)} min) — you can keep using the app.
                 </p>
                 <div className="mt-1 flex gap-3">
-                  <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-[#F8FAFC]/5" className={`${MODAL_BTN} flex-1 border-[#F8FAFC]/20 text-[#F8FAFC]/80`}>Cancel</GlassButton>
+                  <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} flex-1 border-ink/20 text-ink/80`}>Cancel</GlassButton>
                   <GlassButton onClick={runPrepare} radius={999} pane="bg-[#B4A0FF]/15" className={`${MODAL_BTN} flex-1 border-[#B4A0FF]/40 text-[#B4A0FF]`}>Prepare</GlassButton>
                 </div>
               </>

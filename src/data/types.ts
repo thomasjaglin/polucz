@@ -21,6 +21,8 @@ export interface PageConfig {
   icon: string
   desc: string
   gradient: string
+  /** Light-theme counterpart. Falls back to `gradient` where absent. */
+  gradientLight?: string
 }
 
 // ─── Vocab entry sub-shapes ────────────────────────────────────────────────

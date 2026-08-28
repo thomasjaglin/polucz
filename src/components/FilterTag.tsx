@@ -82,10 +82,10 @@ export default function FilterTag({ id, label, active, soloed = false, onToggle,
       className={`flex select-none rounded-[124px] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
         soloed
           ? 'shadow-[0_4px_20px_rgba(0,0,0,0.35),inset_0_0_0_1.5px_rgba(255,255,255,0.75)]'
-          : 'shadow-[0_4px_16px_rgba(0,0,0,0.3),inset_0_0_0_1px_rgba(255,255,255,0.12)]'
+          : 'glass-raise-sm'
       }`}
     >
-      <GlassPane forceCss borderRadius={62} className="relative flex items-center justify-center rounded-[124px] bg-[#F8FAFC]/[0.02] px-3 py-1">
+      <GlassPane forceCss borderRadius={62} className="relative flex items-center justify-center rounded-[124px] bg-ink/[0.02] px-3 py-1">
         {active && (
           <div
             className={`absolute inset-0 z-0 flex items-center justify-center mix-blend-screen ${soloed ? 'opacity-100' : 'opacity-80'}`}
@@ -94,7 +94,7 @@ export default function FilterTag({ id, label, active, soloed = false, onToggle,
         )}
         <span
           className={`relative z-10 font-instrument text-[10px] transition-colors ${
-            soloed ? 'font-medium text-[#F8FAFC]' : active ? 'font-normal text-[#F8FAFC]' : 'font-normal text-[#F8FAFC]/50'
+            soloed ? 'font-medium text-ink' : active ? 'font-normal text-ink' : 'font-normal text-ink/50'
           }`}
         >
           {label}

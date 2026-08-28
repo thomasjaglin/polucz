@@ -25,10 +25,10 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
         className={`card-inner relative flex w-full flex-col rounded-[36px] transition-transform hover:scale-[1.02] active:scale-[0.98] ${
           mastered
             ? 'shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_30px_rgba(255,200,100,0.15),inset_0_0_0_1px_rgba(255,220,150,0.3)]'
-            : 'shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]'
+            : 'glass-raise'
         }`}
       >
-        <GlassPane forceCss borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
+        <GlassPane forceCss borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-ink/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
           {/* Per-type colour base (same as the modal) so the cosmos holo has a
               colourful "illustration" to sit on — mastered cards only. */}
           {mastered && (
@@ -43,7 +43,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
           <div className="relative z-10 flex items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex min-w-0 items-center gap-2">
-                <span lang="pl" className={`hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-[#F8FAFC] ${mastered ? 'holo-text' : ''}`}>
+                <span lang="pl" className={`hyphens-auto break-words font-instrument text-[24px] font-semibold leading-tight tracking-wide text-ink ${mastered ? 'holo-text' : ''}`}>
                   {entry.pl}
                 </span>
                 {mastered && (
@@ -64,15 +64,15 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 </span>
                 {meta && (
                   <>
-                    <span className={mastered ? 'text-white' : 'text-[#F8FAFC]/20'}>·</span>
-                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{meta}</span>
+                    <span className={mastered ? 'text-white' : 'text-ink/20'}>·</span>
+                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-white' : 'text-ink/40'}`}>{meta}</span>
                   </>
                 )}
               </div>
             </div>
             {mastered ? (
               <div
-                className="tag-holo relative mt-1 flex flex-shrink-0 items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-cover bg-center px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]"
+                className="tag-holo relative mt-1 flex flex-shrink-0 items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 bg-cover bg-center px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]"
                 style={{ backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` }}
               >
                 <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-white">
@@ -80,12 +80,12 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 </span>
               </div>
             ) : (
-              <GlassPane forceCss borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+              <GlassPane forceCss borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-ink/20 bg-ink/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
                   className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] }}
                 />
-                <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-[#F8FAFC]">
+                <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-ink">
                   {typeLabel(entry.type)}
                 </span>
               </GlassPane>

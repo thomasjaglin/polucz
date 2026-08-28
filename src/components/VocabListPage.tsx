@@ -120,9 +120,9 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6">
       {/* Search + filter glass card */}
-      <div className="w-full rounded-[36px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+      <div className="w-full rounded-[36px] glass-raise">
         <div className="relative flex w-full flex-col gap-4 rounded-[36px] p-4">
-          <GlassPane forceCss borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+          <GlassPane forceCss borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/[0.02]" />
           <div className="relative z-10 flex flex-col gap-3.5">
             {/* Filter tags + collapsed search toggle */}
             <div className="flex items-center justify-between gap-2">
@@ -142,9 +142,9 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
               <button
                 onClick={toggleSearch}
                 aria-label={searchOpen ? 'Close search' : 'Open search'}
-                className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
+                className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] transition-all hover:scale-105 active:scale-95"
               >
-                <GlassPane forceCss borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/10" />
+                <GlassPane forceCss borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/10" />
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
                     key={searchOpen ? 'close' : 'search'}
@@ -152,7 +152,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
                     animate={{ rotate: 0, opacity: 1 }}
                     exit={reduce ? { opacity: 0 } : { rotate: 90, opacity: 0 }}
                     transition={{ duration: reduce ? 0 : 0.18, ease: 'easeOut' }}
-                    className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/70"
+                    className="material-symbols-rounded relative z-10 text-[20px] text-ink/70"
                   >
                     {searchOpen ? 'close' : 'search'}
                   </motion.span>
@@ -180,7 +180,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
             </AnimatePresence>
 
             {/* Total / filtered card count */}
-            <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-[#F8FAFC]/40">{countLabel}</p>
+            <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-ink/40">{countLabel}</p>
           </div>
         </div>
       </div>
@@ -210,7 +210,7 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
             key="empty"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="mt-8 text-center font-instrument text-[16px] text-[#F8FAFC]/40"
+            className="mt-8 text-center font-instrument text-[16px] text-ink/40"
           >
             No cards match your search.
           </motion.p>

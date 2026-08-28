@@ -310,7 +310,7 @@ export default function App() {
         {showNav && (
           <div
             className="pointer-events-none fixed inset-x-0 bottom-0 z-50 h-[210px]"
-            style={{ background: 'linear-gradient(to top, #121212 14%, rgba(18,18,18,0.72) 42%, transparent 100%)' }}
+            style={{ background: 'var(--nav-scrim)' }}
           />
         )}
 

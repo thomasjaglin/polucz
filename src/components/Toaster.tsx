@@ -8,7 +8,7 @@ const TONE: Record<ToastTone, { pane: string; border: string; icon: string; icon
   success: { pane: 'bg-emerald-400/20', border: 'border-emerald-400/35', icon: 'check_circle', iconColor: 'text-emerald-300' },
   error:   { pane: 'bg-red-400/20',     border: 'border-red-400/40',     icon: 'error',        iconColor: 'text-red-300' },
   delete:  { pane: 'bg-red-400/20',     border: 'border-red-400/35',     icon: 'delete',       iconColor: 'text-red-300' },
-  info:    { pane: 'bg-[#F8FAFC]/10',   border: 'border-[#F8FAFC]/12',   icon: 'info',         iconColor: 'text-[#F8FAFC]/50' },
+  info:    { pane: 'bg-ink/10',   border: 'border-ink/12',   icon: 'info',         iconColor: 'text-ink/50' },
 }
 
 // Global toast stack, top of the screen. Portalled to <body> so it's positioned
@@ -43,7 +43,7 @@ export default function Toaster({ activeId }: { activeId?: PageId }) {
               <GlassPane borderRadius={999} className={`absolute inset-0 z-0 rounded-full ${tone.pane}`} />
               <span className="relative z-10 flex items-center gap-2">
                 <span className={`material-symbols-rounded shrink-0 text-[16px] ${tone.iconColor}`}>{tone.icon}</span>
-                <span className="truncate font-instrument text-[14px] text-[#F8FAFC]/85">{t.text}</span>
+                <span className="truncate font-instrument text-[14px] text-ink/85">{t.text}</span>
               </span>
             </motion.div>
           )

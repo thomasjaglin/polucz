@@ -13,11 +13,25 @@ export default function PageGradient({ activeId }: Props) {
   // stack here would paint the folder page's red over both.
   if (activeId === 'translate') return null
 
+  const page = pages[activeId]
+
+  // Both variants are rendered and CSS picks one. A theme swap is then a class
+  // on <html> with nothing to re-render — and no subscription here, which would
+  // otherwise be the only reason this component needed state at all. Pages
+  // without a light variant fall back to the dark one.
   return (
-    <div
-      className="app-bg-layer pointer-events-none absolute inset-0 z-20 flex justify-center overflow-hidden"
-      style={{ viewTransitionName: 'page-gradient' }}
-      dangerouslySetInnerHTML={{ __html: pages[activeId].gradient }}
-    />
+    <>
+      <div
+        className="app-bg-layer theme-dark-only pointer-events-none absolute inset-0 z-20 flex justify-center overflow-hidden"
+        style={{ viewTransitionName: 'page-gradient' }}
+        dangerouslySetInnerHTML={{ __html: page.gradient }}
+      />
+      {page.gradientLight && (
+        <div
+          className="app-bg-layer theme-light-only pointer-events-none absolute inset-0 z-20 flex justify-center overflow-hidden"
+          dangerouslySetInnerHTML={{ __html: page.gradientLight }}
+        />
+      )}
+    </>
   )
 }
