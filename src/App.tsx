@@ -258,9 +258,9 @@ export default function App() {
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />
     return (
       <div className="animate-fade-in flex h-full flex-col items-center justify-center gap-4 text-center">
-        <span className="material-symbols-rounded text-6xl text-[#F8FAFC]/70">{page.icon}</span>
-        <h1 className="font-instrument text-[24px] font-semibold text-[#F8FAFC]/70">{page.title}</h1>
-        <p className="font-instrument px-8 text-[#F8FAFC]/40">{page.desc}</p>
+        <span className="material-symbols-rounded text-6xl text-ink/70">{page.icon}</span>
+        <h1 className="font-instrument text-[24px] font-semibold text-ink/70">{page.title}</h1>
+        <p className="font-instrument px-8 text-ink/40">{page.desc}</p>
       </div>
     )
   }

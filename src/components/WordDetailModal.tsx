@@ -80,9 +80,9 @@ type ColKind = 'label' | 'value'
 // liquid-glass pane (same GlassPane-behind-content pattern as the header pills).
 function TipBubble({ text }: { text: string }) {
   return (
-    <div className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 whitespace-nowrap rounded-[12px] border border-[#F8FAFC]/15 px-3 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
-      <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-[12px] bg-[#1a1a1a]/55" />
-      <span className="relative z-10 font-instrument text-[12px] not-italic text-[#F8FAFC]/90">{text}</span>
+    <div className="pointer-events-none absolute bottom-full left-0 z-30 mb-1.5 whitespace-nowrap rounded-[12px] border border-ink/15 px-3 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+      <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-[12px] bg-surface/55" />
+      <span className="relative z-10 font-instrument text-[12px] not-italic text-ink/90">{text}</span>
     </div>
   )
 }
@@ -125,7 +125,7 @@ function ParadigmGrid({
             key={key}
             onClick={tip ? () => { haptics.tap(); setOpenKey(open ? null : key) } : undefined}
             className={[
-              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`,
+              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-white' : 'text-ink/40'}`,
               tip ? 'cursor-pointer select-none' : '',
             ].join(' ')}
           >
@@ -155,10 +155,10 @@ function ParadigmGrid({
                 // Tighten the gap between the label column and the values by
                 // trimming the label cell's right padding.
                 isLabel
-                  ? `pl-2 pr-0.5 ${mastered ? 'text-white' : 'text-[#F8FAFC]/45'}`
-                  : `px-2 italic ${mastered ? 'text-white' : 'text-[#F8FAFC]/85'}`,
+                  ? `pl-2 pr-0.5 ${mastered ? 'text-white' : 'text-ink/45'}`
+                  : `px-2 italic ${mastered ? 'text-white' : 'text-ink/85'}`,
                 tip ? 'cursor-pointer select-none' : '',
-                zebra ? (mastered ? 'bg-[#F8FAFC]/[0.1]' : 'bg-[#F8FAFC]/[0.04]') : '',
+                zebra ? (mastered ? 'bg-ink/[0.1]' : 'bg-ink/[0.04]') : '',
                 zebra && c === 0 ? 'rounded-l-[8px]' : '',
                 zebra && c === row.length - 1 ? 'rounded-r-[8px]' : '',
               ].join(' ')}
@@ -176,7 +176,7 @@ function ParadigmGrid({
 
 function EnrichingSkeleton() {
   return (
-    <div className="mb-8 flex flex-col items-center gap-3 py-6 text-[#F8FAFC]/30">
+    <div className="mb-8 flex flex-col items-center gap-3 py-6 text-ink/30">
       <span className="material-symbols-rounded animate-spin text-[28px]">progress_activity</span>
       <span className="font-instrument text-[14px]">Loading grammar…</span>
     </div>
@@ -200,12 +200,12 @@ function VerbSection({ entry, mastered }: { entry: VocabVerb; mastered: boolean 
         />
       </div>
 
-      <div className="my-4 h-[1px] w-full bg-[#F8FAFC]/10" />
+      <div className="my-4 h-[1px] w-full bg-ink/10" />
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
-          <span className={`font-instrument text-[15px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{entry.otherForm.label}</span>
-          <span className={`font-instrument text-[18px] italic text-[#B4A0FF] ${mastered ? 'holo-outline' : ''}`}>{entry.otherForm.word}</span>
+          <span className={`font-instrument text-[15px] ${mastered ? 'text-white' : 'text-ink/40'}`}>{entry.otherForm.label}</span>
+          <span className={`font-instrument text-[18px] italic text-accent ${mastered ? 'holo-outline' : ''}`}>{entry.otherForm.word}</span>
         </div>
       )}
     </>
@@ -234,8 +234,8 @@ function NounSection({ entry, mastered }: { entry: VocabNoun; mastered: boolean 
 function GradeRow({ label, form, mastered }: { label: string; form: string; mastered: boolean }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{label}</span>
-      <span className={`font-instrument text-[16px] text-[#B4A0FF] ${mastered ? 'holo-outline' : ''}`}>{form}</span>
+      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-white' : 'text-ink/40'}`}>{label}</span>
+      <span className={`font-instrument text-[16px] text-accent ${mastered ? 'holo-outline' : ''}`}>{form}</span>
     </div>
   )
 }
@@ -254,20 +254,20 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
       {gradable && (
         <>
           <div className="flex flex-col">
-            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>stopniowanie</span>
+            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-ink/40'}`}>stopniowanie</span>
             <div className="flex flex-col gap-2">
               <GradeRow label="równy" form={entry.pl} mastered={mastered} />
               {entry.comparative && <GradeRow label="wyższy" form={entry.comparative} mastered={mastered} />}
               {entry.superlative && <GradeRow label="najwyższy" form={entry.superlative} mastered={mastered} />}
             </div>
           </div>
-          <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
+          <div className="h-[1px] w-full bg-ink/10" />
         </>
       )}
 
       {/* Singular: cases, m., f., n. */}
       <div className="flex flex-col">
-        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>l. pojedyncza</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-ink/40'}`}>l. pojedyncza</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.', 'f.', 'n.']}
@@ -279,11 +279,11 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
         />
       </div>
 
-      <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
+      <div className="h-[1px] w-full bg-ink/10" />
 
       {/* Plural: cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
-        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>l. mnoga</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-ink/40'}`}>l. mnoga</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.os.', 'nm.os.']}
@@ -300,8 +300,8 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
 
 function FallbackSection({ entry }: { entry: VocabUnknown }) {
   return (
-    <div className="flex flex-col gap-4 rounded-[24px] border border-[#F8FAFC]/5 bg-[#F8FAFC]/5 p-5">
-      <p className="font-instrument text-[16px] text-[#F8FAFC]/80">
+    <div className="flex flex-col gap-4 rounded-[24px] border border-ink/5 bg-ink/5 p-5">
+      <p className="font-instrument text-[16px] text-ink/80">
         {entry.info ?? 'No additional info available.'}
       </p>
     </div>
@@ -383,29 +383,29 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
 
   if (examples) {
     return (
-      <div className="mt-4 flex flex-col gap-4 border-t border-[#F8FAFC]/10 pt-4">
+      <div className="mt-4 flex flex-col gap-4 border-t border-ink/10 pt-4">
         <div className="flex items-center justify-between">
-          <span className={`font-instrument text-[14px] ${mastered ? 'text-white' : 'text-[#F8FAFC]/20'}`}>
+          <span className={`font-instrument text-[14px] ${mastered ? 'text-white' : 'text-ink/20'}`}>
             Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
           </span>
           <button
             onClick={handleRefresh}
             disabled={loading}
             aria-label="Get different examples"
-            className="relative flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 text-[#F8FAFC]/40 transition-all hover:scale-105 hover:text-[#F8FAFC]/80 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+            className="relative flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/40 transition-all hover:scale-105 hover:text-ink/80 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
           >
-            <GlassPane borderRadius={15} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+            <GlassPane borderRadius={15} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
             <span className={`material-symbols-rounded relative z-10 text-[16px]${loading ? ' animate-spin' : ''}`}>refresh</span>
           </button>
         </div>
         <div className="flex flex-col gap-4">
           {examples.map((ex, i) => (
             <div key={i} className="flex flex-col gap-1">
-              <p className="font-instrument text-[17px] leading-snug text-[#F8FAFC]/90">{ex.pl}</p>
+              <p className="font-instrument text-[17px] leading-snug text-ink/90">{ex.pl}</p>
               {/* Smallest purple copy: keep the soft inherited card-mastered
                   text-shadow (same as the small white grammar text) rather than
                   the heavier crisp drop-shadow outline used on the larger words. */}
-              <p className="font-instrument text-[14px] italic leading-snug text-[#B4A0FF]/70">{ex.en}</p>
+              <p className="font-instrument text-[14px] italic leading-snug text-accent/70">{ex.en}</p>
             </div>
           ))}
         </div>
@@ -418,18 +418,18 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
       onClick={handleFind}
       disabled={loading}
       radius={24}
-      pane="bg-[#F8FAFC]/5"
+      pane="bg-ink/5"
       className="mt-4 w-full py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
     >
       {loading ? (
-        <span className="material-symbols-rounded animate-spin text-[#F8FAFC]/40">progress_activity</span>
+        <span className="material-symbols-rounded animate-spin text-ink/40">progress_activity</span>
       ) : error ? (
         <>
           <span className="material-symbols-rounded text-[16px] text-red-400/70">error</span>
-          <span className="text-[#F8FAFC]/30">Unavailable — tap to retry</span>
+          <span className="text-ink/30">Unavailable — tap to retry</span>
         </>
       ) : (
-        <span className="text-[#F8FAFC]/40">Fetch examples</span>
+        <span className="text-ink/40">Fetch examples</span>
       )}
     </GlassButton>
   )
@@ -532,15 +532,16 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
           display:none'd while open, so blur buys nothing. svg/css: keep the
           blur (per-element backdrop-filter, unaffected by this scrim). */}
       <div
-        className={`pointer-events-none fixed inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/20' : 'bg-black/40 backdrop-blur-xl'}`}
+        className={`pointer-events-none fixed inset-0 z-0 ${glassMode === 'webgl' ? '' : 'backdrop-blur-xl'}`}
+        style={{ background: glassMode === 'webgl' ? 'var(--veil-modal-webgl)' : 'var(--veil-modal)' }}
       />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
             onClick={onClose}
             aria-label="Close"
             radius={24}
-            pane="bg-[#F8FAFC]/10"
-            className="self-start mb-3 h-12 w-12 border border-[#F8FAFC]/10 text-[#F8FAFC]/70 hover:text-[#F8FAFC]"
+            pane="bg-ink/10"
+            className="self-start mb-3 h-12 w-12 border border-ink/10 text-ink/70 hover:text-ink"
           >
             <span className="material-symbols-rounded text-[28px]">close</span>
           </GlassButton>
@@ -586,7 +587,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 </>
               )}
             </div>
-            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/[0.02]" />
             {/* Holographic shimmer for mastered words — sits above the glass
                 (z-0) and below the content (z-10). */}
             {mastered && <div className="cosmos-shine" aria-hidden="true" />}
@@ -597,7 +598,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             <div className="mb-8 flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
                 <div
-                  className={`relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] ${mastered ? 'tag-holo bg-cover bg-center' : 'bg-[#F8FAFC]/10'}`}
+                  className={`relative flex items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] ${mastered ? 'tag-holo bg-cover bg-center' : 'bg-ink/10'}`}
                   style={mastered ? { backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` } : undefined}
                 >
                   {!mastered && (
@@ -606,7 +607,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                       dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
                     />
                   )}
-                  <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
+                  <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-ink">
                     {typeLabel(entry.type)}
                   </span>
                 </div>
@@ -618,7 +619,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                     aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
                     // Same gating as the star above. Literal colour rather than
                     // the accent token because this modal is still dark-only.
-                    className={`material-symbols-rounded shrink-0 text-[18px] leading-none ${mastered ? 'holo-icon' : 'text-[#B4A0FF]/70'}`}
+                    className={`material-symbols-rounded shrink-0 text-[18px] leading-none ${mastered ? 'holo-icon' : 'text-accent/70'}`}
                   >
                     {entry.audioReady ? 'done_all' : 'done'}
                   </span>
@@ -630,8 +631,8 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                   <GlassButton
                     onClick={() => setConfirmDelete(false)}
                     radius={20}
-                    pane="bg-[#F8FAFC]/5"
-                    className="h-[38px] border border-[#F8FAFC]/10 px-4 font-instrument text-[13px] text-[#F8FAFC]/50 hover:text-[#F8FAFC]"
+                    pane="bg-ink/5"
+                    className="h-[38px] border border-ink/10 px-4 font-instrument text-[13px] text-ink/50 hover:text-ink"
                   >
                     Cancel
                   </GlassButton>
@@ -651,9 +652,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                   <button
                     onClick={doEnrich}
                     disabled={enriching}
-                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#F8FAFC]/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
+                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-ink/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-ink/50 hover:text-ink'}`}
                   >
-                    <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                    <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
                     <span className={`material-symbols-rounded relative z-10 text-[20px]${enriching ? ' animate-spin' : ''}`}>
                       {enrichError ? 'error' : 'refresh'}
                     </span>
@@ -672,33 +673,33 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
             {/* Word + translation */}
             <div className="mb-8 flex flex-col gap-1">
               <div className="flex min-w-0 items-start gap-3">
-                <h1 lang="pl" className="hyphens-auto break-words font-instrument text-[42px] font-bold leading-none tracking-tight text-[#F8FAFC]">
+                <h1 lang="pl" className="hyphens-auto break-words font-instrument text-[42px] font-bold leading-none tracking-tight text-ink">
                   {mastered ? <span className="holo-text">{entry.pl}</span> : entry.pl}
                   {entry.type === 'noun' && (
-                    <span className="ml-3 text-[24px] font-medium italic text-[#e879f9]">{entry.gender}</span>
+                    <span className="ml-3 text-[24px] font-medium italic" style={{ color: 'var(--aspect)' }}>{entry.gender}</span>
                   )}
                   {entry.type === 'verb' && entry.left && (
-                    <span className="ml-3 text-[24px] font-medium italic text-[#e879f9]">{entry.left}</span>
+                    <span className="ml-3 text-[24px] font-medium italic" style={{ color: 'var(--aspect)' }}>{entry.left}</span>
                   )}
                 </h1>
                 <button
                   onClick={handleSpeaker}
                   disabled={false}
-                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-[#F8FAFC]/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/50 hover:text-[#F8FAFC]'}`}
+                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-ink/50 hover:text-ink'}`}
                 >
-                  <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+                  <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
                   <span className={`material-symbols-rounded relative z-10 text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>
                     {tts.state === 'loading' ? 'progress_activity' : tts.state === 'error' ? 'error' : 'volume_up'}
                   </span>
                 </button>
               </div>
               {entry.type === 'noun' && (
-                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-white' : 'text-[#F8FAFC]/40'}`}>{entry.plAlt}</h3>
+                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-white' : 'text-ink/40'}`}>{entry.plAlt}</h3>
               )}
-              <h2 className={`mt-1 font-instrument text-[22px] font-medium text-[#B4A0FF] ${mastered ? 'holo-outline' : ''}`}>{entry.en}</h2>
+              <h2 className={`mt-1 font-instrument text-[22px] font-medium text-accent ${mastered ? 'holo-outline' : ''}`}>{entry.en}</h2>
               {/* Secondary senses filled during enrichment */}
               {entry.definitions && entry.definitions.length > 0 && (
-                <p className="font-instrument text-[14px] leading-snug text-[#F8FAFC]/45">
+                <p className="font-instrument text-[14px] leading-snug text-ink/45">
                   {entry.definitions.join(' · ')}
                 </p>
               )}

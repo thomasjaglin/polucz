@@ -8,8 +8,8 @@ type Variant = 'primary' | 'secondary' | 'danger'
 // the caller still owns sizing/padding/text-size via className, and can override
 // radius/pane explicitly when needed.
 const VARIANTS: Record<Variant, { radius: number; pane: string; classes: string }> = {
-  primary:   { radius: 24, pane: 'bg-[#B4A0FF]/15', classes: 'border border-[#B4A0FF]/25 font-medium text-[#B4A0FF]' },
-  secondary: { radius: 24, pane: 'bg-[#F8FAFC]/5',  classes: 'border border-[#F8FAFC]/10 text-[#F8FAFC]/60' },
+  primary:   { radius: 24, pane: 'bg-accent/15', classes: 'border border-accent/25 font-medium text-accent' },
+  secondary: { radius: 24, pane: 'bg-ink/5',  classes: 'border border-ink/10 text-ink/60' },
   danger:    { radius: 24, pane: 'bg-red-400/10',   classes: 'border border-red-400/25 font-medium text-red-400' },
 }
 
@@ -17,7 +17,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Standard recipe: 'primary' (accent) or 'secondary' (neutral). */
   variant?: Variant
   radius?: number
-  /** Tint classes for the glass pane behind the content, e.g. "bg-[#F8FAFC]/5" */
+  /** Tint classes for the glass pane behind the content, e.g. "bg-ink/5" */
   pane?: string
   /** Layout of the content row; defaults to a centered flex row */
   contentClassName?: string
@@ -40,7 +40,7 @@ export default function GlassButton({
 }: Props) {
   const v = variant ? VARIANTS[variant] : null
   const r = radius ?? v?.radius ?? 16
-  const paneTint = pane ?? v?.pane ?? 'bg-[#F8FAFC]/5'
+  const paneTint = pane ?? v?.pane ?? 'bg-ink/5'
   return (
     <button
       {...rest}

@@ -103,7 +103,7 @@ export default function ApiConfigPage({ onSave }: Props) {
               localStorage.setItem('polucz_haptics', next ? 'true' : 'false')
               if (next) haptics.tap()
             }}
-            className={`relative h-[28px] w-[48px] shrink-0 rounded-full border transition-colors ${hapticsOn ? 'border-[#B4A0FF]/40 bg-[#B4A0FF]/30' : 'border-ink/10 bg-ink/10'}`}
+            className={`relative h-[28px] w-[48px] shrink-0 rounded-full border transition-colors ${hapticsOn ? 'border-accent/40 bg-accent/30' : 'border-ink/10 bg-ink/10'}`}
           >
             <span // The knob is a surface riding on the track, not text — it stays light in
             // both themes rather than flipping with the ink token.
@@ -134,7 +134,7 @@ export default function ApiConfigPage({ onSave }: Props) {
             className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-ink outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
           >
             {PROVIDERS.map(p => (
-              <option key={p.id} value={p.id} className="bg-[--page-bg] text-ink">{p.label}</option>
+              <option key={p.id} value={p.id} className="bg-surface text-ink">{p.label}</option>
             ))}
           </select>
           {editing && (
@@ -168,7 +168,7 @@ export default function ApiConfigPage({ onSave }: Props) {
               className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-ink outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
             >
               {MODELS[provider].map(m => (
-                <option key={m} value={m} className="bg-[--page-bg] text-ink">{m}</option>
+                <option key={m} value={m} className="bg-surface text-ink">{m}</option>
               ))}
             </select>
             {editing && (

@@ -14,6 +14,9 @@ export default {
         // The purple accent. Same reason as ink: a colour picked to sit on a
         // dark surface is not the same colour on a light one.
         accent: 'rgb(var(--accent-rgb) / <alpha-value>)',
+        // Opaque panel fill — menus and chips that sit above the page rather
+        // than being glass over it. Near-black on dark, near-white on light.
+        surface: 'rgb(var(--surface-rgb) / <alpha-value>)',
       },
     },
   },

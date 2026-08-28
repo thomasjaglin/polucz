@@ -22,15 +22,15 @@ function GlassButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group disabled:pointer-events-none disabled:opacity-40"
+      className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group disabled:pointer-events-none disabled:opacity-40"
     >
-      <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+      <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
       {gradient && (
         <div className="absolute inset-0 z-10 flex items-center justify-center opacity-90 mix-blend-screen">
           {gradient}
         </div>
       )}
-      <span className="relative z-20 font-instrument text-[16px] font-semibold text-[#F8FAFC]">{label}</span>
+      <span className="relative z-20 font-instrument text-[16px] font-semibold text-ink">{label}</span>
     </button>
   )
 }
@@ -122,7 +122,7 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
       {/* Google Sheets Import */}
       <GlassCard contentClassName="flex flex-col p-5">
-        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">Google Sheets Import</h2>
+        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Google Sheets Import</h2>
         <GlassInput
           placeholder="Paste link..."
           icon="link"
@@ -135,7 +135,7 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
 
       {/* Manual Add */}
       <GlassCard contentClassName="flex flex-col p-5">
-        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">Add Manually</h2>
+        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Add Manually</h2>
         <div className="mb-4 grid grid-cols-2 gap-3">
           <GlassInput placeholder="PL" value={pl} onChange={v => { setPl(v); if (phase !== 'idle') resetError() }} />
           <GlassInput placeholder="EN (optional)" value={en} onChange={setEn} />

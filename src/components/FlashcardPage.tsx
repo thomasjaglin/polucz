@@ -296,8 +296,8 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
           animate={{ opacity: 1, y: [0, -4, 0] }}
           transition={{ y: { repeat: Infinity, duration: 1.4 }, opacity: { duration: 0.3 } }}
         >
-          <span className="material-symbols-rounded text-[18px] text-[#B4A0FF]">keyboard_double_arrow_up</span>
-          <span className="font-instrument text-[12px] font-medium text-[#B4A0FF]/80">hold up to conquer</span>
+          <span className="material-symbols-rounded text-[18px] text-accent">keyboard_double_arrow_up</span>
+          <span className="font-instrument text-[12px] font-medium text-accent/80">hold up to conquer</span>
         </motion.div>
       )}
 
@@ -305,35 +305,35 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
           conquer tremble (x jitter + rotateZ) so it stacks on the drag. */}
       <motion.div style={{ rotateY: rotateYVal, x: trembleX, rotate: trembleR }}>
         <div className="relative rounded-[36px] shadow-[0_8px_48px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-          <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/[0.02]" />
+          <GlassPane borderRadius={36} rotation={rotate} className="absolute inset-0 z-0 rounded-[36px] bg-ink/[0.02]" />
 
           <div className="relative z-20 flex flex-col items-center gap-6 px-8 py-10">
             {/* Type badge + hard mode label */}
             <div className="flex items-center gap-2">
-              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3.5 py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+              <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 bg-ink/10 px-3.5 py-[5px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
                   className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] ?? tagGradients['unknown'] }}
                 />
-                <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-[#F8FAFC]">
+                <span className="relative z-10 font-instrument text-[12px] font-medium capitalize text-ink">
                   {typeLabel(entry.type)}
                 </span>
               </div>
               {displayHardMode && (
-                <span className="font-instrument text-[11px] font-medium text-[#B4A0FF]/50">hard</span>
+                <span className="font-instrument text-[11px] font-medium text-accent/50">hard</span>
               )}
             </div>
 
             {/* Question word — pl in normal mode, en in hard mode */}
             <div className="flex flex-col items-center gap-2 text-center">
-              <h1 lang={displayHardMode ? 'en' : 'pl'} className="hyphens-auto break-words font-instrument text-[48px] font-bold leading-none tracking-tight text-[#F8FAFC]">
+              <h1 lang={displayHardMode ? 'en' : 'pl'} className="hyphens-auto break-words font-instrument text-[48px] font-bold leading-none tracking-tight text-ink">
                 {displayHardMode ? entry.en : entry.pl}
               </h1>
               {!displayHardMode && entry.type === 'noun' && entry.gender && (
-                <span className="font-instrument text-[22px] italic text-[#e879f9]">{entry.gender}</span>
+                <span className="font-instrument text-[22px] italic " style={{ color: 'var(--aspect)' }}>{entry.gender}</span>
               )}
               {!displayHardMode && entry.type === 'verb' && entry.left && (
-                <span className="font-instrument text-[22px] italic text-[#e879f9]">{entry.left}</span>
+                <span className="font-instrument text-[22px] italic " style={{ color: 'var(--aspect)' }}>{entry.left}</span>
               )}
             </div>
 
@@ -345,8 +345,8 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                   exit={{ opacity: 0, transition: { duration: 0.1 } }}
                   className="flex w-full flex-col items-center gap-3"
                 >
-                  <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
-                  <p className="font-instrument text-[14px] text-[#F8FAFC]/30">tap to reveal</p>
+                  <div className="h-[1px] w-full bg-ink/10" />
+                  <p className="font-instrument text-[14px] text-ink/30">tap to reveal</p>
                 </motion.div>
               ) : (
                 <motion.div
@@ -356,26 +356,26 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                   transition={{ duration: 0.25 }}
                   className="flex w-full flex-col items-center gap-3"
                 >
-                  <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
+                  <div className="h-[1px] w-full bg-ink/10" />
                   <div className="flex w-full items-center justify-between gap-3">
                     {displayHardMode ? (
                       <div className="flex flex-col gap-1">
-                        <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.pl}</p>
+                        <p className="font-instrument text-[24px] font-medium text-accent">{entry.pl}</p>
                         {entry.type === 'noun' && entry.gender && (
-                          <span className="font-instrument text-[18px] italic text-[#e879f9]">{entry.gender}</span>
+                          <span className="font-instrument text-[18px] italic " style={{ color: 'var(--aspect)' }}>{entry.gender}</span>
                         )}
                         {entry.type === 'verb' && entry.left && (
-                          <span className="font-instrument text-[18px] italic text-[#e879f9]">{entry.left}</span>
+                          <span className="font-instrument text-[18px] italic " style={{ color: 'var(--aspect)' }}>{entry.left}</span>
                         )}
                       </div>
                     ) : (
-                      <p className="font-instrument text-[24px] font-medium text-[#B4A0FF]">{entry.en}</p>
+                      <p className="font-instrument text-[24px] font-medium text-accent">{entry.en}</p>
                     )}
                     <GlassButton
                       onClick={e => { e.stopPropagation(); onReplay() }}
                       radius={16}
-                      pane="bg-[#F8FAFC]/5"
-                      className={`h-[32px] w-[32px] flex-shrink-0 border border-[#F8FAFC]/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-[#F8FAFC]/30 hover:text-[#F8FAFC]/70'}`}
+                      pane="bg-ink/5"
+                      className={`h-[32px] w-[32px] flex-shrink-0 border border-ink/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-ink/30 hover:text-ink/70'}`}
                     >
                       <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
                         {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
@@ -399,9 +399,9 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
 // run instead, so this keeps lifetime mastery visible at a glance.
 function MasteryBadge({ count }: { count: number }) {
   return (
-    <div className="inline-flex items-center gap-1.5 rounded-full border border-[#F8FAFC]/10 bg-[#F8FAFC]/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
-      <span className="material-symbols-rounded text-[15px] text-[#B4A0FF]/80">military_tech</span>
-      <span className="font-instrument text-[12px] font-medium tabular-nums text-[#F8FAFC]/55">
+    <div className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+      <span className="material-symbols-rounded text-[15px] text-accent/80">military_tech</span>
+      <span className="font-instrument text-[12px] font-medium tabular-nums text-ink/55">
         {count} mastered
       </span>
     </div>
@@ -416,9 +416,9 @@ function RunComplete({ reviewed, onRestart, onBack }: { reviewed: number; onRest
   const empty = reviewed === 0
   return (
     <div className="flex flex-col items-center gap-4 pt-16 text-center">
-      <span className="material-symbols-rounded text-[56px] text-[#B4A0FF]/60">{empty ? 'military_tech' : 'task_alt'}</span>
-      <h2 className="font-instrument text-[26px] font-semibold text-[#F8FAFC]/80">{empty ? 'All mastered here' : 'Run complete!'}</h2>
-      <p className="font-instrument text-[16px] text-[#F8FAFC]/40">
+      <span className="material-symbols-rounded text-[56px] text-accent/60">{empty ? 'military_tech' : 'task_alt'}</span>
+      <h2 className="font-instrument text-[26px] font-semibold text-ink/80">{empty ? 'All mastered here' : 'Run complete!'}</h2>
+      <p className="font-instrument text-[16px] text-ink/40">
         {empty ? 'Every card in this group is already mastered.' : `You reviewed all ${reviewed} cards this round.`}
       </p>
       <div className="mt-2 flex flex-col items-stretch gap-3">
@@ -682,7 +682,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <IconButton icon="arrow_back" onClick={() => { tts.stop(); setScreen('selector') }} />
-            <span className="font-instrument text-[13px] text-[#F8FAFC]/50">{scopeLabel}</span>
+            <span className="font-instrument text-[13px] text-ink/50">{scopeLabel}</span>
           </div>
           <div className="flex items-center gap-2">
             {/* Explicit hard-mode toggle (the two-finger rotate gesture still works

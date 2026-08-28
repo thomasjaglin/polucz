@@ -58,7 +58,7 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
   const borderClass =
     phase === 'correct' ? 'border-green-400/50 ring-1 ring-green-400/25' :
     phase === 'wrong-can-retry' || phase === 'wrong-final' ? 'border-red-400/50 ring-1 ring-red-400/25' :
-    'border-[#F8FAFC]/20'
+    'border-ink/20'
 
   // Same scoped frost as the translate input so webgl mode blurs the backdrop
   // behind the field (the canvas glass sits behind the gradient there).
@@ -69,21 +69,21 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
   return (
     <div className="flex flex-col gap-5">
       <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-        <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-[#F8FAFC]/[0.02]" />
+        <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-ink/[0.02]" />
         <div className="relative z-10 p-5">
-          <p className="font-instrument text-[20px] leading-relaxed text-[#F8FAFC]/90">{display}</p>
-          <p className="mt-2 font-instrument text-[14px] italic text-[#F8FAFC]/40">{sentence.english}</p>
+          <p className="font-instrument text-[20px] leading-relaxed text-ink/90">{display}</p>
+          <p className="mt-2 font-instrument text-[14px] italic text-ink/40">{sentence.english}</p>
         </div>
       </div>
 
-      <p className="font-instrument text-[13px] text-[#F8FAFC]/45">{grammarPrompt(sentence)}</p>
+      <p className="font-instrument text-[13px] text-ink/45">{grammarPrompt(sentence)}</p>
 
       <div className="flex flex-col gap-1.5">
         <div
           className={`relative rounded-[16px] border shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)] transition-all ${borderClass}`}
           style={frostStyle}
         >
-          <GlassPane borderRadius={16} className="absolute inset-0 z-0 rounded-[16px] bg-[#F8FAFC]/5" />
+          <GlassPane borderRadius={16} className="absolute inset-0 z-0 rounded-[16px] bg-ink/5" />
           <input
             ref={inputRef}
             type="text"
@@ -92,10 +92,10 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
             onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
             disabled={locked}
             placeholder="Type the missing form…"
-            className="relative z-10 w-full bg-transparent px-4 py-3.5 font-instrument text-[17px] text-[#F8FAFC]/90 placeholder:text-[#F8FAFC]/25 outline-none disabled:opacity-60"
+            className="relative z-10 w-full bg-transparent px-4 py-3.5 font-instrument text-[17px] text-ink/90 placeholder:text-ink/25 outline-none disabled:opacity-60"
           />
         </div>
-        <p className="font-instrument text-[11px] text-[#F8FAFC]/25">
+        <p className="font-instrument text-[11px] text-ink/25">
           Enable Polish keyboard for ą ę ó ś ź ż ć ń ł
         </p>
       </div>
@@ -106,8 +106,8 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           <GlassButton
             onClick={handleTryAgain}
             radius={12}
-            pane="bg-[#F8FAFC]/5"
-            className="border border-[#F8FAFC]/10 px-3 py-1.5 font-instrument text-[13px] text-[#F8FAFC]/65"
+            pane="bg-ink/5"
+            className="border border-ink/10 px-3 py-1.5 font-instrument text-[13px] text-ink/65"
           >
             Try again
           </GlassButton>

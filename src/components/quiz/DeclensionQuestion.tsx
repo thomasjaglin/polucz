@@ -41,7 +41,7 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
 
   function getButtonStyle(opt: string): string {
     if (chosen === null) {
-      return 'border-[#F8FAFC]/10 text-[#F8FAFC]/80 hover:border-[#F8FAFC]/20'
+      return 'border-ink/10 text-ink/80 hover:border-ink/20'
     }
     if (checkAnswer(opt, sentence.targetForm)) {
       return 'border-green-400/40 text-green-300'
@@ -49,14 +49,14 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
     if (opt === chosen) {
       return 'border-red-400/40 text-red-300'
     }
-    return 'border-[#F8FAFC]/5 text-[#F8FAFC]/25'
+    return 'border-ink/5 text-ink/25'
   }
 
   function getPaneTint(opt: string): string {
-    if (chosen === null) return 'bg-[#F8FAFC]/5'
+    if (chosen === null) return 'bg-ink/5'
     if (checkAnswer(opt, sentence.targetForm)) return 'bg-green-400/15'
     if (opt === chosen) return 'bg-red-400/15'
-    return 'bg-[#F8FAFC]/[0.02]'
+    return 'bg-ink/[0.02]'
   }
 
   const display = blankSentence(sentence.polish, sentence.targetForm)
@@ -64,14 +64,14 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
   return (
     <div className="flex flex-col gap-5">
       <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-        <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-[#F8FAFC]/[0.02]" />
+        <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-ink/[0.02]" />
         <div className="relative z-10 p-5">
-          <p className="font-instrument text-[20px] leading-relaxed text-[#F8FAFC]/90">{display}</p>
-          <p className="mt-2 font-instrument text-[14px] italic text-[#F8FAFC]/40">{sentence.english}</p>
+          <p className="font-instrument text-[20px] leading-relaxed text-ink/90">{display}</p>
+          <p className="mt-2 font-instrument text-[14px] italic text-ink/40">{sentence.english}</p>
         </div>
       </div>
 
-      <p className="font-instrument text-[13px] text-[#F8FAFC]/45">{grammarPrompt(sentence)}</p>
+      <p className="font-instrument text-[13px] text-ink/45">{grammarPrompt(sentence)}</p>
 
       <div className="grid grid-cols-2 gap-3">
         {options.map(opt => (

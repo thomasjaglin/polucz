@@ -222,7 +222,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 ref={dropdownRef}
                 className="absolute right-0 top-[50px] z-[100] w-[200px] overflow-hidden rounded-[24px] border border-ink/10 shadow-2xl"
               >
-                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-[#1a1a1a]/60" />
+                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-[24px] bg-surface/60" />
                 <div className="relative z-10 flex flex-col">
                 <button
                   onClick={handleImportClick}
@@ -300,7 +300,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         {/* Dimmed backdrop to focus attention on the modal. In webgl mode it's a
             flat tint only — a backdrop-blur here would blur (and wash out) the
             per-element glass rim the canvas draws behind the panel. */}
-        <div className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? 'bg-black/25' : 'bg-black/25 backdrop-blur-lg'}`} />
+        <div
+          className={`pointer-events-none absolute inset-0 z-0 ${glassMode === 'webgl' ? '' : 'backdrop-blur-lg'}`}
+          style={{ background: 'var(--veil-header)' }}
+        />
         <div className="relative z-10 w-full max-w-[340px] overflow-hidden rounded-[36px] p-6 shadow-[0_16px_64px_rgba(0,0,0,0.5),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
           <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/[0.02]" />
           <div className="relative z-10 flex flex-col gap-4">
@@ -311,7 +314,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                   {prepProgress.done} / {prepProgress.total} cards. This keeps running in the background — you can close this and keep using the app.
                 </p>
                 <div className="h-[4px] w-full overflow-hidden rounded-full bg-ink/10">
-                  <div className="h-full rounded-full bg-[#B4A0FF] transition-all" style={{ width: `${(prepProgress.done / Math.max(prepProgress.total, 1)) * 100}%` }} />
+                  <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${(prepProgress.done / Math.max(prepProgress.total, 1)) * 100}%` }} />
                 </div>
                 <div className="mt-1 flex gap-3">
                   <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} flex-1 border-ink/20 text-ink/80`}>
@@ -332,11 +335,11 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
               <>
                 <h2 className="font-instrument text-[20px] font-semibold text-ink/90">Prepare audio</h2>
                 <p className="font-instrument text-[14px] text-ink/50">
-                  Generate and cache audio for <span className="text-[#B4A0FF]">{incompleteCount}</span> {incompleteCount === 1 ? 'card' : 'cards'}. It's rate-limited, so it runs slowly in the background (~{Math.ceil((incompleteCount * PREP_SPACING_MS) / 60000)} min) — you can keep using the app.
+                  Generate and cache audio for <span className="text-accent">{incompleteCount}</span> {incompleteCount === 1 ? 'card' : 'cards'}. It's rate-limited, so it runs slowly in the background (~{Math.ceil((incompleteCount * PREP_SPACING_MS) / 60000)} min) — you can keep using the app.
                 </p>
                 <div className="mt-1 flex gap-3">
                   <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} flex-1 border-ink/20 text-ink/80`}>Cancel</GlassButton>
-                  <GlassButton onClick={runPrepare} radius={999} pane="bg-[#B4A0FF]/15" className={`${MODAL_BTN} flex-1 border-[#B4A0FF]/40 text-[#B4A0FF]`}>Prepare</GlassButton>
+                  <GlassButton onClick={runPrepare} radius={999} pane="bg-accent/15" className={`${MODAL_BTN} flex-1 border-accent/40 text-accent`}>Prepare</GlassButton>
                 </div>
               </>
             )}

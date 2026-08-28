@@ -9,6 +9,20 @@
 :root {
   --ink-rgb: 248 250 252;
   --accent-rgb: 180 160 255;   /* #B4A0FF — light lavender, for dark surfaces */
+  --surface-rgb: 26 26 26;     /* #1a1a1a — opaque panels above the page */
+  /* Veils that separate a layer from what is behind it — the header band and
+     the modal backdrop. They pull the page away from the content in front,
+     which means darkening on a dark page and lightening on a light one; a
+     black veil on light reads as a stain rather than a recession. */
+  --veil-header: rgba(0, 0, 0, 0.25);
+  --veil-modal: rgba(0, 0, 0, 0.4);
+  --veil-modal-webgl: rgba(0, 0, 0, 0.2);
+  /* Accents chosen to glow on a dark surface. They have to go deep on a light
+     one to carry the same emphasis rather than disappearing into it. */
+  --quiz-amber: #FFDEB3;
+  --quiz-teal: #7DF5EE;
+  --aspect: #e879f9;
+  --blob-opacity: 0.6;
   --page-bg: #121212;
   /* The base wash AppBackground paints under the page gradient. */
   --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(18, 18, 18, 0.99) 62.02%, rgba(18, 18, 18, 0.65) 100%);
@@ -22,6 +36,16 @@ html.theme-light {
   /* The lavender reads at ~2.5:1 on a light card — the same hue has to go
      deep to carry the same meaning at a legible contrast. */
   --accent-rgb: 76 43 184;
+  --surface-rgb: 255 255 255;
+  --veil-header: rgba(255, 255, 255, 0.5);
+  --veil-modal: rgba(247, 244, 241, 0.65);
+  --veil-modal-webgl: rgba(247, 244, 241, 0.35);
+  --quiz-amber: #8A6510;
+  --quiz-teal: #0E6E76;
+  --aspect: #A21CAF;
+  /* The blob screen-blends, which lightens — on a light page the same
+     opacity reads far heavier and drags the controls over it down. */
+  --blob-opacity: 0.4;
   --page-bg: #F7F4F1;               /* warm off-white; a pure white reads clinical under glass */
   --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(255, 253, 251, 0.92) 62.02%, rgba(247, 244, 241, 0.75) 100%);
   --nav-scrim: linear-gradient(to top, #F7F4F1 14%, rgba(247, 244, 241, 0.72) 42%, transparent 100%);

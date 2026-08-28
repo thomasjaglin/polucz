@@ -11,12 +11,12 @@ export default function HardModeToggle({ active, onToggle }: { active: boolean; 
       onClick={onToggle}
       aria-pressed={active}
       className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-full border px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] transition-colors ${
-        active ? 'border-[#e879f9]/40 text-[#F8FAFC]' : 'border-[#F8FAFC]/10 text-[#F8FAFC]/55'
+        active ? 'border-[#e879f9]/40 text-ink' : 'border-ink/10 text-ink/55'
       }`}
     >
       <GlassPane
         borderRadius={999}
-        className={`absolute inset-0 z-0 rounded-full ${active ? 'bg-[#e879f9]/15' : 'bg-[#F8FAFC]/[0.04]'}`}
+        className={`absolute inset-0 z-0 rounded-full ${active ? 'bg-[#e879f9]/15' : 'bg-ink/[0.04]'}`}
       />
       <span className="material-symbols-rounded relative z-10 text-[15px]">bolt</span>
       <span className="relative z-10 inline-block w-[30px] text-left" style={{ perspective: 400 }}>

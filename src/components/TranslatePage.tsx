@@ -65,7 +65,8 @@ const BLOB_TOP_DST = (100 - BOUNDARY) / 100      // source on bottom
 const BLOB_W_VW = 201.69    // backgroundData widthFracVw 2.0169
 const BLOB_H_VH = 85.14     // backgroundData heightFracVh 0.8514
 const BLOB_LEFT_VW = -32.755 // backgroundData leftFrac -0.32755
-const BLOB_OPACITY = 0.6    // backgroundData opacity
+// Opacity is theme-driven (--blob-opacity in index.css); the shader path
+// still uses backgroundData's own 0.6.
 
 // The layer slides by transform rather than `top`, so the SVG's internal
 // Gaussian blur rasterises once and the swap stays a pure compositor move.
@@ -167,27 +168,27 @@ const TYPE_BADGE: Record<string, string> = {
   verb:      'text-[#60A5FA] bg-[#60A5FA]/10 border-[#60A5FA]/25',
   adjective: 'text-[#34D399] bg-[#34D399]/10 border-[#34D399]/25',
   adverb:    'text-[#C084FC] bg-[#C084FC]/10 border-[#C084FC]/25',
-  unknown:   'text-[#B4A0FF] bg-[#B4A0FF]/10 border-[#B4A0FF]/25',
+  unknown:   'text-accent bg-accent/10 border-accent/25',
 }
 
 function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolean; onAdd: () => void }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[#F8FAFC]/5 py-2.5 last:border-0">
+    <div className="flex items-center gap-2 border-b border-ink/5 py-2.5 last:border-0">
       <span className={`shrink-0 rounded-full border px-2 py-0.5 font-instrument text-[10px] font-medium capitalize ${TYPE_BADGE[word.type] ?? TYPE_BADGE.unknown}`}>
         {word.type === 'adjective' ? 'adj' : typeLabel(word.type)}
       </span>
-      <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-[#F8FAFC]/90">{word.lemma}</span>
-      {word.gender && <span className="shrink-0 font-instrument text-[13px] italic text-[#e879f9]">{word.gender}</span>}
-      <span className="shrink-0 text-[#F8FAFC]/20">·</span>
-      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] text-[#F8FAFC]/50">{word.english}</span>
+      <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-ink/90">{word.lemma}</span>
+      {word.gender && <span className="shrink-0 font-instrument text-[13px] italic " style={{ color: 'var(--aspect)' }}>{word.gender}</span>}
+      <span className="shrink-0 text-ink/20">·</span>
+      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] text-ink/50">{word.english}</span>
       {isSaved ? (
-        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] text-[#F8FAFC]/25">✓ In vocabulary</span>
+        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] text-ink/25">✓ In vocabulary</span>
       ) : (
         <button
           onClick={onAdd}
-          className="relative shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-[#F8FAFC]/20 px-3 py-1 font-instrument text-[11px] text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
+          className="relative shrink-0 overflow-hidden whitespace-nowrap rounded-full border border-ink/20 px-3 py-1 font-instrument text-[11px] text-ink/60 transition-colors hover:text-ink"
         >
-          <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5" />
+          <GlassPane borderRadius={999} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
           <span className="relative z-10">+ Add card</span>
         </button>
       )}
@@ -412,13 +413,13 @@ export default function TranslatePage({ onAddCard }: Props) {
   const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
 
   const wordListBlock = wordPhase === 'loading' ? (
-    <div className="flex items-center gap-2 pt-4 text-[#F8FAFC]/30">
+    <div className="flex items-center gap-2 pt-4 text-ink/30">
       <span className="material-symbols-rounded animate-spin text-[16px]">progress_activity</span>
       <span className="font-instrument text-[13px]">Analysing words…</span>
     </div>
   ) : wordPhase === 'done' && words.length > 1 ? (
     <div className="pt-4">
-      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider text-[#F8FAFC]/25">
+      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider text-ink/25">
         {srcTop ? 'Words in this sentence' : 'Words in the Polish translation'}
       </p>
       {words.map(word => (
@@ -434,8 +435,8 @@ export default function TranslatePage({ onAddCard }: Props) {
 
   const inputBlock = (
     <>
-      <div className="relative rounded-[20px] border border-[#F8FAFC]/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
-        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-[#F8FAFC]/5" />
+      <div className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-ink/5" />
         <textarea
           ref={textareaRef}
           value={input}
@@ -443,15 +444,15 @@ export default function TranslatePage({ onAddCard }: Props) {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
           placeholder={srcTop ? 'Wpisz tekst…' : 'Translate text…'}
           rows={2}
-          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-[#F8FAFC]/95 placeholder:text-[#F8FAFC]/40 outline-none"
+          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-ink/95 placeholder:text-ink/40 outline-none"
         />
         {!!input && (
           <button
             onClick={() => setInput('')}
             aria-label="Clear input"
-            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full text-[#F8FAFC]/60 transition-colors hover:text-[#F8FAFC]"
+            className="absolute right-3 top-3 z-20 flex h-[24px] w-[24px] items-center justify-center rounded-full text-ink/60 transition-colors hover:text-ink"
           >
-            <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/15" />
+            <GlassPane borderRadius={12} className="absolute inset-0 z-0 rounded-full bg-ink/15" />
             <span className="material-symbols-rounded relative z-10 text-[16px]">close</span>
           </button>
         )}
@@ -484,7 +485,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         onDragEnd={handleDragEnd}
         className="relative cursor-grab select-none rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)] active:cursor-grabbing"
       >
-        <GlassPane borderRadius={24} clipEllipseRef={circleRef} className="absolute inset-0 z-0 rounded-[24px] bg-[#F8FAFC]/[0.02]" />
+        <GlassPane borderRadius={24} clipEllipseRef={circleRef} className="absolute inset-0 z-0 rounded-[24px] bg-ink/[0.02]" />
 
         {/* Swipe feedback wash, scaled to the card (mirrors the flashcard
             glows): green on the right (save), red on the left (clear). */}
@@ -507,39 +508,39 @@ export default function TranslatePage({ onAddCard }: Props) {
         )}
         <motion.div style={{ opacity: clearOpacity }}
           className="pointer-events-none absolute inset-0 z-10 flex items-center justify-start rounded-[24px] pl-6">
-          <span className="font-instrument text-[18px] font-semibold text-[#F8FAFC]/50">← Clear</span>
+          <span className="font-instrument text-[18px] font-semibold text-ink/50">← Clear</span>
         </motion.div>
 
         <div className="relative z-20 flex flex-col gap-4 p-6">
-          <p className="font-instrument text-[28px] italic leading-tight text-[#B4A0FF]">
+          <p className="font-instrument text-[28px] italic leading-tight text-accent">
             {result.translation}
           </p>
 
           {result.isSingleWord && (
             <>
-              <div className="h-[1px] w-full bg-[#F8FAFC]/10" />
+              <div className="h-[1px] w-full bg-ink/10" />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-3">
-                  <span className="font-instrument text-[18px] font-medium text-[#F8FAFC]/80">
+                  <span className="font-instrument text-[18px] font-medium text-ink/80">
                     {result.lemma}
                   </span>
                   {result.gender && (
-                    <span className="font-instrument text-[15px] italic text-[#e879f9]">
+                    <span className="font-instrument text-[15px] italic " style={{ color: 'var(--aspect)' }}>
                       {result.gender}
                     </span>
                   )}
-                  <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+                  <div className="relative flex items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 bg-ink/10 px-3 py-[3px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                     <div
                       className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                       dangerouslySetInnerHTML={{ __html: tagGradients[result.type] ?? tagGradients['unknown'] }}
                     />
-                    <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-[#F8FAFC]">
+                    <span className="relative z-10 font-instrument text-[10px] font-medium capitalize text-ink">
                       {typeLabel(result.type)}
                     </span>
                   </div>
                 </div>
                 {result.canonicalEn && result.canonicalEn !== result.translation && (
-                  <span className="font-instrument text-[13px] text-[#F8FAFC]/35">{result.canonicalEn}</span>
+                  <span className="font-instrument text-[13px] text-ink/35">{result.canonicalEn}</span>
                 )}
               </div>
 
@@ -547,14 +548,14 @@ export default function TranslatePage({ onAddCard }: Props) {
                 <p className="font-instrument text-[13px] text-emerald-400/80">Added to vocabulary</p>
               )}
               {!added && alreadySaved && (
-                <p className="font-instrument text-[13px] text-[#F8FAFC]/30">Already in your vocabulary</p>
+                <p className="font-instrument text-[13px] text-ink/30">Already in your vocabulary</p>
               )}
             </>
           )}
         </div>
       </motion.div>
 
-      <p className="mt-4 font-instrument text-[11px] text-[#F8FAFC]/20">
+      <p className="mt-4 font-instrument text-[11px] text-ink/20">
         {canSwipe ? 'swipe right to save · swipe left to clear' : 'swipe left to clear'}
       </p>
     </>
@@ -588,7 +589,7 @@ export default function TranslatePage({ onAddCard }: Props) {
             height: `${BLOB_H_VH}vh`,
             left: `${BLOB_LEFT_VW}vw`,
             top: `${BLOB_TOP_SRC * 100}vh`,
-            opacity: BLOB_OPACITY,
+            opacity: 'var(--blob-opacity)',
             WebkitMaskImage: BLOB_MASK,
             maskImage: BLOB_MASK,
           }}
@@ -603,7 +604,7 @@ export default function TranslatePage({ onAddCard }: Props) {
           circle-mask effect above). */}
       <motion.div
         ref={circleRef}
-        className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-[50%] border border-[#F8FAFC]/10"
+        className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-[50%] border border-ink/10"
         style={{ width: `${CIRCLE_W}vw`, height: `${CIRCLE_H}vh` }}
         initial={false}
         animate={{ top: srcTop ? `${BOUNDARY - CIRCLE_H + EDGE_OFFSET}vh` : `${100 - BOUNDARY - EDGE_OFFSET}vh` }}
@@ -612,7 +613,7 @@ export default function TranslatePage({ onAddCard }: Props) {
 
       {/* ── Polish — fixed top section ─────────────────────────── */}
       <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[14vh]">
-        <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">Polish</p>
+        <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">Polish</p>
         {srcTop ? inputBlock : (
           <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
         )}
@@ -624,11 +625,11 @@ export default function TranslatePage({ onAddCard }: Props) {
         aria-label="Swap languages"
         radius={20}
         pane="bg-[#181818]/45"
-        className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-[#F8FAFC]/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+        className="absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-ink/10 shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
         style={{ top: `${BOUNDARY}vh` }}
       >
         <motion.span
-          className="material-symbols-rounded text-[20px] text-[#F8FAFC]/60"
+          className="material-symbols-rounded text-[20px] text-ink/60"
           initial={false}
           animate={{ rotate: srcTop ? 0 : 90 }}
           transition={{ type: 'spring', stiffness: 280, damping: 22 }}
@@ -651,7 +652,7 @@ export default function TranslatePage({ onAddCard }: Props) {
           ...(srcTop ? circleMask(CIRCLE_CY_TOP - (BOUNDARY - CLIP_OVER)) : {}),
         }}
       >
-        <p className="mb-3 font-instrument text-[15px] font-medium text-[#F8FAFC]/70">English</p>
+        <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">English</p>
         {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
       </div>
     </div>
