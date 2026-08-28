@@ -3,7 +3,7 @@ import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
-import { MODELS, PROVIDERS, clearLlmConfig, getLlmConfig, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
+import { MODELS, PROVIDERS, clearDeepLKey, clearLlmConfig, getDeepLKey, getLlmConfig, saveDeepLKey, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
 
 interface Props {
   onSave: () => void
@@ -49,6 +49,9 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [model, setModel] = useState(() => getLlmConfig()?.model ?? MODELS.gemini[0])
   const [baseUrl, setBaseUrl] = useState(() => getLlmConfig()?.baseUrl ?? '')
   const [apiKey, setApiKey] = useState('')
+  const [deeplStored, setDeeplStored] = useState<string | null>(() => getDeepLKey())
+  const [deeplEditing, setDeeplEditing] = useState(() => getDeepLKey() === null)
+  const [deeplKey, setDeeplKey] = useState('')
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
 
   return (
@@ -243,6 +246,76 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.destructive()
               }}
               aria-label="Remove saved key"
+              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+              <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/60">delete</span>
+            </button>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Translation">
+        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-[#F8FAFC]/40">
+          The translate page uses DeepL, which is a separate service from the LLM above
+          and needs its own key. Free-tier keys end in <span className="font-mono">:fx</span>.
+        </p>
+
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">DeepL API Key</h3>
+        <GlassInput
+          type="password"
+          placeholder="Paste DeepL API Key..."
+          value={deeplEditing ? deeplKey : MASK}
+          onChange={setDeeplKey}
+          disabled={!deeplEditing}
+          className="mb-6"
+        />
+
+        {deeplEditing ? (
+          <div className="flex gap-3">
+            {deeplStored && (
+              <button
+                onClick={() => { setDeeplEditing(false); setDeeplKey('') }}
+                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              >
+                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+                <span className="relative z-10 font-instrument text-[16px] text-[#F8FAFC]/70">Cancel</span>
+              </button>
+            )}
+            <button
+              onClick={() => {
+                const k = deeplKey.trim()
+                if (!k) return
+                saveDeepLKey(k)
+                setDeeplStored(k)
+                setDeeplKey('')
+                setDeeplEditing(false)
+                haptics.tap()
+              }}
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save DeepL key</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setDeeplEditing(true); setDeeplKey('') }}
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Change DeepL key</span>
+            </button>
+            <button
+              onClick={() => {
+                clearDeepLKey()
+                setDeeplStored(null)
+                setDeeplEditing(true)
+                setDeeplKey('')
+                haptics.destructive()
+              }}
+              aria-label="Remove saved DeepL key"
               className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
               <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />

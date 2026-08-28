@@ -68,12 +68,42 @@ export function clearLlmConfig() {
 // which is what selects the server's own key.
 export function llmHeaders(): Record<string, string> {
   const c = getLlmConfig()
-  if (!c) return {}
+  if (!c) return { ...deeplHeaders() }
   const h: Record<string, string> = {
     'x-llm-provider': c.provider,
     'x-llm-model': c.model,
     'x-llm-key': c.apiKey,
   }
   if (c.baseUrl) h['x-llm-base-url'] = c.baseUrl
-  return h
+  return { ...h, ...deeplHeaders() }
+}
+
+// Sent alongside llmHeaders() so the browser build uses the user's DeepL key
+// too, rather than only the native path honouring it.
+export function deeplHeaders(): Record<string, string> {
+  const k = getDeepLKey()
+  return k ? { 'x-deepl-key': k } : {}
+}
+
+// ─── DeepL ──────────────────────────────────────────────────────────────────
+// Translation is DeepL, not an LLM, so it has its own key. Kept separate rather
+// than folded into LlmConfig because the two are independently useful: a user
+// may set one and not the other, and each feature should work on its own.
+
+const DEEPL_KEY = 'polucz_deepl_key'
+
+export function getDeepLKey(): string | null {
+  try {
+    return localStorage.getItem(DEEPL_KEY) || null
+  } catch {
+    return null
+  }
+}
+
+export function saveDeepLKey(key: string) {
+  localStorage.setItem(DEEPL_KEY, key)
+}
+
+export function clearDeepLKey() {
+  localStorage.removeItem(DEEPL_KEY)
 }

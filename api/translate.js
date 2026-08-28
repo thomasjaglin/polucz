@@ -6,7 +6,9 @@ export default async function handler(req, res) {
   const { text, direction = 'pl-en' } = req.body ?? {}
   if (!text || typeof text !== 'string') return res.status(400).json({ error: 'text is required' })
 
-  const apiKey = process.env.DEEPL_API_KEY
+  // The caller's own key wins; the server's is the fallback for anyone who
+  // hasn't set one.
+  const apiKey = req.headers['x-deepl-key'] || process.env.DEEPL_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'Translation service not configured' })
 
   const base = apiKey.endsWith(':fx') ? 'https://api-free.deepl.com' : 'https://api.deepl.com'

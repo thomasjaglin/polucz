@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react'
-import { apiUrl } from '../lib/apiBase'
+import { llmFetch } from '../lib/llmApi'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -284,28 +284,16 @@ export default function TranslatePage({ onAddCard }: Props) {
       const single = direction === 'pl-en' && isSingleWord(text)
 
       // Start translate + lemmatize
-      const translateFetch = fetch(apiUrl('/api/translate'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, direction }),
-      })
+      const translateFetch = llmFetch('/api/translate', { text, direction })
       const lemmaFetch: Promise<Response | null> = single
-        ? fetch(apiUrl('/api/lemmatize'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...llmHeaders() },
-            body: JSON.stringify({ text }),
-          })
+        ? llmFetch('/api/lemmatize', { text })
         : Promise.resolve(null)
 
       // pl-en multi-word: fire analyze-sentence in parallel immediately
       const canAnalyzeNow = direction === 'pl-en' && !single
       if (canAnalyzeNow) setWordPhase('loading')
       const analyzeFetch: Promise<Response> | null = canAnalyzeNow
-        ? fetch(apiUrl('/api/analyze-sentence'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...llmHeaders() },
-            body: JSON.stringify({ sentence: text, sourceLang: 'pl' }),
-          })
+        ? llmFetch('/api/analyze-sentence', { sentence: text, sourceLang: 'pl' })
         : null
 
       const [translateRes, lemmaRes] = await Promise.all([translateFetch, lemmaFetch])
@@ -348,11 +336,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         if (translateIdRef.current !== myId) return
         setWordPhase('loading')
         try {
-          const analyzeRes = await fetch(apiUrl('/api/analyze-sentence'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...llmHeaders() },
-            body: JSON.stringify({ sentence: translation, sourceLang: 'pl' }),
-          })
+          const analyzeRes = await llmFetch('/api/analyze-sentence', { sentence: translation, sourceLang: 'pl' })
           if (translateIdRef.current !== myId) return
           if (analyzeRes.ok) {
             const data = await analyzeRes.json()

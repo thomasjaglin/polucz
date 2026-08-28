@@ -27,7 +27,7 @@ export function applyCors(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
     res.setHeader(
       'Access-Control-Allow-Headers',
-      'content-type, x-llm-provider, x-llm-model, x-llm-key, x-llm-base-url',
+      'content-type, x-llm-provider, x-llm-model, x-llm-key, x-llm-base-url, x-deepl-key',
     )
     res.setHeader('Access-Control-Max-Age', '86400')
   }
