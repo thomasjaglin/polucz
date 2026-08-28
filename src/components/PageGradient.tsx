@@ -6,8 +6,11 @@ interface Props {
 }
 
 export default function PageGradient({ activeId }: Props) {
-  // The translate page paints its own moving gradient circle over the plain
-  // dots background (Figma 114-9301 / 114-13593) — no page gradient there.
+  // The translate page has no page gradient in any renderer: its colour comes
+  // entirely from the gradient blob backing the source side. In webgl mode the
+  // shader paints it (backgroundData.ts `translate`); otherwise TranslatePage
+  // renders the same artwork as a DOM layer. Falling back to the shared main
+  // stack here would paint the folder page's red over both.
   if (activeId === 'translate') return null
 
   return (

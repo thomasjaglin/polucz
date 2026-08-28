@@ -9,6 +9,7 @@ import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
 import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
+import translateBlobUrl from '../assets/translate-gradient.svg'
 
 type Direction = 'pl-en' | 'en-pl'
 
@@ -53,6 +54,28 @@ function circleMask(cyInSection: number): CSSProperties {
 // reference so they stay aligned as the circle slides.
 const BLOB_TOP_SRC = (BOUNDARY - CIRCLE_H) / 100 // source on top
 const BLOB_TOP_DST = (100 - BOUNDARY) / 100      // source on bottom
+
+// ── DOM blob (css/svg mode) ──────────────────────────────────────────────
+// Without a canvas there is no procedural blob, and the translate page loses
+// all of its colour. These mirror the `translate` layer in backgroundData.ts
+// one-for-one — same box, same clip — so the DOM and shader blobs land in the
+// same place and the two renderers stay comparable.
+const BLOB_W_VW = 201.69    // backgroundData widthFracVw 2.0169
+const BLOB_H_VH = 85.14     // backgroundData heightFracVh 0.8514
+const BLOB_LEFT_VW = -32.755 // backgroundData leftFrac -0.32755
+const BLOB_OPACITY = 0.6    // backgroundData opacity
+
+// The layer slides by transform rather than `top`, so the SVG's internal
+// Gaussian blur rasterises once and the swap stays a pure compositor move.
+const BLOB_TRAVEL_VH = (BLOB_TOP_DST - BLOB_TOP_SRC) * 100
+
+// The ring ellipse (CIRCLE_W × CIRCLE_H, centered, top edge on the layer's top)
+// expressed as percentages of the blob's own box. Because the ellipse and the
+// layer share that top edge, this is constant — it rides along with the
+// transform and never needs recomputing on swap. Opaque inside, transparent
+// out: the inverse of circleMask() above, which hides the result text along the
+// same curve.
+const BLOB_MASK = `radial-gradient(${(CIRCLE_W / 2) / BLOB_W_VW * 100}% ${(CIRCLE_H / 2) / BLOB_H_VH * 100}% at ${(50 - BLOB_LEFT_VW) / BLOB_W_VW * 100}% ${(CIRCLE_H / 2) / BLOB_H_VH * 100}%, #000 99.5%, transparent 100%)`
 
 // Elliptical glass mask for the circle: a filled ellipse matching its
 // rounded-[50%] box, so the circle reads as a glass disc (refraction + rim
@@ -182,6 +205,9 @@ export default function TranslatePage({ onAddCard }: Props) {
   const [savedSet, setSavedSet] = useState<Set<string>>(() => new Set(getCards().map(c => c.pl.toLowerCase())))
   const translateIdRef = useRef(0)
   const circleRef = useRef<HTMLDivElement>(null)
+  // Renderer is fixed for the page's lifetime (only a context-loss fallback
+  // changes it, which remounts), so a plain read is enough.
+  const isWebgl = getGlassMode() === 'webgl'
 
   // Register the circle as an elliptical glass mask pane so it reads as a glass
   // disc refracting the blob behind it. The map is size-only (rebuilt on
@@ -551,10 +577,40 @@ export default function TranslatePage({ onAddCard }: Props) {
   return (
     <div className="fixed inset-0 overflow-hidden">
 
-      {/* The gradient circle backing the source side (Figma 114-13508) is now
+      {/* The gradient circle backing the source side (Figma 114-13508) is
           rendered procedurally into the WebGL background (see backgroundData.ts
           `translate`) so the page's glass panes refract it natively; its
-          vertical slide on swap is driven via blobTop -> glassStore above. */}
+          vertical slide on swap is driven via blobTop -> glassStore above.
+
+          Without a canvas there is no procedural blob at all, so css/svg mode
+          re-renders the original Figma artwork as a DOM layer, clipped to the
+          ring ellipse. It is the same drawing backgroundData.ts transcribes,
+          and then some: the shader's transcription keeps only the four
+          coloured ellipses and drops the two white stroke sweeps, which the
+          SVG still has. Its own feGaussianBlur (stdDeviation 31.85 over a
+          959.4-wide viewBox → ~28px at this scale) stands in for the layer's
+          blurPx: 30, so no CSS blur is added on top. As an <img> the whole
+          thing — filter included — rasterises once. */}
+      {!isWebgl && (
+        <motion.img
+          src={translateBlobUrl}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute z-0 max-w-none mix-blend-screen"
+          style={{
+            width: `${BLOB_W_VW}vw`,
+            height: `${BLOB_H_VH}vh`,
+            left: `${BLOB_LEFT_VW}vw`,
+            top: `${BLOB_TOP_SRC * 100}vh`,
+            opacity: BLOB_OPACITY,
+            WebkitMaskImage: BLOB_MASK,
+            maskImage: BLOB_MASK,
+          }}
+          initial={false}
+          animate={{ y: srcTop ? '0vh' : `${BLOB_TRAVEL_VH}vh` }}
+          transition={SPRING}
+        />
+      )}
 
       {/* Soft edge ring marking the source side, sliding with the blob. Also
           the tracked box for the elliptical glass-disc mask pane (see the
