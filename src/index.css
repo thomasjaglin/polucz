@@ -22,6 +22,10 @@
   --quiz-amber: #FFDEB3;
   --quiz-teal: #7DF5EE;
   --aspect: #e879f9;
+  /* Transient success / failure states. The pale pair glows on a dark menu
+     and washes out on a light one, so each theme gets its own. */
+  --ok: #86efac;
+  --err: #f87171;
   --blob-opacity: 0.6;
   --page-bg: #121212;
   /* The base wash AppBackground paints under the page gradient. */
@@ -43,6 +47,8 @@ html.theme-light {
   --quiz-amber: #8A6510;
   --quiz-teal: #0E6E76;
   --aspect: #A21CAF;
+  --ok: #15803D;
+  --err: #B91C1C;
   /* The blob screen-blends, which lightens — on a light page the same
      opacity reads far heavier and drags the controls over it down. */
   --blob-opacity: 0.4;

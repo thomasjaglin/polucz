@@ -240,8 +240,8 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 </button>
                 <button
                   onClick={handleCopyToClipboard}
-                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-ink/10"
-                  style={{ color: copyLabel === 'copied' ? '#86efac' : copyLabel === 'error' ? '#f87171' : 'rgba(248,250,252,0.5)' }}
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
+                  style={copyLabel === 'copied' ? { color: 'var(--ok)' } : copyLabel === 'error' ? { color: 'var(--err)' } : undefined}
                 >
                   <span className="material-symbols-rounded text-[18px]">
                     {copyLabel === 'copied' ? 'check_circle' : copyLabel === 'error' ? 'error' : 'content_copy'}
@@ -251,8 +251,8 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 <button
                   onClick={handleSyncSentences}
                   disabled={syncState === 'loading'}
-                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium transition-colors hover:bg-ink/10 disabled:pointer-events-none"
-                  style={{ color: syncState === 'done' ? '#86efac' : syncState === 'error' ? '#f87171' : 'rgba(248,250,252,0.8)' }}
+                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink disabled:pointer-events-none"
+                  style={syncState === 'done' ? { color: 'var(--ok)' } : syncState === 'error' ? { color: 'var(--err)' } : undefined}
                 >
                   <span className={`material-symbols-rounded text-[18px]${syncState === 'loading' ? ' animate-spin' : ''}`}>
                     {syncState === 'done' ? 'check_circle' : syncState === 'error' ? 'error' : syncState === 'loading' ? 'progress_activity' : 'sync'}
@@ -268,7 +268,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 </button>
                 <button
                   onClick={() => { window.location.href = '/?lab' }}
-                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/50 transition-colors hover:bg-ink/10 hover:text-ink/80"
+                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
                 >
                   <span className="material-symbols-rounded text-[18px]">science</span>
                   Glass lab
