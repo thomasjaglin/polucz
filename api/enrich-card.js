@@ -1,79 +1,9 @@
+import { SCHEMAS, PROMPTS } from '../shared/llmTasks.js'
 import { applyCors } from './_cors.js'
 import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
-const VERB_SCHEMA = {
-  type: 'object',
-  properties: {
-    conjugations: {
-      type: 'object',
-      properties: {
-        present: { type: 'array', items: { type: 'string' } },
-        past:    { type: 'array', items: { type: 'string' } },
-        past2:   { type: 'array', items: { type: 'string' } },
-      },
-      required: ['present', 'past', 'past2'],
-    },
-    otherForm: {
-      type: 'object',
-      properties: {
-        label: { type: 'string' },
-        word:  { type: 'string' },
-      },
-      required: ['label', 'word'],
-    },
-  },
-  required: ['conjugations', 'otherForm'],
-}
-
-const NOUN_SCHEMA = {
-  type: 'object',
-  properties: {
-    declensions: {
-      type: 'object',
-      properties: {
-        cases:    { type: 'array', items: { type: 'string' } },
-        singular: { type: 'array', items: { type: 'string' } },
-        plural:   { type: 'array', items: { type: 'string' } },
-      },
-      required: ['cases', 'singular', 'plural'],
-    },
-    plAlt: { type: 'string' },
-  },
-  required: ['declensions', 'plAlt'],
-}
-
-const ADJECTIVE_SCHEMA = {
-  type: 'object',
-  properties: {
-    declensions: {
-      type: 'object',
-      properties: {
-        cases:        { type: 'array', items: { type: 'string' } },
-        masculine:    { type: 'array', items: { type: 'string' } },
-        feminine:     { type: 'array', items: { type: 'string' } },
-        neuter:       { type: 'array', items: { type: 'string' } },
-        pluralMasc:   { type: 'array', items: { type: 'string' } },
-        pluralNonMasc:{ type: 'array', items: { type: 'string' } },
-      },
-      required: ['cases', 'masculine', 'feminine', 'neuter', 'pluralMasc', 'pluralNonMasc'],
-    },
-    comparative: { type: 'string' },
-    superlative: { type: 'string' },
-  },
-  required: ['declensions', 'comparative', 'superlative'],
-}
-
-const UNKNOWN_SCHEMA = {
-  type: 'object',
-  properties: {
-    info: { type: 'string' },
-  },
-  required: ['info'],
-}
-
-const SCHEMAS = { verb: VERB_SCHEMA, noun: NOUN_SCHEMA, adjective: ADJECTIVE_SCHEMA, unknown: UNKNOWN_SCHEMA }
 
 // Every card type also returns a few alternative English senses ("secondary
 // definitions"), shown under the primary translation in the modal.
@@ -84,38 +14,8 @@ for (const s of Object.values(SCHEMAS)) {
 
 // ─── Prompts ──────────────────────────────────────────────────────────────────
 
-const PROMPTS = {
-  verb: `You are a Polish grammar reference. Given a Polish verb infinitive, return:
-- conjugations.present: 6 present-tense forms [ja, ty, on/ona/ono, my, wy, oni/one]
-- conjugations.past: 6 masculine past forms [ja, ty, on, my, wy, oni]
-- conjugations.past2: 6 feminine past forms [ja, ty, ona, my, wy, one]
-- otherForm.label: "pf form" if this verb is imperfective, "impf form" if perfective
-- otherForm.word: the aspect-pair partner verb`,
-
-  noun: `You are a Polish grammar reference. Given a Polish noun in nominative singular, return:
-- declensions.cases: the 7 case names in Polish [mianownik, dopełniacz, celownik, biernik, narzędnik, miejscownik, wołacz]
-- declensions.singular: the 7 singular declined forms in that case order
-- declensions.plural: the 7 plural declined forms in that case order
-- plAlt: the nominative plural form`,
-
-  adjective: `You are a Polish grammar reference. Given a Polish adjective in masculine nominative singular, return:
-- declensions.cases: the 7 case names in Polish [mianownik, dopełniacz, celownik, biernik, narzędnik, miejscownik, wołacz]
-- declensions.masculine: 7 masculine singular forms
-- declensions.feminine: 7 feminine singular forms
-- declensions.neuter: 7 neuter singular forms
-- declensions.pluralMasc: 7 masculine personal (virile) plural forms
-- declensions.pluralNonMasc: 7 non-masculine personal (non-virile) plural forms
-- comparative: the comparative form (stopień wyższy) in masculine nominative singular — the synthetic form when it exists (e.g. "większy", "ładniejszy"), otherwise the periphrastic "bardziej <adj>". If the adjective is not gradable (e.g. relational adjectives like "drewniany", "polski", "codzienny"), return an empty string.
-- superlative: the superlative form (stopień najwyższy) in masculine nominative singular (e.g. "największy", "najładniejszy", or "najbardziej <adj>"). If the adjective is not gradable, return an empty string.
-For the accusative masculine singular, use the slash notation "anim/inanim" where the forms differ.`,
-
-  unknown: `You are a Polish grammar reference. Given an unclassified Polish word, return a brief grammatical note in the info field. If nothing useful can be said, return an empty string.`,
-}
 
 // Appended to every prompt: a few alternative English senses of the word.
-const DEFINITIONS_LINE =
-  '\n- definitions: 2-4 short alternative English senses/meanings of the word, most common first (single words or short phrases). Omit near-duplicates.'
-for (const k of Object.keys(PROMPTS)) PROMPTS[k] += DEFINITIONS_LINE
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
@@ -144,7 +44,6 @@ function validate(type, parsed) {
 }
 
 // ─── Gemini fetch with exponential backoff on 429 ─────────────────────────────
-
 
 
 // ─── Handler ──────────────────────────────────────────────────────────────────

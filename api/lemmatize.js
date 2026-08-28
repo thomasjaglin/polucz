@@ -1,24 +1,6 @@
+import { LEMMATIZE_SCHEMA as SCHEMA, LEMMATIZE_SYSTEM as SYSTEM } from '../shared/llmTasks.js'
 import { applyCors } from './_cors.js'
 import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
-
-const SCHEMA = {
-  type: 'object',
-  properties: {
-    lemma:       { type: 'string' },
-    type:        { type: 'string', enum: ['noun', 'verb', 'adjective', 'unknown'] },
-    gender:      { type: 'string' },
-    canonicalEn: { type: 'string' },
-  },
-  required: ['lemma', 'type', 'gender', 'canonicalEn'],
-}
-
-const SYSTEM = `You are a Polish morphological analyzer. Given a single Polish word (possibly inflected), return its canonical dictionary form, grammatical class, and canonical English translation.
-
-lemma: the dictionary form. Verbs → infinitive. Nouns → nominative singular. Adjectives → masculine nominative singular. Unknown → return the word as-is.
-type: "verb", "noun", "adjective", or "unknown".
-gender: for nouns, one of "m.", "f.", or "n." (with the period). For all other types, return an empty string "".
-canonicalEn: the canonical English translation of the lemma (not the inflected input). Verbs → "to [verb]" form (e.g. "to think", "to run"). Nouns → bare singular (e.g. "friend", "house"). Adjectives → base form (e.g. "happy", "big"). Unknown → best-effort short translation.`
-
 
 
 export default async function handler(req, res) {

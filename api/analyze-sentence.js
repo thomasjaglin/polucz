@@ -1,47 +1,6 @@
+import { ANALYZE_SCHEMA as SCHEMA, ANALYZE_SYSTEM as SYSTEM } from '../shared/llmTasks.js'
 import { applyCors } from './_cors.js'
 import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
-
-const SCHEMA = {
-  type: 'object',
-  properties: {
-    words: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          lemma:   { type: 'string' },
-          type:    { type: 'string', enum: ['noun', 'verb', 'adjective', 'adverb', 'unknown'] },
-          english: { type: 'string' },
-          gender:  { type: 'string' },
-        },
-        required: ['lemma', 'type', 'english', 'gender'],
-      },
-    },
-  },
-  required: ['words'],
-}
-
-const SYSTEM = `You are a Polish language teacher helping a student mine vocabulary from a sentence.
-
-Return ONLY the main content words worth learning as vocabulary — specifically:
-- Nouns (rzeczowniki)
-- Verbs (czasowniki) — return the infinitive form
-- Adjectives (przymiotniki) — return the masculine nominative singular form
-- Adverbs (przysłówki) — only if they are genuinely important for meaning
-
-Do NOT include:
-- Prepositions (przyimki): w, na, do, z, przez, dla, o, po, przy, między, nad, etc.
-- Conjunctions (spójniki): i, a, ale, lub, czy, że, bo, więc, jednak, etc.
-- Pronouns (zaimki): ten, ta, to, który, mój, twój, etc.
-- Particles and interjections: nie, też, już, jeszcze, tylko, właśnie, etc.
-- Articles or very high-frequency words a student at B1 level would certainly know
-
-Return a JSON object with a single key "words" containing an array. Each item must have exactly these fields:
-- lemma: dictionary form of the word
-- type: "noun" | "verb" | "adjective" | "adverb" | "unknown"
-- english: concise English meaning in this sentence's context
-- gender: for nouns only — "m." | "f." | "n." — empty string for all other types`
-
 
 
 export default async function handler(req, res) {

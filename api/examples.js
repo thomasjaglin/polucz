@@ -1,3 +1,4 @@
+import { GEN_SCHEMA, GEN_PROMPT } from '../shared/llmTasks.js'
 import { applyCors } from './_cors.js'
 import { llmConfig, generateJson, LlmError } from './_llm.js'
 
@@ -43,26 +44,6 @@ async function fetchTatoeba(word) {
 
 // ─── Fallback: Gemini ───────────────────────────────────────────────────────
 
-const GEN_SCHEMA = {
-  type: 'object',
-  properties: {
-    examples: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: { pl: { type: 'string' }, en: { type: 'string' } },
-        required: ['pl', 'en'],
-      },
-    },
-  },
-  required: ['examples'],
-}
-
-const GEN_PROMPT =
-  'You are a Polish language teacher. Given a single Polish word, write exactly 3 short, ' +
-  'natural example sentences in Polish that a native speaker would actually say, each using ' +
-  'that word (any inflected form is fine), with a faithful English translation. Prefer common, ' +
-  'everyday phrasing over textbook stiffness. Return JSON matching the schema.'
 
 // Appended to the model input when refreshing, so it doesn't repeat sentences
 // the user has already seen.
@@ -71,7 +52,6 @@ function excludeClause(exclude) {
   return '\n\nDo NOT reuse or closely paraphrase any of these sentences:\n' +
     exclude.map(s => '- ' + s).join('\n')
 }
-
 
 
 // Returns [] on any failure — this is the fallback path behind the corpus, and
