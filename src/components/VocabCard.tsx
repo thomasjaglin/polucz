@@ -52,7 +52,11 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 {entry.enriched && (
                   <span
                     aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
-                    className="holo-icon material-symbols-rounded shrink-0 text-[16px] leading-none"
+                    // Holo is the mastered treatment — the star beside it is
+                    // gated the same way. Ungated, every enriched card wore it,
+                    // and since holo renders the glyph near-white it also left
+                    // the tick almost invisible on a light background.
+                    className={`material-symbols-rounded shrink-0 text-[16px] leading-none ${mastered ? 'holo-icon' : 'text-accent/70'}`}
                   >
                     {entry.audioReady ? 'done_all' : 'done'}
                   </span>

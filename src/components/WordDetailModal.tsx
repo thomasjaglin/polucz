@@ -616,7 +616,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 {entry.enriched && (
                   <span
                     aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
-                    className="holo-icon material-symbols-rounded shrink-0 text-[18px] leading-none"
+                    // Same gating as the star above. Literal colour rather than
+                    // the accent token because this modal is still dark-only.
+                    className={`material-symbols-rounded shrink-0 text-[18px] leading-none ${mastered ? 'holo-icon' : 'text-[#B4A0FF]/70'}`}
                   >
                     {entry.audioReady ? 'done_all' : 'done'}
                   </span>
