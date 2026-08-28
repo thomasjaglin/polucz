@@ -8,9 +8,15 @@ export const pages: Record<PageId, PageConfig> = {
     gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#4A0101"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#8B0909"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#C82A2A"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#F57D7D"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>`,
     // Light counterpart. The dark stack screen-blends a dark→white ramp to make
     // a bright core; on a light page screen only washes toward white, so this
-    // multiplies a white→tinted ramp instead — same geometry, inverted ends, so
-    // the colour still gathers in the middle rather than at the edges.
-    gradientLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-[0.55] blur-[36px] mix-blend-multiply transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#FFFFFF"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#FFF0EE"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#FFDAD6"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#FFC4BE"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="#FFB3AC"/></svg>`,
+    // multiplies tinted ellipses instead.
+    //
+    // Deliberately wider and more varied than the dark one. Frosted glass is
+    // only legible when there is something behind it to be blurred — over a
+    // near-uniform wash a blur produces the same uniform wash, and the panes
+    // read as flat white however transparent they actually are. Several hues
+    // spread across the page give every card a different backdrop, so the
+    // transparency shows.
+    gradientLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[12%] w-[880px] max-w-none opacity-[0.7] blur-[52px] mix-blend-multiply transition-all"><ellipse cx="110" cy="70" rx="205" ry="185" fill="#FFC4B8"/><ellipse cx="340" cy="160" rx="195" ry="175" fill="#FFE2BC"/><ellipse cx="205" cy="330" rx="235" ry="205" fill="#E4D6FF"/><ellipse cx="70" cy="470" rx="205" ry="185" fill="#C6E6FF"/><ellipse cx="350" cy="520" rx="185" ry="175" fill="#FFD2E6"/></svg>`,
   },
   translate: {
     title: 'Translate',

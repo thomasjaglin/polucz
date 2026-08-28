@@ -64,7 +64,10 @@ html.theme-light .glass-raise-sm {
    Applied to ::before (which already carries the backdrop-filter) so it sits
    under content and needs no !important to beat the utility class. */
 html.theme-light .kube-glass-bg::before {
-  background-color: rgba(255, 255, 255, 0.55);
+  /* Enough white to keep dark text readable over any part of the gradient, but
+     thin enough that the colour behind still comes through — at 0.55 the panes
+     were opaque and the glass read as flat white. */
+  background-color: rgba(255, 255, 255, 0.32);
 }
 
 /* The painted depth pass assumes a dark surround: a bright top highlight reads
