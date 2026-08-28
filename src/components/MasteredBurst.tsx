@@ -70,7 +70,7 @@ export default function MasteredBurst() {
   if (reduce) return null
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20 overflow-visible">
+    <div className="mastered-glow pointer-events-none absolute inset-0 z-20 overflow-visible">
       {/* Warm light bloom — an ellipse that fills the whole card and spills a
           little past every edge. */}
       <motion.div

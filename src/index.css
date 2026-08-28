@@ -482,6 +482,30 @@ html.theme-light .kube-glass-bg::after {
 
 /* Hover/tap on list cards: full intensity, a touch quicker. Shimmer + glitter
    keep the SAME duration so their shared light stays phase-locked. */
+/* The mastered celebration — light rays and a spark burst — screen-blends warm
+   gold around the card. Screen lightens, so against the dark page it reads as
+   light thrown off the card; against a light one it blows out to near-white and
+   swallows the modal it is meant to frame. There is no light-mode equivalent:
+   an effect built from emitted light needs darkness to be seen against, and
+   inverting it to a shadow would say the opposite thing. So it is dark-only —
+   the card keeps its own holo foil either way. */
+html.theme-light .mastered-glow {
+  display: none;
+}
+
+/* A mastered card paints its own dark cosmos and keeps it in both themes — the
+   holo foil only reads against a dark surface, so it does not invert. That
+   makes it an always-dark island in a light page, and the tokens have to stay
+   dark inside it: with the page's light palette the translation went deep
+   violet on a saturated dark card and all but vanished.
+   Resetting the tokens here covers everything inside at once, rather than
+   hunting per-element overrides now and again with every new child. */
+.card-mastered {
+  --ink-rgb: 248 250 252;
+  --accent-rgb: 180 160 255;
+  --aspect: #e879f9;
+}
+
 .card-mastered:hover .holo-shimmer,
 .card-mastered:active .holo-shimmer {
   opacity: 1;

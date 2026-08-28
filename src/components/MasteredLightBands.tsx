@@ -30,7 +30,7 @@ export default function MasteredLightBands() {
   }
 
   return (
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-visible">
+    <div aria-hidden="true" className="mastered-glow pointer-events-none absolute inset-0 overflow-visible">
       {/* Wider, warmer fan — clockwise. The -50% centering is applied as motion
           values (x/y), not Tailwind classes, so it composes with the animated
           rotate/scale instead of being overwritten by them. */}
