@@ -503,11 +503,21 @@ html.theme-light .mastered-glow {
 .mastered-base[data-mastered-type="adjective"] { background: linear-gradient(135deg, #1A5A30, #2AA840 55%, #145A3A); }
 .mastered-base[data-mastered-type="unknown"]   { background: linear-gradient(135deg, #3A3A44, #5A5A66); }
 
-/* Same hues, pale enough to carry dark text. */
-html.theme-light .mastered-base[data-mastered-type="verb"]      { background: linear-gradient(135deg, #EBD7F5, #D9D9F7 55%, #C9EFF6); }
-html.theme-light .mastered-base[data-mastered-type="noun"]      { background: linear-gradient(135deg, #F7DAD5, #FAE4C6 55%, #EDF0C6); }
-html.theme-light .mastered-base[data-mastered-type="adjective"] { background: linear-gradient(135deg, #D2EEDA, #DCF4E0 55%, #D0EBDC); }
-html.theme-light .mastered-base[data-mastered-type="unknown"]   { background: linear-gradient(135deg, #E6E6EA, #F0F0F3); }
+/* Same hues at real saturation. The first pass was pale enough that the foil
+   had nothing to sit on — the sparkle and sweep need colour underneath to be
+   visible at all, and a near-white base gives them none. Every stop still
+   clears AAA against the dark glyph (7.8:1 at worst). */
+html.theme-light .mastered-base[data-mastered-type="verb"]      { background: linear-gradient(135deg, #C79AE8, #9BA6F2 55%, #6FD8EC); }
+html.theme-light .mastered-base[data-mastered-type="noun"]      { background: linear-gradient(135deg, #F2A08C, #F7C066 55%, #DDE070); }
+html.theme-light .mastered-base[data-mastered-type="adjective"] { background: linear-gradient(135deg, #83DBA2, #A6E884 55%, #74D2AE); }
+html.theme-light .mastered-base[data-mastered-type="unknown"]   { background: linear-gradient(135deg, #BFBFCE, #D6D6E2 55%, #C8C8D6); }
+
+/* The accent sits at 3.9:1 on the deepest of those stops — below AA. Deepening
+   it inside the light foil keeps the base as saturated as it wants to be
+   instead of washing the colour back out to rescue the text. */
+html.theme-light .card-mastered {
+  --accent-rgb: 63 34 153;
+}
 
 /* Meta (gender / aspect / the separator dot) on a mastered card. Forced white
    so it survives the dark foil; on a pale foil it flips with it. */
@@ -584,7 +594,7 @@ html.theme-light .holo-edge {
    down — on a pale base the same opacity reads far heavier. */
 html.theme-light .holo-shimmer {
   mix-blend-mode: overlay;
-  opacity: 0.5;
+  opacity: 0.72;
 }
 html.theme-light .card-mastered:hover .holo-shimmer,
 html.theme-light .card-mastered:active .holo-shimmer {
@@ -592,10 +602,10 @@ html.theme-light .card-mastered:active .holo-shimmer {
 }
 html.theme-light .holo-glitter {
   mix-blend-mode: overlay;
-  opacity: 0.45;
+  opacity: 0.68;
 }
 html.theme-light .cosmos-shine {
-  opacity: 0.35;
+  opacity: 0.6;
 }
 
 /* The modal's round buttons carry white glyphs with a dark shadow so they read
