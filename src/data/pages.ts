@@ -53,9 +53,9 @@ export const pages: Record<PageId, PageConfig> = {
     `,
   },
   api_config: {
-    title: 'API Configuration',
-    icon: 'api',
-    desc: 'Configure your LLM provider.',
+    title: 'App Settings',
+    icon: 'settings',
+    desc: 'Configure the app and your LLM provider.',
     gradient: `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 401 463" fill="none" class="absolute -top-[5%] -left-[20%] w-[509px] max-w-none opacity-[0.28] blur-[46px] mix-blend-screen transition-all">
         <ellipse cx="-11.3347" cy="72.7827" rx="254.534" ry="325.96" transform="rotate(-57.5101 -11.3347 72.7827)" fill="#4A014A"/>
