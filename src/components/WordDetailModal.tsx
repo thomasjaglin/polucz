@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
+import { apiUrl } from '../lib/apiBase'
 import { tagGradients, masteredBase, tagImages } from '../data/gradients'
 import {
   type VocabEntry, type VocabVerb, type VocabNoun, type VocabAdjective, type VocabUnknown,
@@ -353,7 +354,7 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
     setLoading(true)
     if (!isRefresh) setError(false)
     try {
-      const res = await fetch('/api/examples', {
+      const res = await fetch(apiUrl('/api/examples'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...llmHeaders() },
         body: JSON.stringify({ word, exclude }),
@@ -481,7 +482,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
       // translation with a fresh (and, since lemmatize is a stochastic LLM,
       // often different) canonicalEn. The word's translation is set once at
       // card creation and left alone.
-      const enrichRes = await fetch('/api/enrich-card', {
+      const enrichRes = await fetch(apiUrl('/api/enrich-card'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...llmHeaders() },
         body: JSON.stringify({ lemma: entry.id, type: entry.type }),

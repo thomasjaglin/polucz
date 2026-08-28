@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react'
+import { apiUrl } from '../lib/apiBase'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
@@ -283,13 +284,13 @@ export default function TranslatePage({ onAddCard }: Props) {
       const single = direction === 'pl-en' && isSingleWord(text)
 
       // Start translate + lemmatize
-      const translateFetch = fetch('/api/translate', {
+      const translateFetch = fetch(apiUrl('/api/translate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, direction }),
       })
       const lemmaFetch: Promise<Response | null> = single
-        ? fetch('/api/lemmatize', {
+        ? fetch(apiUrl('/api/lemmatize'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...llmHeaders() },
             body: JSON.stringify({ text }),
@@ -300,7 +301,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       const canAnalyzeNow = direction === 'pl-en' && !single
       if (canAnalyzeNow) setWordPhase('loading')
       const analyzeFetch: Promise<Response> | null = canAnalyzeNow
-        ? fetch('/api/analyze-sentence', {
+        ? fetch(apiUrl('/api/analyze-sentence'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...llmHeaders() },
             body: JSON.stringify({ sentence: text, sourceLang: 'pl' }),
@@ -347,7 +348,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         if (translateIdRef.current !== myId) return
         setWordPhase('loading')
         try {
-          const analyzeRes = await fetch('/api/analyze-sentence', {
+          const analyzeRes = await fetch(apiUrl('/api/analyze-sentence'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...llmHeaders() },
             body: JSON.stringify({ sentence: translation, sourceLang: 'pl' }),

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiUrl } from '../lib/apiBase'
 import GlassCard from './GlassCard'
 import GlassPane from './GlassPane'
 import GlassInput from './GlassInput'
@@ -71,7 +72,7 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
     setErrorMsg('')
 
     try {
-      const lemmaRes = await fetch('/api/lemmatize', {
+      const lemmaRes = await fetch(apiUrl('/api/lemmatize'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...llmHeaders() },
         body: JSON.stringify({ text: plTrimmed }),

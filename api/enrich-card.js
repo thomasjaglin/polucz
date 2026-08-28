@@ -1,3 +1,4 @@
+import { applyCors } from './_cors.js'
 import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
@@ -149,6 +150,7 @@ function validate(type, parsed) {
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { lemma, type } = req.body ?? {}

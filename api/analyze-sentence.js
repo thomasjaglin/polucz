@@ -1,3 +1,4 @@
+import { applyCors } from './_cors.js'
 import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
 
 const SCHEMA = {
@@ -44,6 +45,7 @@ Return a JSON object with a single key "words" containing an array. Each item mu
 
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { sentence, sourceLang = 'pl' } = req.body ?? {}

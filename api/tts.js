@@ -1,3 +1,4 @@
+import { applyCors } from './_cors.js'
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent'
 
 // Gemini TTS returns raw 16-bit signed PCM at 24 kHz mono.
@@ -34,6 +35,7 @@ function buildPrompt(text, language) {
 }
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { text, language = 'pl' } = req.body ?? {}
