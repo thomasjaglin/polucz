@@ -1,9 +1,10 @@
+import { llmConfig, generateJson, LlmError } from './_llm.js'
+
 // Usage examples for a Polish word. Corpus-first (Tatoeba — real, human-written
 // sentence pairs), with an LLM fallback (Gemini) when the corpus has no
 // coverage. The response tags its `source` so the UI can be honest about
 // whether the examples are attested or generated.
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions'
 const WANT = 3            // examples to aim for
 const MAX_LEN = 160       // skip very long corpus sentences
 
@@ -70,52 +71,27 @@ function excludeClause(exclude) {
     exclude.map(s => '- ' + s).join('\n')
 }
 
-async function fetchWithBackoff(apiKey, body) {
-  let res
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt - 1) * 1000))
-    res = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'x-goog-api-key': apiKey, 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (res.status !== 429) break
-  }
-  return res
-}
 
-function extractText(data) {
-  const step = data.steps?.find(s => s.type === 'model_output')
-  return step?.content?.find(c => c.type === 'text')?.text ?? null
-}
 
-async function fetchGenerated(word, exclude = []) {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return []
-  let r
+// Returns [] on any failure — this is the fallback path behind the corpus, and
+// the handler already has a "no examples available" answer for the empty case.
+async function fetchGenerated(req, word, exclude = []) {
+  let parsed
   try {
-    r = await fetchWithBackoff(apiKey, {
-      model: 'gemini-3.5-flash',
-      system_instruction: GEN_PROMPT,
+    parsed = await generateJson(llmConfig(req), {
+      system: GEN_PROMPT,
       input: word + excludeClause(exclude),
-      response_format: { type: 'text', mime_type: 'application/json', schema: GEN_SCHEMA },
+      schema: GEN_SCHEMA,
     })
-  } catch {
+  } catch (e) {
+    console.error('Example generation failed', e instanceof LlmError ? `${e.code} ${e.message}` : e)
     return []
   }
-  if (!r.ok) return []
-  const raw = extractText(await r.json())
-  if (!raw) return []
-  try {
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed.examples)) return []
-    return parsed.examples
-      .filter(e => e && typeof e.pl === 'string' && typeof e.en === 'string' && e.pl.trim() && e.en.trim())
-      .slice(0, WANT)
-      .map(e => ({ pl: e.pl.trim(), en: e.en.trim() }))
-  } catch {
-    return []
-  }
+  if (!Array.isArray(parsed.examples)) return []
+  return parsed.examples
+    .filter(e => e && typeof e.pl === 'string' && typeof e.en === 'string' && e.pl.trim() && e.en.trim())
+    .slice(0, WANT)
+    .map(e => ({ pl: e.pl.trim(), en: e.en.trim() }))
 }
 
 // ─── Handler ────────────────────────────────────────────────────────────────
@@ -142,7 +118,7 @@ export default async function handler(req, res) {
   }
 
   // … LLM fallback where the corpus has no coverage (or is exhausted on refresh).
-  const generated = fresh(await fetchGenerated(w, excludeList))
+  const generated = fresh(await fetchGenerated(req, w, excludeList))
   if (generated.length > 0) {
     return res.status(200).json({ examples: generated, source: 'generated' })
   }

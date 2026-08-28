@@ -4,6 +4,7 @@ import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
+import { llmHeaders } from '../lib/llmConfig'
 import { type VocabEntry, type WordType, typeLabel } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
@@ -290,7 +291,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       const lemmaFetch: Promise<Response | null> = single
         ? fetch('/api/lemmatize', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...llmHeaders() },
             body: JSON.stringify({ text }),
           })
         : Promise.resolve(null)
@@ -301,7 +302,7 @@ export default function TranslatePage({ onAddCard }: Props) {
       const analyzeFetch: Promise<Response> | null = canAnalyzeNow
         ? fetch('/api/analyze-sentence', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...llmHeaders() },
             body: JSON.stringify({ sentence: text, sourceLang: 'pl' }),
           })
         : null
@@ -348,7 +349,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         try {
           const analyzeRes = await fetch('/api/analyze-sentence', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...llmHeaders() },
             body: JSON.stringify({ sentence: translation, sourceLang: 'pl' }),
           })
           if (translateIdRef.current !== myId) return

@@ -28,7 +28,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
             : 'shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]'
         }`}
       >
-        <GlassPane borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
+        <GlassPane forceCss borderRadius={36} className={`relative flex w-full flex-col rounded-[36px] bg-[#F8FAFC]/[0.02] p-5 ${mastered ? 'card-mastered' : ''}`}>
           {/* Per-type colour base (same as the modal) so the cosmos holo has a
               colourful "illustration" to sit on — mastered cards only. */}
           {mastered && (
@@ -80,7 +80,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 </span>
               </div>
             ) : (
-              <GlassPane borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
+              <GlassPane forceCss borderRadius={62} className="relative mt-1 flex flex-shrink-0 items-center justify-center rounded-[124px] border border-[#F8FAFC]/20 bg-[#F8FAFC]/10 px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]">
                 <div
                   className="absolute inset-0 z-0 flex items-center justify-center opacity-70 mix-blend-screen"
                   dangerouslySetInnerHTML={{ __html: tagGradients[entry.type] }}

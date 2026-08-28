@@ -1,4 +1,4 @@
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions'
+import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
 
 const SCHEMA = {
   type: 'object',
@@ -41,24 +41,7 @@ Return a JSON object with a single key "words" containing an array. Each item mu
 - english: concise English meaning in this sentence's context
 - gender: for nouns only — "m." | "f." | "n." — empty string for all other types`
 
-async function fetchWithBackoff(apiKey, body) {
-  let res
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt - 1) * 1000))
-    res = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'x-goog-api-key': apiKey, 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (res.status !== 429) break
-  }
-  return res
-}
 
-function extractText(data) {
-  const step = data.steps?.find(s => s.type === 'model_output')
-  return step?.content?.find(c => c.type === 'text')?.text ?? null
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -68,35 +51,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'sentence is required' })
   }
 
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'Analysis service not configured' })
-
-  let r
-  try {
-    r = await fetchWithBackoff(apiKey, {
-      model: 'gemini-3.5-flash',
-      system_instruction: SYSTEM,
-      input: `Analyse this ${sourceLang === 'pl' ? 'Polish' : 'Polish'} sentence: "${sentence.trim()}"`,
-      response_format: { type: 'text', mime_type: 'application/json', schema: SCHEMA },
-    })
-  } catch {
-    return res.status(200).json({ words: [] })
-  }
-
-  if (!r.ok) {
-    console.error('Gemini API error', r.status, await r.text().catch(() => ''))
-    return res.status(200).json({ words: [] })
-  }
-
-  const data = await r.json()
-  const raw = extractText(data)
-  if (!raw) return res.status(200).json({ words: [] })
-
+  // This endpoint degrades to an empty word list rather than an error — the
+  // sentence breakdown is supplementary, and a failure here shouldn't fail the
+  // translation the user actually asked for.
   let parsed
   try {
-    parsed = JSON.parse(raw)
-  } catch {
-    console.error('Failed to parse model response:', raw)
+    parsed = await generateJson(llmConfig(req), {
+      system: SYSTEM,
+      input: `Analyse this ${sourceLang === 'pl' ? 'Polish' : 'Polish'} sentence: "${sentence.trim()}"`,
+      schema: SCHEMA,
+    })
+  } catch (e) {
+    console.error('Analyse-sentence failed', e instanceof LlmError ? `${e.code} ${e.message}` : e)
     return res.status(200).json({ words: [] })
   }
 

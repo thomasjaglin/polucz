@@ -1,4 +1,4 @@
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions'
+import { llmConfig, generateJson, LlmError, statusFor } from './_llm.js'
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -144,24 +144,7 @@ function validate(type, parsed) {
 
 // ─── Gemini fetch with exponential backoff on 429 ─────────────────────────────
 
-async function fetchWithBackoff(apiKey, body) {
-  let res
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, Math.pow(2, attempt - 1) * 1000))
-    res = await fetch(GEMINI_URL, {
-      method: 'POST',
-      headers: { 'x-goog-api-key': apiKey, 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    if (res.status !== 429) break
-  }
-  return res
-}
 
-function extractText(data) {
-  const step = data.steps?.find(s => s.type === 'model_output')
-  return step?.content?.find(c => c.type === 'text')?.text ?? null
-}
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
@@ -176,39 +159,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'type must be verb, noun, adjective, or unknown' })
   }
 
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return res.status(500).json({ error: 'Enrichment service not configured' })
-
-  let r
-  try {
-    r = await fetchWithBackoff(apiKey, {
-      model: 'gemini-3.5-flash',
-      system_instruction: PROMPTS[type],
-      input: lemma.trim(),
-      response_format: { type: 'text', mime_type: 'application/json', schema: SCHEMAS[type] },
-    })
-  } catch {
-    return res.status(500).json({ error: 'Internal server error' })
-  }
-
-  if (r.status === 429) return res.status(429).json({ error: 'Rate limit — try again shortly' })
-
-  if (!r.ok) {
-    const errBody = await r.text().catch(() => '')
-    console.error('Gemini API error', r.status, errBody)
-    return res.status(502).json({ error: 'Enrichment service error' })
-  }
-
-  const data = await r.json()
-  const raw = extractText(data)
-  if (!raw) return res.status(502).json({ error: 'Empty response from model' })
-
   let parsed
   try {
-    parsed = JSON.parse(raw)
-  } catch {
-    console.error('Failed to parse model response:', raw)
-    return res.status(502).json({ error: 'Malformed response from model' })
+    parsed = await generateJson(llmConfig(req), { system: PROMPTS[type], input: lemma.trim(), schema: SCHEMAS[type] })
+  } catch (e) {
+    if (!(e instanceof LlmError)) {
+      console.error('Enrich failed', e)
+      return res.status(500).json({ error: 'Internal server error' })
+    }
+    if (e.code === 'rate_limited') return res.status(429).json({ error: 'Rate limit — try again shortly' })
+    if (e.code === 'not_configured') return res.status(500).json({ error: 'Enrichment service not configured' })
+    console.error('Enrich LLM error', e.code, e.message)
+    return res.status(statusFor(e.code)).json({ error: 'Enrichment service error' })
   }
 
   if (!validate(type, parsed)) {

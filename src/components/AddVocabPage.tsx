@@ -3,6 +3,7 @@ import GlassCard from './GlassCard'
 import GlassPane from './GlassPane'
 import GlassInput from './GlassInput'
 import { findByLemma } from '../lib/storage'
+import { llmHeaders } from '../lib/llmConfig'
 import type { VocabEntry } from '../data/types'
 
 function GlassButton({
@@ -72,7 +73,7 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
     try {
       const lemmaRes = await fetch('/api/lemmatize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...llmHeaders() },
         body: JSON.stringify({ text: plTrimmed }),
       })
 

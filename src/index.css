@@ -11,6 +11,17 @@ body {
 /* ─── Font ────────────────────────────────────────────────── */
 .font-instrument { font-family: 'Instrument Sans', sans-serif; }
 
+/* Off-screen vocab-list cards skip layout, paint AND compositing (native
+   Chromium windowing) so a 700-card list doesn't lay out thousands of nodes or
+   promote hundreds of backdrop-filter layers at once — only the cards near the
+   viewport do real work. The `auto` keyword makes the browser remember each
+   card's real measured height, so the scrollbar/scroll position stays stable;
+   96px is just the first-paint estimate for cards not yet seen. */
+.card-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 96px;
+}
+
 /* ─── Page fade-in animation ──────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -158,6 +169,18 @@ body {
   transform: none;
 }
 
+/* Hybrid: a force-css pane (scrolling list glass) uses the DOM backdrop path even
+   while the global renderer is webgl — so undo, for just these panes, the two
+   webgl-mode suppressions above: restore the ::before backdrop layer and the
+   translateZ(0) stacking context it needs to paint below content. These panes do
+   NOT register with the canvas, so they stay glued to their element on scroll. */
+.glass-webgl .kube-glass-bg.glass-force-css {
+  transform: translateZ(0);
+}
+.glass-webgl .kube-glass-bg.glass-force-css::before {
+  display: block;
+}
+
 .kube-glass-bg::before {
   content: '';
   position: absolute;
@@ -176,6 +199,47 @@ body {
      shifted by the 20px overscan. */
   clip-path: var(--glass-clip, none);
   pointer-events: none;
+}
+
+/* Tier-1 scroll perf (css mode only): the expensive part of the glass is the
+   blur() KERNEL, which re-composites every scroll frame. saturate() is a cheap
+   per-pixel colour transform. So while actively scrolling (html.is-scrolling,
+   toggled by initScrollGlass) we drop only the blur and keep saturate — the card
+   shows the SAME backdrop at the SAME brightness, just sharp instead of frosted
+   (reads as a focus-pull, not a brightness flash), with no added fill. The full
+   frosted blur returns the instant motion settles. Applies to css-mode panes and
+   to hybrid force-css panes; webgl/svg panes never paint a per-frame backdrop. */
+.glass-css.is-scrolling .kube-glass-bg::before,
+.is-scrolling .kube-glass-bg.glass-force-css::before {
+  -webkit-backdrop-filter: saturate(140%);
+  backdrop-filter: saturate(140%);
+}
+
+/* Tier-3 painted glass depth (css mode only): css frosted-blur is flat on its
+   own, so paint the light a real glass edge would catch — a crisp top highlight,
+   a faint diagonal specular sheen, and a soft bottom shade + inner bevel. It's a
+   pure ::after overlay that composites like normal paint (no filter), so it's
+   free and scrolls attached. Sits above the blurred backdrop (::before) but below
+   content (both are z-index -1 within the pane's translateZ(0) context; ::after
+   paints last). webgl/svg get their rim from the shader/filter, so scope to css
+   panes and hybrid force-css panes; mirror --glass-clip so non-rect panes (the
+   gooey nav) keep their silhouette. */
+.glass-css .kube-glass-bg::after,
+.kube-glass-bg.glass-force-css::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  clip-path: var(--glass-clip, none);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.10) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 24%, rgba(0, 0, 0, 0.05) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.07);
 }
 
 /* ─── Mastered card holographic effect ─────────────────────────────────────

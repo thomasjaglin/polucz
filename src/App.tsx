@@ -25,6 +25,7 @@ import { vocabularyData } from './data/vocabulary'
 import { getAllReviews } from './lib/reviewStorage'
 import { isConquered } from './lib/scheduler'
 import { initHoloMotion } from './lib/holoMotion'
+import { initScrollGlass } from './lib/scrollGlass'
 import { initBackHandler } from './lib/backStack'
 import { useBackClose } from './hooks/useBackClose'
 
@@ -114,6 +115,7 @@ export default function App() {
   // each overlay register itself so back closes it instead of exiting the app.
   useEffect(() => { initBackHandler() }, [])
   useEffect(() => { initHoloMotion() }, [])
+  useEffect(() => { initScrollGlass() }, [])
   useBackClose(!!modalEntry, handleCloseModal)
   // Android back on any non-home tab returns to the vocab list. Each page's own
   // sub-screen back (quiz session→selector, audio playback→start) registers on

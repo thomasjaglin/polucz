@@ -32,6 +32,21 @@ export const RELIEF_NEUTRAL = 128
 // Re-exported for the filter plumbing in useGlassFilter.
 export { GLASS_OVERSCAN }
 
+// Supersample the displacement map above CSS resolution. The SVG feImage is
+// otherwise a CSS-px bitmap that the browser upscales to device pixels on a
+// high-DPI phone, so the rounded corners show stair-step dither. Rendering the
+// map at 2× (then displaying it at CSS size, so the filter samples the detail)
+// keeps the edges smooth. Capped at 2 for main-thread cost — bump toward the
+// device ratio for crisper edges if the phone has headroom.
+const SUPERSAMPLE = Math.min(
+  Math.ceil((typeof window !== 'undefined' ? window.devicePixelRatio : 1) || 1),
+  2,
+)
+
+// Identical-size panes (a scrolling list of same-shaped cards) share one
+// generated bitmap instead of each rebuilding the (now pricier) supersampled map.
+const mapCache = new Map<string, GlassMaps>()
+
 interface GlassMapOptions {
   bezelWidth?: number      // px of rim that refracts (flat glass beyond it)
   thickness?: number       // glass slab thickness in px
@@ -49,15 +64,26 @@ export function generateGlassMap(
   borderRadius: number,
   { bezelWidth = BEZEL_WIDTH, thickness = THICKNESS, refractiveIndex = REFRACTIVE_INDEX }: GlassMapOptions = {}
 ): GlassMaps {
+  // Identical panes reuse one bitmap (see mapCache note above).
+  const cacheKey = `${width}x${height}x${borderRadius}x${bezelWidth}x${thickness}x${refractiveIndex}x${SUPERSAMPLE}`
+  const cached = mapCache.get(cacheKey)
+  if (cached) return cached
+
   // Canvas covers the overscanned ::before area; the element's rounded rect
   // sits centered with GLASS_OVERSCAN px of neutral (no-displacement) padding.
+  // The bitmap is rendered at SUPERSAMPLE× device density (ss) but still encodes
+  // CSS-space geometry, so it displays 1:1 at the CSS filter size with crisper
+  // edges. All the geometry math below stays in CSS px via `x / ss`.
+  const ss = SUPERSAMPLE
   const mapW = width + GLASS_OVERSCAN * 2
   const mapH = height + GLASS_OVERSCAN * 2
+  const bw = mapW * ss
+  const bh = mapH * ss
   const canvas = document.createElement('canvas')
-  canvas.width = mapW
-  canvas.height = mapH
+  canvas.width = bw
+  canvas.height = bh
   const ctx = canvas.getContext('2d')!
-  const img = ctx.createImageData(mapW, mapH)
+  const img = ctx.createImageData(bw, bh)
   const d = img.data
 
   const hw = width / 2
@@ -67,11 +93,11 @@ export function generateGlassMap(
   const { mags, max } = refractionProfile(bezel, thickness, refractiveIndex)
   const eps = 0.5
 
-  for (let y = 0; y < mapH; y++) {
-    for (let x = 0; x < mapW; x++) {
-      const px = x - GLASS_OVERSCAN - hw
-      const py = y - GLASS_OVERSCAN - hh
-      const i = (y * mapW + x) * 4
+  for (let y = 0; y < bh; y++) {
+    for (let x = 0; x < bw; x++) {
+      const px = x / ss - GLASS_OVERSCAN - hw
+      const py = y / ss - GLASS_OVERSCAN - hh
+      const i = (y * bw + x) * 4
 
       const dist = sdfRoundRect(px, py, hw, hh, r)
       // dist < 0 means inside; edgeDist is how far inside we are
@@ -104,7 +130,9 @@ export function generateGlassMap(
   }
 
   ctx.putImageData(img, 0, 0)
-  return { url: canvas.toDataURL(), scale: max }
+  const result = { url: canvas.toDataURL(), scale: max }
+  mapCache.set(cacheKey, result)
+  return result
 }
 
 function clampUnit(v: number): number {

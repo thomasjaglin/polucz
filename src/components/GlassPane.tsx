@@ -14,18 +14,23 @@ interface Props {
    *  pane reads as sliding under that shape (e.g. the translate result card
    *  disappearing behind the gradient circle along its curve). */
   clipEllipseRef?: { current: HTMLElement | null }
+  /** Hybrid: force this pane onto the cheap, attached css backdrop path even when
+   *  the global renderer is webgl — for glass inside a scrolling list, which
+   *  otherwise detaches from its element as the fixed canvas repaints a frame
+   *  behind the compositor-driven scroll. */
+  forceCss?: boolean
 }
 
 // Applies the per-element computed displacement map via --glass-filter CSS variable.
 // The .kube-glass-bg::before picks it up with filter: var(--glass-filter).
 // Blur is handled separately by backdrop-filter: blur() on the same ::before.
-export default function GlassPane({ borderRadius, className = '', style, children, rotation, clipEllipseRef }: Props) {
-  const { elRef, filterCss } = useGlassFilter(borderRadius, rotation, clipEllipseRef)
+export default function GlassPane({ borderRadius, className = '', style, children, rotation, clipEllipseRef, forceCss = false }: Props) {
+  const { elRef, filterCss } = useGlassFilter(borderRadius, rotation, clipEllipseRef, forceCss)
 
   return (
     <div
       ref={elRef as React.RefObject<HTMLDivElement>}
-      className={`kube-glass-bg ${className}`}
+      className={`kube-glass-bg ${forceCss ? 'glass-force-css' : ''} ${className}`}
       style={{ '--glass-filter': filterCss, ...style } as CSSProperties}
     >
       {children}

@@ -3,6 +3,7 @@ import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
+import { MODELS, PROVIDERS, clearLlmConfig, getLlmConfig, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
 
 interface Props {
   onSave: () => void
@@ -35,8 +36,18 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
   )
 }
 
+// Fixed-length stand-in for a saved key. Rendering one bullet per real
+// character would leak its length, which is a fingerprint of the provider.
+const MASK = '\u2022'.repeat(24)
+
 export default function ApiConfigPage({ onSave }: Props) {
-  const [provider, setProvider] = useState('gemini')
+  const [stored, setStored] = useState<LlmConfig | null>(() => getLlmConfig())
+  // Editing starts true only when there's nothing saved, so a configured device
+  // opens on the locked summary rather than an empty form.
+  const [editing, setEditing] = useState(() => getLlmConfig() === null)
+  const [provider, setProvider] = useState<Provider>(() => getLlmConfig()?.provider ?? 'gemini')
+  const [model, setModel] = useState(() => getLlmConfig()?.model ?? MODELS.gemini[0])
+  const [baseUrl, setBaseUrl] = useState(() => getLlmConfig()?.baseUrl ?? '')
   const [apiKey, setApiKey] = useState('')
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
 
@@ -79,40 +90,166 @@ export default function ApiConfigPage({ onSave }: Props) {
       </Section>
 
       <Section title="API">
-        <h3 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">LLM Provider</h3>
+        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-[#F8FAFC]/40">
+          Run the app's language features through your own LLM. Without a key here the
+          app uses the server's own, so this is optional.
+        </p>
 
-        {/* Provider select */}
-        <div className="relative mb-6 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">Provider</h3>
+        <div className="relative mb-5 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
           <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
           <select
             value={provider}
-            onChange={e => setProvider(e.target.value)}
-            className="relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none cursor-pointer"
+            disabled={!editing}
+            onChange={e => {
+              const next = e.target.value as Provider
+              setProvider(next)
+              // Model IDs don't carry across providers, so reset rather than
+              // leave a name the new provider will 404 on.
+              setModel(MODELS[next][0] ?? '')
+            }}
+            className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
           >
-            <option value="gemini" className="bg-[#1a1a1a] text-[#F8FAFC]">Google Gemini</option>
-            <option value="claude" className="bg-[#1a1a1a] text-[#F8FAFC]">Anthropic Claude</option>
+            {PROVIDERS.map(p => (
+              <option key={p.id} value={p.id} className="bg-[#1a1a1a] text-[#F8FAFC]">{p.label}</option>
+            ))}
           </select>
-          <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
-            expand_more
-          </span>
+          {editing && (
+            <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
+              expand_more
+            </span>
+          )}
         </div>
 
-        <h3 className="mb-4 font-instrument text-[18px] font-semibold text-[#F8FAFC]">API Key</h3>
+        {provider === 'openai-compatible' && (
+          <>
+            <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">Base URL</h3>
+            <GlassInput
+              placeholder="https://api.groq.com/openai/v1"
+              value={baseUrl}
+              onChange={setBaseUrl}
+              disabled={!editing}
+              className="mb-5"
+            />
+          </>
+        )}
+
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">Model</h3>
+        {MODELS[provider].length > 0 ? (
+          <div className="relative mb-5 w-full rounded-[36px] border border-[#F8FAFC]/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
+            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-[#F8FAFC]/10 transition-colors group-focus-within:bg-[#F8FAFC]/15" />
+            <select
+              value={model}
+              disabled={!editing}
+              onChange={e => setModel(e.target.value)}
+              className={`relative z-10 w-full appearance-none bg-transparent px-[18px] py-3 font-instrument text-[16px] text-[#F8FAFC] outline-none ${editing ? 'cursor-pointer' : 'opacity-60'}`}
+            >
+              {MODELS[provider].map(m => (
+                <option key={m} value={m} className="bg-[#1a1a1a] text-[#F8FAFC]">{m}</option>
+              ))}
+            </select>
+            {editing && (
+              <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-[#F8FAFC]/50">
+                expand_more
+              </span>
+            )}
+          </div>
+        ) : (
+          // No catalogue to offer: the base URL can point at any of hundreds of
+          // models, so the name is typed rather than picked.
+          <GlassInput
+            placeholder="Model name, e.g. llama-3.3-70b-versatile"
+            value={model}
+            onChange={setModel}
+            disabled={!editing}
+            className="mb-5"
+          />
+        )}
+
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-[#F8FAFC]">API Key</h3>
         <GlassInput
           type="password"
           placeholder="Paste API Key..."
-          value={apiKey}
+          value={editing ? apiKey : MASK}
           onChange={setApiKey}
-          className="mb-8"
+          disabled={!editing}
+          className="mb-6"
         />
 
-        <button
-          onClick={onSave}
-          className="relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
-        >
-          <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
-          <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save Configuration</span>
-        </button>
+        {editing ? (
+          <div className="flex gap-3">
+            {stored && (
+              <button
+                onClick={() => {
+                  setEditing(false)
+                  setApiKey('')
+                  setProvider(stored.provider)
+                  setModel(stored.model)
+                  setBaseUrl(stored.baseUrl)
+                }}
+                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              >
+                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+                <span className="relative z-10 font-instrument text-[16px] text-[#F8FAFC]/70">Cancel</span>
+              </button>
+            )}
+            <button
+              onClick={() => {
+                const trimmedKey = apiKey.trim()
+                const trimmedModel = model.trim()
+                const trimmedUrl = baseUrl.trim()
+                // An incomplete config would be silently ignored by llmHeaders()
+                // and the app would quietly keep using the server key, so refuse
+                // to save one rather than look configured when it isn't.
+                if (!trimmedKey || !trimmedModel) return
+                if (provider === 'openai-compatible' && !trimmedUrl) return
+                const next: LlmConfig = { provider, model: trimmedModel, apiKey: trimmedKey, baseUrl: trimmedUrl }
+                saveLlmConfig(next)
+                setStored(next)
+                setApiKey('')
+                setEditing(false)
+                haptics.tap()
+                onSave()
+              }}
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Save Configuration</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                // Clear the fields rather than pre-fill them: the stored key is
+                // never readable back, so an edit always means entering a new one.
+                setEditing(true)
+                setApiKey('')
+              }}
+              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-[#F8FAFC]">Change API key</span>
+            </button>
+            <button
+              onClick={() => {
+                clearLlmConfig()
+                setStored(null)
+                setEditing(true)
+                setApiKey('')
+                setProvider('gemini')
+                setModel(MODELS.gemini[0])
+                setBaseUrl('')
+                haptics.destructive()
+              }}
+              aria-label="Remove saved key"
+              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#F8FAFC]/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-[#F8FAFC]/5 transition-colors group-hover:bg-[#F8FAFC]/10" />
+              <span className="material-symbols-rounded relative z-10 text-[20px] text-[#F8FAFC]/60">delete</span>
+            </button>
+          </div>
+        )}
       </Section>
     </div>
   )

@@ -23,6 +23,18 @@ const MAX_PANES = 48
 // bump alongside the texture units wired up below if a third is ever needed.
 const MAX_MASK_PANES = 2
 
+// Render-resolution cap (canvas backing pixels = CSS px × min(devicePixelRatio,
+// this)). The whole-screen glass shader is fragment-bound and recomposites every
+// scroll frame, so cost scales with the SQUARE of this. Phones report a DPR of
+// ~2.6–3.5; capping lower there is the biggest lever against scroll lag and the
+// blur/refraction hides the softness. Desktop keeps 2 (crisp, not perf-bound).
+// Tune MOBILE down (e.g. 1.25) for more speed, up (2) for more sharpness.
+const MAX_DPR_MOBILE = 1.5
+const MAX_DPR_DESKTOP = 2
+const IS_COARSE_POINTER =
+  typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches
+const MAX_DPR = IS_COARSE_POINTER ? MAX_DPR_MOBILE : MAX_DPR_DESKTOP
+
 // Fullscreen triangle from gl_VertexID — no vertex buffers needed.
 const VERT = `#version 300 es
 void main() {
@@ -464,7 +476,7 @@ export default function GlassCanvas({ activeId, onFallback }: Props) {
     // Reads layout (clientWidth/Height) — called only when a resize actually
     // happened, then caches the result so renders reuse it without re-reading.
     function updateSize(): boolean {
-      cssDpr = Math.min(window.devicePixelRatio || 1, 2)
+      cssDpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
       cssW = canvas.clientWidth
       cssH = canvas.clientHeight
       const w = Math.round(cssW * cssDpr)

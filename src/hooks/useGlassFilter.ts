@@ -108,11 +108,14 @@ export function upsertFilter(id: string, maps: GlassMaps, w: number, h: number) 
 // current on-screen position each frame (it moves on language swap).
 type ClipEllipseRef = { current: HTMLElement | null }
 
-export function useGlassFilter(borderRadius: number, rotation?: MotionValue<number>, clipEllipseRef?: ClipEllipseRef) {
+export function useGlassFilter(borderRadius: number, rotation?: MotionValue<number>, clipEllipseRef?: ClipEllipseRef, forceCss = false) {
   const elRef = useRef<HTMLElement | null>(null)
   const [filterId] = useState(() => `kube-glass-${++counter}`)
   const prevSize = useRef({ w: 0, h: 0 })
-  const mode = getGlassMode()
+  // Hybrid: a force-css pane (scrolling list glass) uses the cheap, attached DOM
+  // backdrop path even while the global renderer is webgl — so it neither
+  // registers with the canvas nor bakes an SVG map.
+  const mode = forceCss ? 'css' : getGlassMode()
 
   useEffect(() => {
     const el = elRef.current

@@ -10,6 +10,7 @@ import GlassButton from './GlassButton'
 import MasteredBurst from './MasteredBurst'
 import MasteredLightBands from './MasteredLightBands'
 import { useTTS } from '../lib/useTTS'
+import { llmHeaders } from '../lib/llmConfig'
 import { haptics } from '../lib/haptics'
 import { getGlassMode } from '../lib/glassMode'
 import { useBackClose } from '../hooks/useBackClose'
@@ -354,7 +355,7 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
     try {
       const res = await fetch('/api/examples', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...llmHeaders() },
         body: JSON.stringify({ word, exclude }),
       })
       const data = await res.json()
@@ -482,7 +483,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
       // card creation and left alone.
       const enrichRes = await fetch('/api/enrich-card', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...llmHeaders() },
         body: JSON.stringify({ lemma: entry.id, type: entry.type }),
       })
       if (!enrichRes.ok) throw new Error()
