@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import { llmFetch } from '../lib/llmApi'
-import { tagGradients, masteredBase, tagImages } from '../data/gradients'
+import { tagGradients, tagImages } from '../data/gradients'
 import {
   type VocabEntry, type VocabVerb, type VocabNoun, type VocabAdjective, type VocabUnknown,
   type VerbConjugations, type NounDeclensions, type AdjectiveDeclensions,
@@ -125,7 +125,7 @@ function ParadigmGrid({
             key={key}
             onClick={tip ? () => { haptics.tap(); setOpenKey(open ? null : key) } : undefined}
             className={[
-              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-white' : 'text-ink/40'}`,
+              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-holo-meta' : 'text-ink/40'}`,
               tip ? 'cursor-pointer select-none' : '',
             ].join(' ')}
           >
@@ -155,8 +155,8 @@ function ParadigmGrid({
                 // Tighten the gap between the label column and the values by
                 // trimming the label cell's right padding.
                 isLabel
-                  ? `pl-2 pr-0.5 ${mastered ? 'text-white' : 'text-ink/45'}`
-                  : `px-2 italic ${mastered ? 'text-white' : 'text-ink/85'}`,
+                  ? `pl-2 pr-0.5 ${mastered ? 'text-holo-meta' : 'text-ink/45'}`
+                  : `px-2 italic ${mastered ? 'text-holo-meta' : 'text-ink/85'}`,
                 tip ? 'cursor-pointer select-none' : '',
                 zebra ? (mastered ? 'bg-ink/[0.1]' : 'bg-ink/[0.04]') : '',
                 zebra && c === 0 ? 'rounded-l-[8px]' : '',
@@ -204,7 +204,7 @@ function VerbSection({ entry, mastered }: { entry: VocabVerb; mastered: boolean 
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
-          <span className={`font-instrument text-[15px] ${mastered ? 'text-white' : 'text-ink/40'}`}>{entry.otherForm.label}</span>
+          <span className={`font-instrument text-[15px] ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{entry.otherForm.label}</span>
           <span className={`font-instrument text-[18px] italic text-accent ${mastered ? 'holo-outline' : ''}`}>{entry.otherForm.word}</span>
         </div>
       )}
@@ -234,7 +234,7 @@ function NounSection({ entry, mastered }: { entry: VocabNoun; mastered: boolean 
 function GradeRow({ label, form, mastered }: { label: string; form: string; mastered: boolean }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-white' : 'text-ink/40'}`}>{label}</span>
+      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{label}</span>
       <span className={`font-instrument text-[16px] text-accent ${mastered ? 'holo-outline' : ''}`}>{form}</span>
     </div>
   )
@@ -254,7 +254,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
       {gradable && (
         <>
           <div className="flex flex-col">
-            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-ink/40'}`}>stopniowanie</span>
+            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>stopniowanie</span>
             <div className="flex flex-col gap-2">
               <GradeRow label="równy" form={entry.pl} mastered={mastered} />
               {entry.comparative && <GradeRow label="wyższy" form={entry.comparative} mastered={mastered} />}
@@ -267,7 +267,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
 
       {/* Singular: cases, m., f., n. */}
       <div className="flex flex-col">
-        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-ink/40'}`}>l. pojedyncza</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>l. pojedyncza</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.', 'f.', 'n.']}
@@ -283,7 +283,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
 
       {/* Plural: cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
-        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-white' : 'text-ink/40'}`}>l. mnoga</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>l. mnoga</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.os.', 'nm.os.']}
@@ -385,7 +385,7 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
     return (
       <div className="mt-4 flex flex-col gap-4 border-t border-ink/10 pt-4">
         <div className="flex items-center justify-between">
-          <span className={`font-instrument text-[14px] ${mastered ? 'text-white' : 'text-ink/20'}`}>
+          <span className={`font-instrument text-[14px] ${mastered ? 'text-holo-meta' : 'text-ink/20'}`}>
             Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
           </span>
           <button
@@ -563,7 +563,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               {/* Mastered: a solid per-type gradient base so the holo always has a
                   colourful "illustration" to sit on (not black). */}
               {mastered && (
-                <div className="absolute inset-0" style={{ background: masteredBase[entry.type] ?? masteredBase.unknown }} />
+                <div className="mastered-base absolute inset-0" data-mastered-type={entry.type} />
               )}
               {entry.type === 'verb' && (
                 <>
@@ -694,7 +694,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 </button>
               </div>
               {entry.type === 'noun' && (
-                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-white' : 'text-ink/40'}`}>{entry.plAlt}</h3>
+                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{entry.plAlt}</h3>
               )}
               <h2 className={`mt-1 font-instrument text-[22px] font-medium text-accent ${mastered ? 'holo-outline' : ''}`}>{entry.en}</h2>
               {/* Secondary senses filled during enrichment */}

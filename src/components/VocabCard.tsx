@@ -1,5 +1,5 @@
 import { forwardRef } from 'react'
-import { tagGradients, masteredBase, tagImages } from '../data/gradients'
+import { tagGradients, tagImages } from '../data/gradients'
 import { type VocabEntry, typeLabel } from '../data/types'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
@@ -33,9 +33,9 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
               colourful "illustration" to sit on — mastered cards only. */}
           {mastered && (
             <div
-              className="absolute inset-0 z-0 rounded-[36px]"
+              className="mastered-base absolute inset-0 z-0 rounded-[36px]"
               aria-hidden="true"
-              style={{ background: masteredBase[entry.type] ?? masteredBase.unknown }}
+              data-mastered-type={entry.type}
             />
           )}
           {mastered && <div className="cosmos-shine" aria-hidden="true" />}
@@ -68,8 +68,8 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 </span>
                 {meta && (
                   <>
-                    <span className={mastered ? 'text-white' : 'text-ink/20'}>·</span>
-                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-white' : 'text-ink/40'}`}>{meta}</span>
+                    <span className={mastered ? 'text-holo-meta' : 'text-ink/20'}>·</span>
+                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{meta}</span>
                   </>
                 )}
               </div>
@@ -79,7 +79,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 className="tag-holo relative mt-1 flex flex-shrink-0 items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 bg-cover bg-center px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]"
                 style={{ backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` }}
               >
-                <span className="relative z-10 font-instrument text-[10px] font-normal capitalize text-white">
+                <span className="text-holo-meta relative z-10 font-instrument text-[10px] font-normal capitalize">
                   {typeLabel(entry.type)}
                 </span>
               </div>

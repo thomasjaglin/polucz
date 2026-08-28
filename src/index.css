@@ -493,17 +493,117 @@ html.theme-light .mastered-glow {
   display: none;
 }
 
-/* A mastered card paints its own dark cosmos and keeps it in both themes — the
-   holo foil only reads against a dark surface, so it does not invert. That
-   makes it an always-dark island in a light page, and the tokens have to stay
-   dark inside it: with the page's light palette the translation went deep
-   violet on a saturated dark card and all but vanished.
-   Resetting the tokens here covers everything inside at once, rather than
-   hunting per-element overrides now and again with every new child. */
-.card-mastered {
-  --ink-rgb: 248 250 252;
-  --accent-rgb: 180 160 255;
-  --aspect: #e879f9;
+
+/* ─── Mastered card: per-type base ────────────────────────── */
+/* Was an inline style, which could only ever carry one palette. In CSS it can
+   carry two, so the foil inverts with the theme instead of staying a dark
+   island in a light page. */
+.mastered-base[data-mastered-type="verb"]      { background: linear-gradient(135deg, #9B4FB0, #3A3AB5 55%, #1FB4CC); }
+.mastered-base[data-mastered-type="noun"]      { background: linear-gradient(135deg, #8A2E2E, #D07A2A 55%, #A0A830); }
+.mastered-base[data-mastered-type="adjective"] { background: linear-gradient(135deg, #1A5A30, #2AA840 55%, #145A3A); }
+.mastered-base[data-mastered-type="unknown"]   { background: linear-gradient(135deg, #3A3A44, #5A5A66); }
+
+/* Same hues, pale enough to carry dark text. */
+html.theme-light .mastered-base[data-mastered-type="verb"]      { background: linear-gradient(135deg, #EBD7F5, #D9D9F7 55%, #C9EFF6); }
+html.theme-light .mastered-base[data-mastered-type="noun"]      { background: linear-gradient(135deg, #F7DAD5, #FAE4C6 55%, #EDF0C6); }
+html.theme-light .mastered-base[data-mastered-type="adjective"] { background: linear-gradient(135deg, #D2EEDA, #DCF4E0 55%, #D0EBDC); }
+html.theme-light .mastered-base[data-mastered-type="unknown"]   { background: linear-gradient(135deg, #E6E6EA, #F0F0F3); }
+
+/* Meta (gender / aspect / the separator dot) on a mastered card. Forced white
+   so it survives the dark foil; on a pale foil it flips with it. */
+.text-holo-meta { color: #fff; }
+html.theme-light .text-holo-meta { color: #241D33; }
+
+/* The dark glow behind mastered text keeps it legible over a bright foil. Over
+   a pale one it smudges — the same job needs a light glow instead. */
+html.theme-light .card-mastered {
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.55), 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+/* The type pill and the modal's round buttons are filled with a per-type foil
+   image built for a dark card. Lightening the fill keeps the pill reading as
+   the same object while letting dark text sit on it. */
+html.theme-light .tag-holo,
+html.theme-light .holo-full button::before {
+  filter: brightness(1.9) saturate(0.72);
+}
+
+/* ─── Mastered card: light-theme foil ─────────────────────── */
+/* The foil layers are all built to ADD light: the glyph fill is white, the edge
+   is a bright stroke, and the sparkle layers dodge. That reads as foil catching
+   light on a dark card and as nothing on a pale one.
+   The glyph and the edge invert outright. The sparkle layers only get their
+   weight adjusted — flipping every one of them to multiply compounds, and three
+   multiplies over a pale base drive the card to near-black. */
+
+html.theme-light .holo-icon,
+html.theme-light .holo-text {
+  /* Dark ends, same iridescent band and the same --holo-shift positions, so it
+     tracks the tilt identically. */
+  background-image: linear-gradient(110deg,
+    #1B1526 0%, #1B1526 38%,
+    #7A5410 44%, #7A1450 47%, #14477A 50%, #145F42 53%, #7A5410 56%,
+    #1B1526 62%, #1B1526 100%);
+  /* background-image, not the shorthand: the shorthand resets background-clip,
+     which is what makes the glyph a filled rectangle instead of text. */
+  background-size: 260% 100%;
+  background-position: var(--holo-shift, 50%) center;
+}
+
+/* The outline separates the glyph from the foil behind it. Black does that on a
+   dark card; against a now-dark glyph on a pale card it has to flip. */
+html.theme-light .holo-icon,
+html.theme-light .holo-text,
+html.theme-light .holo-outline {
+  filter:
+    drop-shadow(0.6px 0 0 rgba(255, 255, 255, 0.8))
+    drop-shadow(-0.6px 0 0 rgba(255, 255, 255, 0.8))
+    drop-shadow(0 0.6px 0 rgba(255, 255, 255, 0.8))
+    drop-shadow(0 -0.6px 0 rgba(255, 255, 255, 0.8));
+}
+
+/* Light running along the edge — same sweep, dark, so it still reads as a
+   travelling stroke rather than disappearing into a pale card. */
+html.theme-light .holo-edge {
+  /* A bright hairline is enough to read as light on a dark card. A dark one on a
+     pale card has less to work against, so it needs more weight to register as
+     a stroke at all. */
+  padding: 2.5px;
+  opacity: 1;
+  background-image: linear-gradient(110deg,
+    rgba(86, 58, 8, 0.95) 0%, rgba(86, 58, 8, 0.95) 30%,
+    rgba(96, 16, 64, 0.92) 42%,
+    rgba(16, 46, 96, 0.92) 50%,
+    rgba(10, 70, 48, 0.92) 58%,
+    rgba(86, 58, 8, 0.95) 70%, rgba(86, 58, 8, 0.95) 100%);
+  background-size: 260% 100%;
+  background-position: var(--holo-shift, 50%) center;
+}
+
+/* Sparkle: keep overlay, which works in both directions, and pull the weight
+   down — on a pale base the same opacity reads far heavier. */
+html.theme-light .holo-shimmer {
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+html.theme-light .card-mastered:hover .holo-shimmer,
+html.theme-light .card-mastered:active .holo-shimmer {
+  opacity: 0.8;
+}
+html.theme-light .holo-glitter {
+  mix-blend-mode: overlay;
+  opacity: 0.45;
+}
+html.theme-light .cosmos-shine {
+  opacity: 0.35;
+}
+
+/* The modal's round buttons carry white glyphs with a dark shadow so they read
+   over the cosmos. Over a pale face that is the wrong way round. */
+html.theme-light .holo-full button,
+html.theme-light .holo-full button * {
+  color: #1B1526;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.75), 0 1px 1px rgba(255, 255, 255, 0.6);
 }
 
 .card-mastered:hover .holo-shimmer,

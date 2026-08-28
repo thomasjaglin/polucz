@@ -63,7 +63,7 @@ export default function ApiConfigPage({ onSave }: Props) {
       <Section title="Appearance">
         {/* Live. The hint names the scope rather than the control implying the
             whole app is themed — only the vocabulary list is, so far. */}
-        <Row label="Theme" hint="Light mode currently covers the vocabulary list">
+        <Row label="Theme">
           <div
             role="radiogroup"
             aria-label="Theme"
