@@ -544,6 +544,18 @@ html.theme-light .holo-full button::before {
   filter: brightness(1.9) saturate(0.72);
 }
 
+/* Other.png is far heavier than its three siblings — average (82,16,111) at
+   0.86 saturation, where the others sit near 0.75 and much lighter. The shared
+   lift turns that into vivid magenta rather than a pastel, which is doubly
+   wrong here because the unknown card's own base is neutral grey. Pull the
+   saturation most of the way out and lift further, so the pill belongs to its
+   card the way the other three do. */
+html.theme-light .tag-holo[data-mastered-type="unknown"],
+html.theme-light [data-mastered-type="unknown"] .tag-holo,
+html.theme-light .holo-full[data-mastered-type="unknown"] button::before {
+  filter: brightness(3.2) saturate(0.22);
+}
+
 /* ─── Mastered card: light-theme foil ─────────────────────── */
 /* The foil layers are all built to ADD light: the glyph fill is white, the edge
    is a bright stroke, and the sparkle layers dodge. That reads as foil catching

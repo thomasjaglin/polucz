@@ -556,6 +556,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
 
           <div
             className={`relative flex w-full flex-col rounded-[36px] ${mastered ? 'card-mastered holo-full' : ''}`}
+            data-mastered-type={mastered ? entry.type : undefined}
             style={mastered ? ({ '--tag-img': `url(${tagImages[entry.type] ?? tagImages.unknown})` } as CSSProperties) : undefined}
           >
             {/* Per-type colour blobs — sit behind GlassPane so the blur picks them up */}

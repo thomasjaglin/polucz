@@ -76,6 +76,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
             </div>
             {mastered ? (
               <div
+                data-mastered-type={entry.type}
                 className="tag-holo relative mt-1 flex flex-shrink-0 items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 bg-cover bg-center px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]"
                 style={{ backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` }}
               >
