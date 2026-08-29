@@ -545,15 +545,17 @@ html.theme-light .holo-full button::before {
 }
 
 /* Other.png is far heavier than its three siblings — average (82,16,111) at
-   0.86 saturation, where the others sit near 0.75 and much lighter. The shared
-   lift turns that into vivid magenta rather than a pastel, which is doubly
-   wrong here because the unknown card's own base is neutral grey. Pull the
-   saturation most of the way out and lift further, so the pill belongs to its
-   card the way the other three do. */
+   0.86 saturation, where the others sit near 0.75 and much lighter. No amount
+   of brightness and desaturation turns that deep purple into a pastel without
+   passing through magenta on the way, so light mode substitutes the colour
+   outright rather than filtering toward it. A light blue-grey, because this is
+   the one type whose card base is neutral — a warm pill would sit apart from it
+   the way the purple did. Filter off, since it was tuned for the image that is
+   no longer there. */
 html.theme-light .tag-holo[data-mastered-type="unknown"],
-html.theme-light [data-mastered-type="unknown"] .tag-holo,
 html.theme-light .holo-full[data-mastered-type="unknown"] button::before {
-  filter: brightness(3.2) saturate(0.22);
+  background-image: linear-gradient(135deg, #D6E1EF, #BCCCE2 55%, #CCDAE9);
+  filter: none;
 }
 
 /* ─── Mastered card: light-theme foil ─────────────────────── */
@@ -740,6 +742,10 @@ html.theme-light .holo-full button * {
    sweeps with --holo-shift. Sits above the tag colour (z-0) and below the label
    (z-10). */
 .tag-holo {
+  /* The per-type foil image, passed in as --tag-img. It lives here rather than
+     inline so a theme can substitute something else for it — an inline
+     background-image would win over any stylesheet rule. */
+  background-image: var(--tag-img);
   /* Contain the color-dodge glitter to the tag's own stack (like the mastered
      card does) so it blends over the tag colour, not the page. */
   isolation: isolate;

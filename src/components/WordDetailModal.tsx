@@ -600,7 +600,8 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               <div className="flex items-center gap-2">
                 <div
                   className={`relative flex items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 px-4 py-1.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] ${mastered ? 'tag-holo bg-cover bg-center' : 'bg-ink/10'}`}
-                  style={mastered ? { backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` } : undefined}
+                  data-mastered-type={mastered ? entry.type : undefined}
+                  style={mastered ? ({ '--tag-img': `url(${tagImages[entry.type] ?? tagImages.unknown})` } as CSSProperties) : undefined}
                 >
                   {!mastered && (
                     <div

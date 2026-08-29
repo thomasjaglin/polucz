@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, type CSSProperties } from 'react'
 import { tagGradients, tagImages } from '../data/gradients'
 import { type VocabEntry, typeLabel } from '../data/types'
 import GlassPane from './GlassPane'
@@ -78,7 +78,7 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
               <div
                 data-mastered-type={entry.type}
                 className="tag-holo relative mt-1 flex flex-shrink-0 items-center justify-center overflow-hidden rounded-[124px] border border-ink/20 bg-cover bg-center px-3 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]"
-                style={{ backgroundImage: `url(${tagImages[entry.type] ?? tagImages.unknown})` }}
+                style={{ '--tag-img': `url(${tagImages[entry.type] ?? tagImages.unknown})` } as CSSProperties}
               >
                 <span className="text-holo-meta relative z-10 font-instrument text-[10px] font-normal capitalize">
                   {typeLabel(entry.type)}
