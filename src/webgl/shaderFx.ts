@@ -1,7 +1,7 @@
 import { LIGHT_X, LIGHT_Y } from '../lib/glassParams'
 
 // Live-tunable shader effect parameters for the WebGL glass experiments.
-// The glass lab (?lab in webgl mode) exposes sliders for these; GlassCanvas
+// GlassCanvas
 // reads them every composite pass and re-renders continuously while any
 // animated effect (wobble, auto/tilt light) is active.
 export interface ShaderFx {

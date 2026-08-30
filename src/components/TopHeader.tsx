@@ -261,17 +261,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                 </button>
                 <button
                   onClick={() => { onChangePage('api_config'); setSettingsOpen(false) }}
-                  className="flex w-full items-center gap-3 border-b border-ink/5 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
+                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
                 >
                   <span className="material-symbols-rounded text-[18px]">settings</span>
                   App settings
-                </button>
-                <button
-                  onClick={() => { window.location.href = '/?lab' }}
-                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
-                >
-                  <span className="material-symbols-rounded text-[18px]">science</span>
-                  Glass lab
                 </button>
                 </div>
               </div>

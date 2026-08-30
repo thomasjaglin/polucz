@@ -14,7 +14,6 @@ import FlashcardPage from './components/FlashcardPage'
 import AudioPlaybackPage from './components/AudioPlaybackPage'
 import QuizPage from './components/QuizPage'
 import WordDetailModal from './components/WordDetailModal'
-import GlassLabPage from './components/GlassLabPage'
 import Toaster from './components/Toaster'
 import { pushToast } from './lib/toastStore'
 import { pages, pageOrder } from './data/pages'
@@ -247,8 +246,6 @@ export default function App() {
   const compactTop = activeId === 'dynamic_feed' || activeId === 'question_mark' || activeId === 'spatial_audio'
 
   function renderContent() {
-    // Glass shader test bench (dev tool) — open with ?lab
-    if (new URLSearchParams(window.location.search).has('lab')) return <GlassLabPage />
     if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
     if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} />
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />

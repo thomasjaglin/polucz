@@ -51,7 +51,7 @@ export default function AppLogo() {
   // feeds the shared filter defs; in webgl mode the raw map canvas is
   // registered for the GlassCanvas renderer to sample as a texture.
   // Conservative baseline parameters — the relief experiments for thin glass
-  // live in the glass lab (?lab) until a combination is proven there.
+  // be proven by hand before being adopted here.
   const MASK_OPTS = { scale: 30, blurRadius: 3, highlight: 0.5, shade: 0 }
 
   useEffect(() => {
