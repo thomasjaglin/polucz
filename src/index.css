@@ -335,6 +335,24 @@ html.theme-light .kube-glass-bg::after {
   pointer-events: none;
 }
 
+/* Chromium does not clip a backdrop-filter to an ancestor's rounded overflow
+   clip, so an oversized ::before paints its blur as a hard SQUARE at the pane's
+   rounded corners — very visible on small pills like the modal buttons, where
+   the corner radius is most of the height. The pane has to carry the rounded
+   shape itself.
+
+   Dropping the overscan costs nothing outside svg mode: the 20px inset exists
+   only to give the SVG displacement map bleed room, and --glass-filter resolves
+   to `none` in css/webgl (see useGlassFilter). svg mode keeps the base rule
+   above untouched. Note this also means --glass-clip coordinates are unshifted
+   here — nothing sets that variable today, but a future non-rect pane must
+   account for the mode it runs in. */
+.glass-css .kube-glass-bg::before,
+.glass-webgl .kube-glass-bg.glass-force-css::before {
+  inset: 0;
+  border-radius: inherit;
+}
+
 /* Tier-1 scroll perf (css mode only): the expensive part of the glass is the
    blur() KERNEL, which re-composites every scroll frame. saturate() is a cheap
    per-pixel colour transform. So while actively scrolling (html.is-scrolling,
