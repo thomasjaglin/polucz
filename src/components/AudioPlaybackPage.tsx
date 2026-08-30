@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { motion, AnimatePresence } from 'framer-motion'
 import { type VocabEntry, typeLabel } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
@@ -101,20 +102,29 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     return () => document.removeEventListener('click', onClick)
   }, [speedOpen])
 
-  // Playable cards = those whose audio is ACTUALLY in the cache (verified below),
-  // not merely flagged audioReady. The flag can drift from the real cache (stale
-  // import, eviction, interrupted write), and any such card would hit the
-  // rate-limited API and error/skip — so we verify the store directly and only
-  // ever play confirmed-cached cards. `null` = still verifying (fall back to the
-  // flag so the screen isn't empty for the first frame).
+  // In the BROWSER, playable cards are those whose audio is ACTUALLY in the
+  // cache (verified below), not merely flagged audioReady. The flag can drift
+  // from the real cache (stale import, eviction, interrupted write), and any
+  // such card would hit the rate-limited API and error/skip — so we verify the
+  // store directly and only ever play confirmed-cached cards. `null` = still
+  // verifying (fall back to the flag so the screen isn't empty for the first
+  // frame).
+  //
+  // NATIVELY that check is not just unnecessary but wrong: the device TTS
+  // engine is always available, so useTTS caches nothing (prefetch returns true
+  // outright) and playSequence speaks uncached text directly. The cache is
+  // therefore always empty on Android, and verifying against it emptied a page
+  // whose cards were all perfectly playable. Trust the flag there.
+  const verifyCache = !Capacitor.isNativePlatform()
   const [cachedIds, setCachedIds] = useState<Set<string> | null>(null)
   useEffect(() => {
+    if (!verifyCache) return
     let cancelled = false
     const flagged = cards.filter(c => c.audioReady)
     Promise.all(flagged.map(async c => ((await hasCachedClips(c.pl, c.en)) ? c.id : null)))
       .then(ids => { if (!cancelled) setCachedIds(new Set(ids.filter((x): x is string => x !== null))) })
     return () => { cancelled = true }
-  }, [cards])
+  }, [cards, verifyCache])
 
   const isReady = (c: VocabEntry) => cachedIds ? cachedIds.has(c.id) : !!c.audioReady
   const availableCount = cards.filter(isReady).length
