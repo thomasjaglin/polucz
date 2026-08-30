@@ -512,7 +512,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                             onClick={() => { setPlaybackRate(r); setSpeedOpen(false) }}
                             className={`relative flex h-[40px] w-[54px] flex-shrink-0 items-center justify-center rounded-full border transition-all active:scale-95 ${active ? 'border-accent/50' : 'border-ink/10'}`}
                           >
-                            <GlassPane borderRadius={20} className={`absolute inset-0 z-0 rounded-full ${active ? 'bg-accent/20' : 'bg-[#0d0d0d]/70'}`} />
+                            <GlassPane borderRadius={20} className={`absolute inset-0 z-0 rounded-full ${active ? 'bg-accent/20' : 'pane-neutral'}`} />
                             <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${active ? 'text-accent' : 'text-ink/70'}`}>
                               {r === 1 ? '1×' : `${r}×`}
                             </span>

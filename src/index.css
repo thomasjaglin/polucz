@@ -922,16 +922,19 @@ html.theme-light .holo-full button * {
 }
 
 
-/* ─── Translate swap button ───────────────────────────────────
-   The puck sits on the boundary between the two language panes, half over the
-   gradient circle and half over the page. Its tint therefore can't be a fixed
-   colour: a near-black fill reads as a dark glass puck against the dark page,
-   but against the light wash it reads as a grey smudge and drags the icon's
-   contrast down with it. Each theme gets a fill that lifts off its own ground —
-   dark stays dark, light goes white — and the drop shadow follows, since a
-   0.6-alpha black halo is a bruise on a pale background. */
-.swap-pane { background-color: rgba(24, 24, 24, 0.45); }
-.swap-btn { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); }
+/* ─── Neutral glass fill ──────────────────────────────────────
+   The tint for a glass control that has no colour of its own — the translate
+   swap puck, the inactive playback speeds. It can't be a fixed colour: a
+   near-black fill reads as dark glass against the dark page, but against the
+   light wash it reads as a grey smudge and drags the label's contrast down
+   with it. So each theme gets a fill that lifts off its own ground — dark
+   stays dark, light goes white — kept transparent enough that the control
+   still reads as glass rather than a solid chip. */
+.pane-neutral { background-color: rgba(24, 24, 24, 0.45); }
+html.theme-light .pane-neutral { background-color: rgba(255, 255, 255, 0.38); }
 
-html.theme-light .swap-pane { background-color: rgba(255, 255, 255, 0.38); }
+/* The swap puck's own lift. Separate from the fill because it is about where
+   the puck sits (floating on the boundary between the two language panes), and
+   a 0.6-alpha black halo is a bruise on a pale background. */
+.swap-btn { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); }
 html.theme-light .swap-btn { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16); }

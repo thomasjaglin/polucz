@@ -624,7 +624,7 @@ export default function TranslatePage({ onAddCard }: Props) {
         onClick={handleSwap}
         aria-label="Swap languages"
         radius={20}
-        pane="swap-pane"
+        pane="pane-neutral"
         className="swap-btn absolute left-1/2 z-20 h-[42px] w-[42px] -translate-x-1/2 -translate-y-1/2 border border-ink/10"
         style={{ top: `${BOUNDARY}vh` }}
       >
