@@ -1,4 +1,4 @@
-package com.polucz.app;
+package com.polon.app;
 
 import com.getcapacitor.BridgeActivity;
 

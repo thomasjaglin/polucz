@@ -24,5 +24,6 @@ dist/
 
 # Personal vocabulary and review data — local only, never committed.
 polucz-backup-*.json
+polon-backup-*.json
 Vocab-list*.json
 sentences.json

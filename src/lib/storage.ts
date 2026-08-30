@@ -1,6 +1,6 @@
 import type { VocabEntry } from '../data/types'
 
-const KEY = 'polucz_vocab'
+const KEY = 'polon_vocab'
 
 export function getCards(): VocabEntry[] {
   try {

@@ -317,7 +317,7 @@ interface ExampleData { examples: Example[]; source: ExampleSource }
 // session, mirrored to localStorage so it also survives reloads. Best-effort:
 // any storage failure just falls back to a network fetch.
 const exampleMem = new Map<string, ExampleData>()
-const exampleKey = (w: string) => `polucz_examples:${w.toLowerCase()}`
+const exampleKey = (w: string) => `polon_examples:${w.toLowerCase()}`
 
 function getCachedExamples(word: string): ExampleData | null {
   const mem = exampleMem.get(word)

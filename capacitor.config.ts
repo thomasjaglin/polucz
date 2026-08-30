@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-  appId: 'com.polucz.app',
-  appName: 'Polucz',
+  appId: 'com.polon.app',
+  appName: 'Polon',
   webDir: 'dist',
 
   plugins: {

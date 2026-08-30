@@ -7,7 +7,7 @@ export type GroupSize = 10 | 30 | 50
 export const GROUP_SIZES: GroupSize[] = [10, 30, 50]
 export const DEFAULT_GROUP_SIZE: GroupSize = 30
 
-const SIZE_KEY = 'polucz_flashcard_group_size'
+const SIZE_KEY = 'polon_flashcard_group_size'
 
 export function getGroupSize(): GroupSize {
   try {

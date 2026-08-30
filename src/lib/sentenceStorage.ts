@@ -1,6 +1,6 @@
 import type { SentenceEntry } from '../data/types'
 
-const KEY = 'polucz_sentences'
+const KEY = 'polon_sentences'
 
 export function getSentences(): SentenceEntry[] {
   try {

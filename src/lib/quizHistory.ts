@@ -6,7 +6,7 @@ export interface QuizSession {
   wrongAnswers: { sentence: string; correct: string; given: string }[]
 }
 
-const KEY = 'polucz_quiz_history'
+const KEY = 'polon_quiz_history'
 const MAX = 30
 
 export function getHistory(): QuizSession[] {

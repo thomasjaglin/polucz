@@ -54,7 +54,7 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [deeplEditing, setDeeplEditing] = useState(() => getDeepLKey() === null)
   const [deeplKey, setDeeplKey] = useState('')
   const [theme, setThemeState] = useState<Theme>(() => getTheme())
-  const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
+  const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polon_haptics') !== 'false')
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
@@ -100,7 +100,7 @@ export default function ApiConfigPage({ onSave }: Props) {
             onClick={() => {
               const next = !hapticsOn
               setHapticsOn(next)
-              localStorage.setItem('polucz_haptics', next ? 'true' : 'false')
+              localStorage.setItem('polon_haptics', next ? 'true' : 'false')
               if (next) haptics.tap()
             }}
             className={`relative h-[28px] w-[48px] shrink-0 rounded-full border transition-colors ${hapticsOn ? 'border-accent/40 bg-accent/30' : 'border-ink/10 bg-ink/10'}`}

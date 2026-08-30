@@ -39,7 +39,7 @@ export const MODELS: Record<Provider, string[]> = {
   'openai-compatible': [],
 }
 
-const KEY = 'polucz_llm_config'
+const KEY = 'polon_llm_config'
 
 export function getLlmConfig(): LlmConfig | null {
   try {
@@ -90,7 +90,7 @@ export function deeplHeaders(): Record<string, string> {
 // than folded into LlmConfig because the two are independently useful: a user
 // may set one and not the other, and each feature should work on its own.
 
-const DEEPL_KEY = 'polucz_deepl_key'
+const DEEPL_KEY = 'polon_deepl_key'
 
 export function getDeepLKey(): string | null {
   try {

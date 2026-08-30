@@ -39,5 +39,5 @@ rebuild once. From then on web deploys reach the app without rebuilding.
   `android/app/src/main/AndroidManifest.xml`.
 - The `android/` folder is committed (native project source); build artifacts
   (`build/`, `.gradle/`, `*.apk`) are gitignored.
-- App id: `com.polucz.app` — change it in `capacitor.config.ts` **and** the native
+- App id: `com.polon.app` — change it in `capacitor.config.ts` **and** the native
   project before publishing to the Play Store if desired.

@@ -4,7 +4,7 @@
 // (it stops re-hitting the TTS API on every listen). Best-effort: any IndexedDB
 // failure (private mode, quota, unsupported) silently falls back to the network.
 
-const DB_NAME = 'polucz-audio'
+const DB_NAME = 'polon-audio'
 const STORE = 'clips'
 const VERSION = 1
 
