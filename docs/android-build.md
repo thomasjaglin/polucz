@@ -41,3 +41,24 @@ rebuild once. From then on web deploys reach the app without rebuilding.
   (`build/`, `.gradle/`, `*.apk`) are gitignored.
 - App id: `com.polucz.app` — change it in `capacitor.config.ts` **and** the native
   project before publishing to the Play Store if desired.
+
+## Versioning
+
+`package.json` `version` is the single source of truth. `android/app/build.gradle`
+reads it and derives both Android fields:
+
+```
+versionName = the semver string          1.0.0  →  "1.0.0"
+versionCode = major*10000 + minor*100 + patch   →  10000
+```
+
+Bump with `npm version patch | minor | major` — never edit the Gradle file. Play
+only requires `versionCode` to increase, and deriving it from semver makes that
+automatic.
+
+Deliberately **not** the git commit count: this repo's history has been rewritten
+once already, which would have sent the count backwards and locked out every
+future upload.
+
+Minor and patch are capped at 99 by the scheme. The build fails with an
+explanatory error rather than silently producing a wrong code if you exceed it.

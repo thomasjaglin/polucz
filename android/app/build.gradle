@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 apply plugin: 'com.android.application'
 
 // Release signing. The keystore itself never lives in the repo — its path and
@@ -16,6 +18,24 @@ def storeFilePath = signingProp("storeFile", "POLUCZ_KEYSTORE_FILE")
 def releaseKeystore = storeFilePath == null ? null : rootProject.file(storeFilePath)
 def hasReleaseSigning = releaseKeystore != null && releaseKeystore.exists()
 
+// Version comes from package.json, so the web build and the APK can never
+// disagree about what release this is. Bump it with `npm version patch|minor|major`.
+//
+// versionCode is DERIVED rather than tracked separately: Play only requires it
+// to increase, and deriving it from semver makes that automatic. Deliberately
+// not the git commit count — this repo's history has already been rewritten
+// once, which would have sent the count backwards and locked out every future
+// upload.
+def pkg = new JsonSlurper().parse(rootProject.file("../package.json"))
+def semver = pkg.version.tokenize('.').collect { it.toInteger() }
+if (semver.size() != 3 || semver[1] > 99 || semver[2] > 99) {
+    throw new GradleException(
+        "package.json version '${pkg.version}' does not fit the versionCode scheme " +
+        "(major.minor.patch, minor and patch <= 99).")
+}
+def appVersionName = pkg.version
+def appVersionCode = semver[0] * 10000 + semver[1] * 100 + semver[2]
+
 android {
     namespace = "com.polucz.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -23,8 +43,8 @@ android {
         applicationId "com.polucz.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
