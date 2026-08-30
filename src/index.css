@@ -925,3 +925,17 @@ html.theme-light .holo-full button * {
   mix-blend-mode: multiply;
 }
 
+
+/* ─── Translate swap button ───────────────────────────────────
+   The puck sits on the boundary between the two language panes, half over the
+   gradient circle and half over the page. Its tint therefore can't be a fixed
+   colour: a near-black fill reads as a dark glass puck against the dark page,
+   but against the light wash it reads as a grey smudge and drags the icon's
+   contrast down with it. Each theme gets a fill that lifts off its own ground —
+   dark stays dark, light goes white — and the drop shadow follows, since a
+   0.6-alpha black halo is a bruise on a pale background. */
+.swap-pane { background-color: rgba(24, 24, 24, 0.45); }
+.swap-btn { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); }
+
+html.theme-light .swap-pane { background-color: rgba(255, 255, 255, 0.38); }
+html.theme-light .swap-btn { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16); }
