@@ -297,8 +297,16 @@ export default function App() {
           className="relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col overflow-y-auto px-6 pb-[180px] no-scrollbar"
           style={{ paddingTop: `calc(${topPad} + env(safe-area-inset-top))` }}
         >
+          {/* shrink-0 matters: as a flex item of the scroller this wrapper would
+              otherwise shrink below its content, the content would spill out of
+              it, and the scroller's bottom padding would sit above the spill
+              rather than after it — so the last control on a long page ended
+              flush with the screen edge (the Save DeepL key button). min-h-full
+              rather than h-full so it can also grow past the viewport; short
+              pages that centre with h-full or flex-1 measure the same as
+              before. */}
           <div
-            className="relative z-30 flex h-full w-full flex-col"
+            className="relative z-30 flex min-h-full w-full shrink-0 flex-col"
             style={{ viewTransitionName: 'page-content' }}
           >
             {renderContent()}
