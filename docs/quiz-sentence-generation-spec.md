@@ -3,7 +3,7 @@
 ## Goal
 
 A local, offline pipeline that:
-1. Reads your exported card list (polon-backup-YYYY-MM-DD.json)
+1. Reads your exported card list (polucz-backup-YYYY-MM-DD.json)
 2. Generates grammatically correct Polish example sentences for each word/form
 3. Validates each sentence through a local LanguageTool instance
 4. Produces a reviewed, curated sentences.json file
@@ -18,7 +18,7 @@ call for generation.
 ## Pipeline overview
 
 ```
-polon-backup.json
+polucz-backup.json
        ↓
   [1] Parse cards
        ↓
@@ -165,7 +165,7 @@ One or more matches = grammar/style issue flagged = sentence rejected.
 ```json
 {
   "generated": "2026-07-01T12:00:00Z",
-  "sourceFile": "polon-backup-2026-07-01.json",
+  "sourceFile": "polucz-backup-2026-07-01.json",
   "sentences": [
     {
       "id": "uuid-or-hash",
@@ -217,9 +217,9 @@ your review is a common-sense plausibility check, not a grammar exam.
 Two options, simplest first:
 
 **Option A — Merge into the existing backup JSON**
-Add a `sentences` array to your polon-backup.json before importing it back into the app.
+Add a `sentences` array to your polucz-backup.json before importing it back into the app.
 The app's existing Import JSON flow already handles the file — you'd just extend the
-import logic to also read and store `sentences` in localStorage (`polon_sentences` key).
+import logic to also read and store `sentences` in localStorage (`polucz_sentences` key).
 
 **Option B — Separate import**
 Add a dedicated "Import Sentences" button in the app's Settings/API Config page,
@@ -245,7 +245,7 @@ tools/
 ### Script arguments
 ```bash
 node scripts/generate-sentences.js \
-  --input polon-backup-2026-07-01.json \
+  --input polucz-backup-2026-07-01.json \
   --output sentences.json \
   --languagetool http://localhost:8010 \
   --limit 50              # optional: stop after N validated sentences

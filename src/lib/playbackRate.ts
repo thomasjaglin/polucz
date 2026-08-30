@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react'
 // clip (audio playback page, flashcards, modal speaker). Browsers time-stretch
 // with preservesPitch, so slower/faster keeps the voice natural.
 
-const KEY = 'polon_playback_rate'
+const KEY = 'polucz_playback_rate'
 export const RATE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5] as const
 
 function load(): number {

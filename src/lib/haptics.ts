@@ -5,7 +5,7 @@ import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics'
 // so the same calls work in Chrome and in the packaged Android app. All calls
 // are best-effort and no-op on unsupported devices.
 
-const isEnabled = () => localStorage.getItem('polon_haptics') !== 'false'
+const isEnabled = () => localStorage.getItem('polucz_haptics') !== 'false'
 
 const impact = (style: ImpactStyle) => { if (isEnabled()) Haptics.impact({ style }).catch(() => {}) }
 const notify = (type: NotificationType) => { if (isEnabled()) Haptics.notification({ type }).catch(() => {}) }

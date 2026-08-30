@@ -15,7 +15,7 @@ real grammatical context rather than abstract "what is the genitive of X" drilli
 ## Data source
 
 `approved-sentences.json` — generated offline, validated by LanguageTool, reviewed by user.
-Stored in the app's localStorage under key `polon_sentences` after import.
+Stored in the app's localStorage under key `polucz_sentences` after import.
 Each sentence object shape (from the generation pipeline):
 
 ```typescript
@@ -118,7 +118,7 @@ pre-blanked version; always blank dynamically so the original sentence is preser
   short and mobile-friendly)
 - Question selection: weighted by SRS review state — cards with lower `easeFactor`
   or more recent `lastReviewed` dates get higher probability of appearing
-  (reuse the same `ReviewState` from `polon_reviews` localStorage key)
+  (reuse the same `ReviewState` from `polucz_reviews` localStorage key)
 - Do not repeat the same sentence twice in one session
 - Shuffle question order within each session
 
@@ -131,7 +131,7 @@ pre-blanked version; always blank dynamically so the original sentence is preser
   practice, not a replacement for the main flashcard SRS review
 
 ### Progress persistence
-- Save session history to localStorage (`polon_quiz_history` key):
+- Save session history to localStorage (`polucz_quiz_history` key):
   ```typescript
   interface QuizSession {
     date: string
@@ -150,10 +150,10 @@ pre-blanked version; always blank dynamically so the original sentence is preser
 Extend the existing import flow (Option A from the generation spec):
 - Add `sentences` array support to the existing JSON import handler
 - When importing a backup that contains a `sentences` array, write it to
-  `polon_sentences` in localStorage
+  `polucz_sentences` in localStorage
 - Add a separate "Import Sentences" button in Settings/API Config page for importing
   a standalone `approved-sentences.json` file without overwriting cards/reviews
-- On app load, read `polon_sentences` from localStorage and make it available
+- On app load, read `polucz_sentences` from localStorage and make it available
   to the quiz components
 
 ---
@@ -179,7 +179,7 @@ QuizPage
 
 ## Build order (for Claude Code)
 
-1. Add `polon_sentences` localStorage read/write to the app's data layer —
+1. Add `polucz_sentences` localStorage read/write to the app's data layer —
    import the `approved-sentences.json` file manually first to confirm it loads
 2. Build the question generation logic as pure functions (no UI yet):
    - `getSessionQuestions(type, count, sentences, reviews)` → QuizSentence[]

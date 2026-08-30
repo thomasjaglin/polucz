@@ -1,7 +1,7 @@
 import type { ReviewState } from '../data/types'
 import { CONQUERED_INTERVAL } from './scheduler'
 
-const KEY = 'polon_reviews'
+const KEY = 'polucz_reviews'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)

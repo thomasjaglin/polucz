@@ -2,7 +2,7 @@
 /**
  * Polish vocabulary — sentence generation script
  *
- * Reads a polon backup JSON, generates 3 candidate Polish example sentences
+ * Reads a polucz backup JSON, generates 3 candidate Polish example sentences
  * per grammatical form via Gemini, validates each with local LanguageTool,
  * and writes the first passing candidate to sentences.json.
  *
@@ -13,7 +13,7 @@
  *
  * Usage:
  *   node scripts/generate-sentences.js \
- *     --input polon-backup-2026-07-02.json \
+ *     --input polucz-backup-2026-07-02.json \
  *     [--output sentences.json] \
  *     [--languagetool http://localhost:8010] \
  *     [--limit 50]

@@ -6,7 +6,7 @@
 
 export type Theme = 'dark' | 'light'
 
-const KEY = 'polon_theme'
+const KEY = 'polucz_theme'
 const listeners = new Set<(t: Theme) => void>()
 
 export function getTheme(): Theme {

@@ -96,7 +96,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `polon-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `polucz-backup-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(url)
     setSettingsOpen(false)
@@ -157,7 +157,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         onImport()
         pushToast(`Imported ${data.cards.length} cards`, 'success')
       } catch {
-        pushToast('Could not read the file — not a valid Polon backup', 'error')
+        pushToast('Could not read the file — not a valid Polucz backup', 'error')
       }
     }
     reader.readAsText(file)

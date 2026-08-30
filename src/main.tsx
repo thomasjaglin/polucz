@@ -9,7 +9,7 @@ import { migrateStorageKeys } from './lib/storageMigration'
 // Resolve the glass rendering mode before first paint so the stylesheet's
 // .glass-<mode> rules apply from the start (see docs/liquid-glass-webgl-plan.md)
 getGlassMode()
-// Rename fallout: pull any pre-Polon keys forward before anything reads them.
+// Rename fallout: pull any Polon-era keys forward before anything reads them.
 migrateStorageKeys()
 // Before first paint, so a light-mode user never sees a dark flash.
 initTheme()
