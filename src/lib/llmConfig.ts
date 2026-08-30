@@ -1,9 +1,10 @@
 // Which LLM the app's own endpoints call on this device.
 //
-// The key is sent as a request header and used by api/_llm.js for that request
-// only. Nothing is stored server-side. With no config saved the header is
-// absent and the server falls back to its own GEMINI_API_KEY, so the app works
-// unconfigured exactly as it did before.
+// On Android the app calls the provider directly with this key; there is no
+// server involved and no fallback, so without a config the language features
+// return 503 not_configured. In the browser the key is sent as a request header
+// and used by api/_llm.js for that request only — nothing is stored
+// server-side.
 //
 // The key lives in localStorage, like every other preference here. That is the
 // normal shape for a bring-your-own-key app and it means any script that runs
