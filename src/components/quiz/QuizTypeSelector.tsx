@@ -28,9 +28,7 @@ export default function QuizTypeSelector({ sentenceCount, onStart }: Props) {
         className="w-full border border-ink/10 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] disabled:opacity-35"
       >
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#C8AB2A]/15">
-            <span className="material-symbols-rounded text-[24px]" style={{ color: 'var(--quiz-amber)' }}>table_chart</span>
-          </div>
+          <span className="material-symbols-rounded shrink-0 text-[24px] text-ink/70">table_chart</span>
           <div className="min-w-0">
             <div className="font-instrument text-[17px] font-semibold text-ink/90">Declension Quiz</div>
             <div className="font-instrument text-[13px] text-ink/45">Multiple choice · nouns &amp; adjectives</div>
@@ -48,9 +46,7 @@ export default function QuizTypeSelector({ sentenceCount, onStart }: Props) {
         className="w-full border border-ink/10 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] disabled:opacity-35"
       >
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[16px] bg-[#2ABFC8]/15">
-            <span className="material-symbols-rounded text-[24px]" style={{ color: 'var(--quiz-teal)' }}>edit</span>
-          </div>
+          <span className="material-symbols-rounded shrink-0 text-[24px] text-ink/70">edit</span>
           <div className="min-w-0">
             <div className="font-instrument text-[17px] font-semibold text-ink/90">Conjugation Quiz</div>
             <div className="font-instrument text-[13px] text-ink/45">Fill in the blank · verbs</div>

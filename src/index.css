@@ -19,8 +19,6 @@
   --veil-modal-webgl: rgba(0, 0, 0, 0.2);
   /* Accents chosen to glow on a dark surface. They have to go deep on a light
      one to carry the same emphasis rather than disappearing into it. */
-  --quiz-amber: #FFDEB3;
-  --quiz-teal: #7DF5EE;
   --aspect: #e879f9;
   /* Transient success / failure states. The pale pair glows on a dark menu
      and washes out on a light one, so each theme gets its own. */
@@ -44,8 +42,6 @@ html.theme-light {
   --veil-header: rgba(255, 255, 255, 0.5);
   --veil-modal: rgba(247, 244, 241, 0.65);
   --veil-modal-webgl: rgba(247, 244, 241, 0.35);
-  --quiz-amber: #8A6510;
-  --quiz-teal: #0E6E76;
   --aspect: #A21CAF;
   --ok: #15803D;
   --err: #B91C1C;
