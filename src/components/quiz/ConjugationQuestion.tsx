@@ -83,7 +83,7 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           className={`relative rounded-[16px] border shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)] transition-all ${borderClass}`}
           style={frostStyle}
         >
-          <GlassPane borderRadius={16} className="absolute inset-0 z-0 rounded-[16px] bg-ink/5" />
+          <GlassPane borderRadius={16} className="absolute inset-0 z-0 rounded-[16px] pane-field-soft" />
           <input
             ref={inputRef}
             type="text"

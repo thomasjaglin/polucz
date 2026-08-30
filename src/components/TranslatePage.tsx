@@ -436,7 +436,7 @@ export default function TranslatePage({ onAddCard }: Props) {
   const inputBlock = (
     <>
       <div className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
-        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] bg-ink/5" />
+        <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] pane-field-soft" />
         <textarea
           ref={textareaRef}
           value={input}

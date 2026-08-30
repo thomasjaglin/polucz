@@ -9,7 +9,7 @@ interface Props {
 export default function SearchBar({ value, onChange, autoFocus = false }: Props) {
   return (
     <div className="relative w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-      <GlassPane forceCss borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/10 transition-colors group-focus-within:bg-ink/15" />
+      <GlassPane forceCss borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] pane-field transition-colors" />
       <div className="relative z-10 flex items-center gap-3 px-[18px] py-3">
         <input
           type="text"

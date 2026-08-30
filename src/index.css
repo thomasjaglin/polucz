@@ -948,6 +948,13 @@ html.theme-light .pane-field { background-color: rgba(255, 255, 255, 0.50); }
 html.theme-light .group:focus-within > .pane-field,
 html.theme-light .group:hover > .pane-field { background-color: rgba(255, 255, 255, 0.70); }
 
+/* Half-weight variant, for the controls that sat at bg-ink/5: the translate
+   textarea (over the gradient circle, where a heavier fill would hide it) and
+   the conjugation answer box (which layers its own correct/incorrect frost on
+   top). Same principle, same ratio between the themes. */
+.pane-field-soft { background-color: rgb(var(--ink-rgb) / 0.05); }
+html.theme-light .pane-field-soft { background-color: rgba(255, 255, 255, 0.30); }
+
 /* The swap puck's own lift. Separate from the fill because it is about where
    the puck sits (floating on the boundary between the two language panes), and
    a 0.6-alpha black halo is a bruise on a pale background. */
