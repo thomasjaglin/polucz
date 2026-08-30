@@ -120,7 +120,7 @@ export default function ApiConfigPage({ onSave }: Props) {
 
         <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">Provider</h3>
         <div className="relative mb-5 w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/10 transition-colors group-focus-within:bg-ink/15" />
+          <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] pane-field transition-colors" />
           <select
             value={provider}
             disabled={!editing}
@@ -160,7 +160,7 @@ export default function ApiConfigPage({ onSave }: Props) {
         <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">Model</h3>
         {MODELS[provider].length > 0 ? (
           <div className="relative mb-5 w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group">
-            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/10 transition-colors group-focus-within:bg-ink/15" />
+            <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] pane-field transition-colors" />
             <select
               value={model}
               disabled={!editing}

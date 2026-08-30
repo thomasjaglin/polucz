@@ -933,6 +933,21 @@ html.theme-light .holo-full button * {
 .pane-neutral { background-color: rgba(24, 24, 24, 0.45); }
 html.theme-light .pane-neutral { background-color: rgba(255, 255, 255, 0.38); }
 
+/* Form surfaces: text inputs and the native selects behind their glass pane.
+   These were bg-ink/10, which lifts on the dark page but *darkens* the light
+   one — the opposite of what glass should do, so the fields read as grey slabs
+   sitting on the wash rather than as panes cut into it. Dark keeps the ink
+   lift; light fills with white and lets the page tint show through.
+   The hover/focus step stays a step in the same direction, not a jump to a
+   different material. */
+.pane-field { background-color: rgb(var(--ink-rgb) / 0.10); }
+.group:focus-within > .pane-field,
+.group:hover > .pane-field { background-color: rgb(var(--ink-rgb) / 0.15); }
+
+html.theme-light .pane-field { background-color: rgba(255, 255, 255, 0.50); }
+html.theme-light .group:focus-within > .pane-field,
+html.theme-light .group:hover > .pane-field { background-color: rgba(255, 255, 255, 0.70); }
+
 /* The swap puck's own lift. Separate from the fill because it is about where
    the puck sits (floating on the boundary between the two language panes), and
    a 0.6-alpha black halo is a bruise on a pale background. */

@@ -16,7 +16,7 @@ interface Props {
 export default function GlassInput({ placeholder, type = 'text', icon, value, onChange, onKeyDown, className = '', clearable = false, disabled = false }: Props) {
   return (
     <div className={`relative w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group ${disabled ? 'opacity-60' : ''} ${className}`}>
-      <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/10 transition-colors group-focus-within:bg-ink/15" />
+      <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] pane-field transition-colors" />
       <div className="relative z-10 flex items-center gap-3 px-[18px] py-3">
         {icon && <span className="material-symbols-rounded text-[18px] text-ink/50 shrink-0">{icon}</span>}
         <input
