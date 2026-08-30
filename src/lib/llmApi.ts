@@ -9,7 +9,6 @@
 // res.ok / res.json() / 429 handling and don't need to know which path ran.
 
 import { Capacitor } from '@capacitor/core'
-import { apiUrl } from './apiBase'
 import { getDeepLKey, getLlmConfig, llmHeaders } from './llmConfig'
 import { generateJson, LlmError, withTimeout } from './llmClient'
 import {
@@ -160,9 +159,11 @@ export async function llmFetch(path: string, body: Json): Promise<Response> {
   const usesDeepL = path === '/api/translate'
   const configured = usesDeepL ? !!getDeepLKey() : !!getLlmConfig()
 
-  // Native with a key goes direct; everything else keeps the server hop, which
-  // is what the browser build needs (provider CORS blocks it from a web page).
-  if (Capacitor.isNativePlatform() && configured) {
+  // Android always goes direct — there is no server fallback. Without a key
+  // there is nothing to fall back to, so say so plainly instead of issuing a
+  // request that cannot succeed.
+  if (Capacitor.isNativePlatform()) {
+    if (!configured) return json({ error: 'not_configured' }, 503)
     try {
       return await direct(path, body)
     } catch (e) {
@@ -172,7 +173,9 @@ export async function llmFetch(path: string, body: Json): Promise<Response> {
     }
   }
 
-  return fetch(apiUrl(path), {
+  // Browser: same-origin call to api/*. Providers block direct browser calls,
+  // so this path stays.
+  return fetch(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...llmHeaders() },
     body: JSON.stringify(body),

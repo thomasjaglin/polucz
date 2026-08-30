@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { TextToSpeech } from '@capacitor-community/text-to-speech'
-import { apiUrl } from './apiBase'
 import { getCachedClip, putCachedClip } from './audioCache'
 import { getPlaybackRate, subscribeRate } from './playbackRate'
 
@@ -37,7 +36,7 @@ async function fetchBlob(text: string, language: 'pl' | 'en', retries = 2): Prom
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 700 * Math.pow(2, attempt - 1)))
     try {
-      const res = await fetch(apiUrl('/api/tts'), {
+      const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language }),
