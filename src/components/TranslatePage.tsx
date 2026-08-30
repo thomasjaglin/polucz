@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { llmFetch } from '../lib/llmApi'
+import { readLlmError, llmErrorMessage, type LlmErrorCode } from '../lib/llmErrors'
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import { llmHeaders } from '../lib/llmConfig'
-import { type VocabEntry, type WordType, typeLabel } from '../data/types'
+import { type VocabEntry, type WordType, type PageId, typeLabel } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
 import { haptics } from '../lib/haptics'
@@ -156,6 +157,8 @@ interface Result {
 
 interface Props {
   onAddCard: (entry: VocabEntry) => void
+  /** Error states route here when the failure is a missing API key. */
+  onChangePage: (id: PageId) => void
 }
 
 const isSingleWord = (text: string) => {
@@ -196,9 +199,12 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
   )
 }
 
-export default function TranslatePage({ onAddCard }: Props) {
+export default function TranslatePage({ onAddCard, onChangePage }: Props) {
   const [input, setInput] = useState('')
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  // Which failure it was, so the message can name the fix rather than blaming
+  // the network for a missing key.
+  const [errorCode, setErrorCode] = useState<LlmErrorCode>('upstream')
   const [result, setResult] = useState<Result | null>(null)
   const [added, setAdded] = useState(false)
   const [direction, setDirection] = useState<Direction>('pl-en')
@@ -299,7 +305,10 @@ export default function TranslatePage({ onAddCard }: Props) {
 
       const [translateRes, lemmaRes] = await Promise.all([translateFetch, lemmaFetch])
 
-      if (!translateRes.ok) throw new Error()
+      if (!translateRes.ok) {
+        setErrorCode(await readLlmError(translateRes))
+        throw new Error()
+      }
       const { translation } = await translateRes.json()
 
       let lemma = text
@@ -468,8 +477,19 @@ export default function TranslatePage({ onAddCard }: Props) {
       </GlassButton>
 
       {phase === 'error' && (
-        <p className="mt-2 text-center font-instrument text-[12px] text-red-400/70">
-          Translation unavailable — check your connection
+        <p className="mt-2 text-center font-instrument text-[12px] text-red-400/80">
+          {llmErrorMessage(errorCode)}
+          {errorCode === 'not_configured' && (
+            <>
+              {' — '}
+              <button
+                onClick={() => onChangePage('api_config')}
+                className="font-semibold text-accent underline underline-offset-2"
+              >
+                add one in App settings
+              </button>
+            </>
+          )}
         </p>
       )}
     </>

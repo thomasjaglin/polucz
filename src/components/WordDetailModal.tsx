@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type CSSProperties } from 'react'
 import { llmFetch } from '../lib/llmApi'
+import { readLlmError, llmErrorMessage, type LlmErrorCode } from '../lib/llmErrors'
 import { tagGradients, tagImages } from '../data/gradients'
 import {
   type VocabEntry, type VocabVerb, type VocabNoun, type VocabAdjective, type VocabUnknown,
@@ -345,6 +346,8 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
   const [examples, setExamples] = useState<Example[] | null>(() => getCachedExamples(word)?.examples ?? null)
   const [source, setSource] = useState<ExampleSource>(() => getCachedExamples(word)?.source ?? null)
   const [error, setError] = useState(false)
+  // Why it failed, so a missing key doesn't read as a dead endpoint.
+  const [errorCode, setErrorCode] = useState<LlmErrorCode>('upstream')
 
   // `exclude` non-empty = a refresh: ask the API for sentences other than the
   // ones already shown. On failure we keep the current examples and just toast,
@@ -361,8 +364,11 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
         setSource(data.source ?? null)
         putCachedExamples(word, { examples: data.examples, source: data.source ?? null })
       } else if (isRefresh) {
-        pushToast('No different examples found', 'info')
-      } else setError(true)
+        pushToast(res.ok ? 'No different examples found' : llmErrorMessage(await readLlmError(res)), res.ok ? 'info' : 'error')
+      } else {
+        if (!res.ok) setErrorCode(await readLlmError(res))
+        setError(true)
+      }
     } catch {
       if (isRefresh) pushToast('Could not refresh examples', 'error')
       else setError(true)
@@ -426,7 +432,9 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
       ) : error ? (
         <>
           <span className="material-symbols-rounded text-[16px] text-red-400/70">error</span>
-          <span className="text-ink/30">Unavailable — tap to retry</span>
+          <span className="text-ink/40">
+            {errorCode === 'not_configured' ? llmErrorMessage(errorCode) : 'Unavailable — tap to retry'}
+          </span>
         </>
       ) : (
         <span className="text-ink/40">Fetch examples</span>

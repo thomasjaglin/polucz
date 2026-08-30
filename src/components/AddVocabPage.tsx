@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { llmFetch } from '../lib/llmApi'
+import { readLlmError, llmErrorMessage } from '../lib/llmErrors'
 import GlassCard from './GlassCard'
 import GlassPane from './GlassPane'
 import GlassInput from './GlassInput'
@@ -75,8 +76,9 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
       const lemmaRes = await llmFetch('/api/lemmatize', { text: plTrimmed })
 
       if (!lemmaRes.ok) {
-        const err = await lemmaRes.json().catch(() => ({}))
-        throw new Error(err.error ?? 'Lemmatization failed')
+        // Was `err.error`, which put the raw wire code ("not_configured") in
+        // front of the user. Map it to something actionable instead.
+        throw new Error(llmErrorMessage(await readLlmError(lemmaRes)))
       }
       const { lemma, type, gender, canonicalEn } = await lemmaRes.json()
 

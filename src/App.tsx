@@ -254,7 +254,7 @@ export default function App() {
 
   function renderContent() {
     if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} onChangePage={changePage} onListEmptyChange={setListEmpty} />
-    if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} />
+    if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} onChangePage={changePage} />
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
     if (activeId === 'question_mark') return <QuizPage />
     if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
