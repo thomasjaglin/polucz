@@ -29,6 +29,18 @@ export class LlmError extends Error {
 
 type Json = Record<string, unknown>
 
+// CapacitorHttp replaces fetch on the native path and its replacement has no
+// notion of AbortController — a `signal` is accepted and silently ignored, so a
+// request that never answers hangs forever. Racing a timer works either way,
+// and is the only thing that does on device.
+export function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new LlmError('upstream', `${label} timed out after ${ms}ms`)), ms)),
+  ])
+}
+
 // Anthropic and OpenAI's strict mode reject objects that don't close themselves
 // off, and OpenAI additionally wants every property listed in `required`. The
 // shared schemas are written for Gemini, which asks for neither.
@@ -55,12 +67,14 @@ async function postJson(url: string, headers: Record<string, string>, body: unkn
   for (let attempt = 0; ; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 2 ** (attempt - 1) * 1000))
     try {
-      res = await fetch(url, {
+      // 45s: generation can legitimately take a while, but never forever.
+      res = await withTimeout(fetch(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json', ...headers },
         body: JSON.stringify(body),
-      })
+      }), 45000, label)
     } catch (e) {
+      if (e instanceof LlmError) throw e
       throw new LlmError('upstream', `${label} network: ${(e as Error)?.message ?? e}`)
     }
     if (res.status !== 429 || attempt >= 2) break

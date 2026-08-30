@@ -11,7 +11,7 @@
 import { Capacitor } from '@capacitor/core'
 import { apiUrl } from './apiBase'
 import { getDeepLKey, getLlmConfig, llmHeaders } from './llmConfig'
-import { generateJson, LlmError } from './llmClient'
+import { generateJson, LlmError, withTimeout } from './llmClient'
 import {
   LEMMATIZE_SCHEMA, LEMMATIZE_SYSTEM,
   ANALYZE_SCHEMA, ANALYZE_SYSTEM,
@@ -31,17 +31,13 @@ const MAX_LEN = 160
 // ones, so the corpus is still tried first on the direct path.
 async function fetchTatoeba(word: string): Promise<{ pl: string; en: string }[]> {
   const url = `https://tatoeba.org/en/api_v0/search?query=${encodeURIComponent(word)}&from=pol&to=eng&sort=relevance`
-  const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), 4000)
   let data: Json
   try {
-    const r = await fetch(url, { headers: { accept: 'application/json' }, signal: ctrl.signal })
+    const r = await withTimeout(fetch(url, { headers: { accept: 'application/json' } }), 4000, 'tatoeba')
     if (!r.ok) return []
     data = await r.json()
   } catch {
     return []
-  } finally {
-    clearTimeout(timer)
   }
   const out: { pl: string; en: string }[] = []
   for (const result of data.results ?? []) {
