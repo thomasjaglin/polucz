@@ -114,8 +114,8 @@ export default function ApiConfigPage({ onSave }: Props) {
 
       <Section title="API">
         <p className="mb-5 font-instrument text-[13px] leading-relaxed text-ink/40">
-          Run the app's language features through your own LLM. Without a key here the
-          app uses the server's own, so this is optional.
+          Run the app's language features through your own LLM. A key is required:
+          without one, examples, card details and sentence breakdowns won't load.
         </p>
 
         <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">Provider</h3>
