@@ -21,3 +21,8 @@ dist/
 *.tsbuildinfo
 .vercel
 .env*
+
+# Personal vocabulary and review data — local only, never committed.
+polucz-backup-*.json
+Vocab-list*.json
+sentences.json
