@@ -142,7 +142,7 @@ export const MAX_LAYERS = 2
 // translate blob, which slides on language swap).
 // Flashcard hard mode recolours the dynamic_feed glow from green to a reddish
 // purple (dark plum → magenta-pink), signalling the harder recall drill.
-const DYNAMIC_FEED_HARD: BgLayer[] = [mainLayer(['#40012A', '#850950', '#C82A7A', '#F57DB5', '#FFFFFF'])]
+const DYNAMIC_FEED_HARD: BgLayer[] = [mainLayer(['#4A0120', '#8B0930', '#C82A50', '#F57D9A', '#FFFFFF'])]
 
 export function resolvePageUniforms(page: PageId, vw: number, vh: number, dynamicTopFrac?: number, audioCard?: AudioCardBlob | null, hardMode?: boolean) {
   const layers = (page === 'dynamic_feed' && hardMode)

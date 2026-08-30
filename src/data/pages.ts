@@ -33,6 +33,13 @@ export const pages: Record<PageId, PageConfig> = {
     desc: 'Memorize terms using spaced repetition.',
     gradient: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#014A2D"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#098B42"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#2AC87C"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#B3F57D"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>`,
     gradientLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[12%] w-[880px] max-w-none opacity-[0.7] blur-[52px] mix-blend-multiply transition-all"><ellipse cx="110" cy="70" rx="205" ry="185" fill="#C6EFD4"/><ellipse cx="340" cy="160" rx="195" ry="175" fill="#E4F6C6"/><ellipse cx="205" cy="330" rx="235" ry="205" fill="#D4EEFF"/><ellipse cx="70" cy="470" rx="205" ry="185" fill="#FFE9CC"/><ellipse cx="350" cy="520" rx="185" ry="175" fill="#E2E8FF"/></svg>`,
+    // Hard mode (English→Polish recall) swaps the green for crimson, so the
+    // mode is obvious from the background alone on both the group selector and
+    // the game. Deliberately a rose-leaning red rather than the vocab list's
+    // fire red — the two pages should not read as the same place. Mirrors
+    // DYNAMIC_FEED_HARD in webgl/backgroundData.ts; change both together.
+    gradientHard: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[10%] w-[504px] max-w-none opacity-50 blur-[36px] mix-blend-screen transition-all"><ellipse cx="205" cy="95.5" rx="252" ry="430.5" fill="#4A0120"/><ellipse cx="205" cy="43.3958" rx="252" ry="378.396" fill="#8B0930"/><ellipse cx="205" cy="-18.9583" rx="252" ry="316.042" fill="#C82A50"/><ellipse cx="205" cy="-88.1458" rx="252" ry="246.854" fill="#F57D9A"/><ellipse cx="205" cy="-145.375" rx="252" ry="189.625" fill="white"/></svg>`,
+    gradientHardLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[12%] w-[880px] max-w-none opacity-[0.7] blur-[52px] mix-blend-multiply transition-all"><ellipse cx="110" cy="70" rx="205" ry="185" fill="#FFB8B8"/><ellipse cx="340" cy="160" rx="195" ry="175" fill="#FFD2C0"/><ellipse cx="205" cy="330" rx="235" ry="205" fill="#FFC2D4"/><ellipse cx="70" cy="470" rx="205" ry="185" fill="#F0C0CC"/><ellipse cx="350" cy="520" rx="185" ry="175" fill="#FFDCD2"/></svg>`,
   },
   question_mark: {
     title: 'Quiz Game',

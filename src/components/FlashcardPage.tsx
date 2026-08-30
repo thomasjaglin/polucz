@@ -496,8 +496,9 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
   // glass doesn't lag behind and render as a ghost card.
   useMotionValueEvent(x, 'change', pokeRenderer)
 
-  // Recolour the page background to reddish purple while in hard mode; clear it
-  // when leaving the flashcard page.
+  // Recolour the page background to crimson while in hard mode; clear it when
+  // leaving the flashcard page. Read by both renderers: the shader via
+  // resolvePageUniforms, the DOM layers via PageGradient.
   useEffect(() => { setBgHardMode(hardMode) }, [hardMode])
   useEffect(() => () => setBgHardMode(false), [])
 

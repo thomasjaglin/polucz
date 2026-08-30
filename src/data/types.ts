@@ -23,6 +23,10 @@ export interface PageConfig {
   gradient: string
   /** Light-theme counterpart. Falls back to `gradient` where absent. */
   gradientLight?: string
+  /** Flashcard hard-mode counterpart (dynamic_feed only). Falls back to `gradient`. */
+  gradientHard?: string
+  /** Light-theme hard-mode counterpart. Falls back to `gradientHard`. */
+  gradientHardLight?: string
 }
 
 // ─── Vocab entry sub-shapes ────────────────────────────────────────────────
