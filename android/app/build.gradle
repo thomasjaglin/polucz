@@ -1,5 +1,21 @@
 apply plugin: 'com.android.application'
 
+// Release signing. The keystore itself never lives in the repo — its path and
+// passwords come from android/keystore.properties (gitignored) or, for CI, the
+// matching POLUCZ_* environment variables. When neither resolves, the signing
+// config is simply not attached, so a fresh clone still builds; only a release
+// build is affected, and the check task below makes that loud rather than
+// silently shipping an unsigned artifact.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+def signingProp = { String key, String env -> keystoreProps.getProperty(key) ?: System.getenv(env) }
+def storeFilePath = signingProp("storeFile", "POLUCZ_KEYSTORE_FILE")
+def releaseKeystore = storeFilePath == null ? null : rootProject.file(storeFilePath)
+def hasReleaseSigning = releaseKeystore != null && releaseKeystore.exists()
+
 android {
     namespace = "com.polucz.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,10 +32,37 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile releaseKeystore
+                storePassword signingProp("storePassword", "POLUCZ_KEYSTORE_PASSWORD")
+                keyAlias signingProp("keyAlias", "POLUCZ_KEY_ALIAS")
+                keyPassword signingProp("keyPassword", "POLUCZ_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Fail loudly instead of producing a release artifact Play will reject. Without
+// this an unconfigured machine yields an unsigned APK/AAB that only fails at
+// upload time, long after the build looks like it succeeded.
+tasks.configureEach { task ->
+    if (task.name in ["assembleRelease", "bundleRelease"] && !hasReleaseSigning) {
+        task.doFirst {
+            throw new GradleException(
+                "No release signing key configured. Create android/keystore.properties " +
+                "(see keystore.properties.example) or set POLUCZ_KEYSTORE_FILE, " +
+                "POLUCZ_KEYSTORE_PASSWORD, POLUCZ_KEY_ALIAS and POLUCZ_KEY_PASSWORD.")
         }
     }
 }

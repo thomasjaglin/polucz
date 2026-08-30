@@ -104,3 +104,9 @@ app/src/main/res/xml/config.xml
 /app/src/main/assets/public
 /app/src/main/assets/capacitor.config.json
 /app/src/main/assets/capacitor.plugins.json
+
+# Release signing — never commit the keystore or the file holding its passwords.
+# Losing the keystore means losing the ability to update the app on Play.
+keystore.properties
+*.jks
+*.keystore
