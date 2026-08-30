@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion'
 import SearchBar from './SearchBar'
 import FilterTag from './FilterTag'
@@ -7,6 +7,9 @@ import GlassPane from './GlassPane'
 import type { WordType, VocabEntry } from '../data/types'
 import { getAllReviews } from '../lib/reviewStorage'
 import { isConquered } from '../lib/scheduler'
+import { getLlmConfig } from '../lib/llmConfig'
+import GlassButton from './GlassButton'
+import type { PageId } from '../data/types'
 
 type FilterKey = 'noun' | 'verb' | 'adjective' | 'mastered'
 
@@ -20,9 +23,13 @@ const FILTER_TAGS: { id: FilterKey; label: string }[] = [
 interface Props {
   cards: VocabEntry[]
   onOpenModal: (entry: VocabEntry, cardEl: HTMLDivElement | null) => void
+  /** Empty state only: send a first-time user to Add or App settings. */
+  onChangePage: (id: PageId) => void
+  /** Lets App drop the bottom scrim when there are no cards for it to fade. */
+  onListEmptyChange?: (empty: boolean) => void
 }
 
-export default function VocabListPage({ cards, onOpenModal }: Props) {
+export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange }: Props) {
   const reduce = useReducedMotion()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -83,6 +90,9 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
     })
   }
 
+  // Read once per render: which of the two first-run steps is actually next.
+  const hasLlmKey = !!getLlmConfig()
+
   const reviews = getAllReviews()
   const masteredIds = new Set(
     cards.filter(c => { const r = reviews[c.id]; return r && isConquered(r) }).map(c => c.id)
@@ -95,6 +105,15 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
     if (masteredIds.has(v.id) && !activeFilters.mastered) return false
     return !q || v.pl.toLowerCase().includes(q) || v.en.toLowerCase().includes(q)
   })
+
+  // The bottom scrim exists to fade scrolling cards behind the nav. With none
+  // showing it has nothing to do and only harms: it is fixed and sits above the
+  // content, so when the keyboard opens and shrinks the viewport it slides up
+  // over the empty state and bleaches the very message the user is reading.
+  useEffect(() => {
+    onListEmptyChange?.(filtered.length === 0)
+    return () => onListEmptyChange?.(false)
+  }, [filtered.length, onListEmptyChange])
 
   // Count line under the filters: total normally, "X out of Y" while filtered.
   const wordNoun = (n: number) => (n === 1 ? 'word' : 'words')
@@ -206,14 +225,77 @@ export default function VocabListPage({ cards, onOpenModal }: Props) {
           ))}
         </AnimatePresence>
         {filtered.length === 0 && (
-          <motion.p
-            key="empty"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-8 text-center font-instrument text-[16px] text-ink/40"
-          >
-            No cards match your search.
-          </motion.p>
+          cards.length === 0 ? (
+            /* First run — action-focused. This is the app's very first screen,
+               and the old copy ("No cards match your search.") addressed someone
+               who had searched: it described a state a new user isn't in and
+               offered nothing to do.
+               ONE action, deliberately. The obvious layout offers "add a word"
+               AND "set your key" AND "import a backup", but competing calls to
+               action leave a first-time user choosing instead of starting. So
+               the primary adapts to which step is actually next: with no key,
+               adding a word would fail at the LLM call and the failure wouldn't
+               explain itself, so the key IS the next step. Import stays plain
+               text — a different person (returning, with a backup), not a rival
+               button. */
+            <motion.div
+              key="first-run"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-10 flex flex-col items-center gap-4 px-4 text-center"
+            >
+              <span className="material-symbols-rounded text-[44px] text-ink/35">book_2</span>
+              <h2 className="font-instrument text-[20px] font-semibold text-ink/85">
+                Your vocabulary starts here
+              </h2>
+              <p className="max-w-[300px] font-instrument text-[14px] leading-relaxed text-ink/55">
+                {hasLlmKey
+                  ? 'Add a Polish word and Polucz fills in the rest — translation, forms and examples — then schedules it for review.'
+                  : 'Polucz fills in translations, forms and examples using an LLM of your choice. Add your key to get started.'}
+              </p>
+              <GlassButton
+                variant="primary"
+                onClick={() => onChangePage(hasLlmKey ? 'add_page' : 'api_config')}
+                className="mt-1 px-6 py-3 font-instrument text-[15px]"
+              >
+                {hasLlmKey ? 'Add your first word' : 'Add your API key'}
+              </GlassButton>
+              <p className="max-w-[300px] font-instrument text-[13px] text-ink/45">
+                Already have a backup? Use Import JSON in the settings menu.
+              </p>
+            </motion.div>
+          ) : (
+            /* Cards exist; the current view just excludes them. Name which of
+               the two reasons it is and hand back the way out, rather than
+               stranding the user in a blank list — the exits (collapsing search,
+               tapping the highlighted tag) are both invisible from here. */
+            <motion.div
+              key="no-match"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-6 flex flex-col items-center gap-2.5 px-4 text-center"
+            >
+              <span className="material-symbols-rounded text-[32px] text-ink/30">
+                {searchQuery.trim() ? 'search_off' : 'filter_alt_off'}
+              </span>
+              <p className="max-w-[300px] font-instrument text-[15px] text-ink/55">
+                {searchQuery.trim()
+                  ? `No words match \u201c${searchQuery.trim()}\u201d.`
+                  : 'Nothing to show for the types you\u2019ve selected.'}
+              </p>
+              <GlassButton
+                variant="secondary"
+                onClick={() => {
+                  if (searchQuery.trim()) { setSearchQuery(''); return }
+                  setSoloed(null)
+                  setActiveFilters(ALL_ON)
+                }}
+                className="mt-1 px-5 py-2.5 font-instrument text-[14px]"
+              >
+                {searchQuery.trim() ? 'Clear search' : 'Show all types'}
+              </GlassButton>
+            </motion.div>
+          )
         )}
       </motion.div>
 

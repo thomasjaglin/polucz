@@ -20,7 +20,6 @@ import { pages, pageOrder } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
 import { haptics } from './lib/haptics'
-import { vocabularyData } from './data/vocabulary'
 import { getAllReviews } from './lib/reviewStorage'
 import { isConquered } from './lib/scheduler'
 import { initHoloMotion } from './lib/holoMotion'
@@ -47,15 +46,18 @@ export default function App() {
 
   // Hide header on scroll down, reveal on scroll up
   const [headerHidden, setHeaderHidden] = useState(false)
+  const [listEmpty, setListEmpty] = useState(false)
   const lastScrollY = useRef(0)
   const lastTickY = useRef(0)   // last scroll position that fired a haptic tick
 
   const [cards, setCards] = useState<VocabEntry[]>(() => {
     const stored = getCards()
-    if (stored.length === 0) {
-      vocabularyData.forEach(c => saveCard(c))
-      return vocabularyData
-    }
+    // No seeding. A fresh install used to get four demo words written straight
+    // into storage, which made the app look alive but left a new user unable to
+    // tell the samples from their own words — and made the empty state
+    // unreachable. An empty list now stays empty, and VocabListPage says what to
+    // do about it.
+    if (stored.length === 0) return []
     // One-time backfill: write aspect to `left` for enriched verb cards that predate this field
     let patched = false
     stored.forEach(c => {
@@ -251,7 +253,7 @@ export default function App() {
   const topPad = compactTop ? '1.25rem' : secondaryTop ? '58px' : '94px'
 
   function renderContent() {
-    if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
+    if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} onChangePage={changePage} onListEmptyChange={setListEmpty} />
     if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} />
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
     if (activeId === 'question_mark') return <QuizPage />
@@ -317,7 +319,7 @@ export default function App() {
             the scrolling card list into the page's base colour, so cards don't
             clutter the nav. Sits above the content (z-30) and below the nav
             (z-60). Static (unlike a per-frame mask), so it doesn't jank scroll. */}
-        {showNav && (
+        {showNav && !listEmpty && (
           <div
             className="pointer-events-none fixed inset-x-0 bottom-0 z-50 h-[210px]"
             style={{ background: 'var(--nav-scrim)' }}
