@@ -240,10 +240,15 @@ export default function App() {
 
   const showNav = activeId !== 'add_page' && activeId !== 'api_config'
   const page = pages[activeId]
-  // Flashcard / quiz / audio pages render no header content, so they don't need
-  // the full header clearance — give them a small top gap instead of leaving the
-  // empty header space at the top.
+  // Top padding is sized to whatever TopHeader actually draws on this page, so
+  // no page reserves space for a header it doesn't have:
+  //   main nav  — centered logo row, needs the full 94px clearance
+  //   compact   — flashcard / quiz / audio draw their own headings: gutter only
+  //   secondary — add / settings show a lone back button at 1rem + 42px tall,
+  //               so 58px puts content directly beneath it
   const compactTop = activeId === 'dynamic_feed' || activeId === 'question_mark' || activeId === 'spatial_audio'
+  const secondaryTop = activeId === 'add_page' || activeId === 'api_config'
+  const topPad = compactTop ? '1.25rem' : secondaryTop ? '58px' : '94px'
 
   function renderContent() {
     if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} />
@@ -290,7 +295,7 @@ export default function App() {
         <div
           onScroll={handleScroll}
           className="relative z-30 mx-auto flex h-screen w-full max-w-[426px] flex-col overflow-y-auto px-6 pb-[180px] no-scrollbar"
-          style={{ paddingTop: compactTop ? 'calc(1.25rem + env(safe-area-inset-top))' : 'calc(94px + env(safe-area-inset-top))' }}
+          style={{ paddingTop: `calc(${topPad} + env(safe-area-inset-top))` }}
         >
           <div
             className="relative z-30 flex h-full w-full flex-col"
