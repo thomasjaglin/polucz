@@ -191,3 +191,54 @@ For the accusative masculine singular, use the slash notation "anim/inanim" wher
 // Every card type gets the same definitions clause appended.
 for (const k of Object.keys(PROMPTS)) PROMPTS[k] += DEFINITIONS_LINE
 
+
+// ─── quiz sentences (tier 2 of docs/tiered-quiz-generation-plan.md) ─────
+//
+// One call per card covering every form the corpus could not supply, rather
+// than one call per form: 4,477 calls become ~761. The cost is that the model
+// can pair a sentence with the wrong slot, which is why each item must echo
+// the form it used — the caller verifies that string against the paradigm and
+// discards mismatches.
+
+export const QUIZ_SENTENCES_SCHEMA = {
+  type: 'object',
+  properties: {
+    sentences: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          // Echoed back so a sentence can be matched to the slot it was asked
+          // for. Without it a misaligned answer is undetectable.
+          form: { type: 'string' },
+          polish: { type: 'string' },
+          english: { type: 'string' },
+        },
+        required: ['form', 'polish', 'english'],
+      },
+    },
+  },
+  required: ['sentences'],
+}
+
+const QUIZ_RULES = `\
+Each sentence must contain the requested form EXACTLY as given, once only, and \
+that form must be genuinely required by the sentence's grammar — not optional usage. \
+Write 5 to 14 words of common, everyday Polish. No titles, lists or quotations. \
+Sentences must be factually sensible and differ from one another. \
+Return one object per requested form, echoing that form verbatim in "form", with a \
+faithful English translation in "english".`
+
+export const QUIZ_SENTENCES_PROMPTS = {
+  noun: `You are a Polish language teacher writing example sentences for grammar exercises.
+You are given several inflected forms of one noun, each with its case and number.
+${QUIZ_RULES}`,
+  verb: `You are a Polish language teacher writing example sentences for grammar exercises.
+You are given several conjugated forms of one verb, each with its person.
+The subject pronoun may be omitted as Polish normally does, but the person must be unambiguous.
+${QUIZ_RULES}`,
+  adjective: `You are a Polish language teacher writing example sentences for grammar exercises.
+You are given several forms of one adjective, each with its gender.
+Each adjective must agree with a noun of the stated gender and stand in the nominative.
+${QUIZ_RULES}`,
+}

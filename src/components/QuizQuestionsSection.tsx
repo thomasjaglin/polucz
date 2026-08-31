@@ -4,6 +4,8 @@ import { getSentences } from '../lib/sentenceStorage'
 import { paradigmQuestionsForCard, slotKey } from '../lib/paradigmQuestions'
 import { generateCorpusQuestionsForCard } from '../lib/corpusQuestions'
 import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
+import { generateLlmQuestionsForCard } from '../lib/generatedQuestions'
+import { getLlmConfig } from '../lib/llmConfig'
 import { haptics } from '../lib/haptics'
 import GlassButton from './GlassButton'
 
@@ -58,7 +60,31 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
     }
   }
 
+  // Tier 2, for what the corpus could not supply. Only offered when a key
+  // exists — generation must never be what makes the quiz unavailable.
+  async function generate() {
+    if (running || !stored) return
+    haptics.tap()
+    setRunning(true); setResult(null)
+    try {
+      const r = await generateLlmQuestionsForCard(entry, stored)
+      await load()
+      setResult(
+        r.notConfigured
+          ? 'No API key set — add one in App settings'
+          : r.added > 0
+            ? `Wrote ${r.added} sentence${r.added === 1 ? '' : 's'} with your LLM`
+            : 'The model returned nothing usable for these forms',
+      )
+    } catch {
+      setResult('Could not reach your LLM provider')
+    } finally {
+      setRunning(false)
+    }
+  }
+
   const remaining = slots.length - withSentence
+  const hasKey = !!getLlmConfig()
 
   return (
     <div className="mt-4 flex flex-col gap-3 border-t border-ink/10 pt-4">
@@ -75,22 +101,40 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
       </p>
 
       {remaining > 0 && (
-        <GlassButton
-          variant="secondary"
-          onClick={run}
-          disabled={running}
-          className="px-5 py-2.5 font-instrument text-[14px]"
-        >
-          {running ? 'Searching…' : `Find sentences for ${remaining} form${remaining === 1 ? '' : 's'}`}
-        </GlassButton>
+        <div className="flex flex-col gap-2">
+          <GlassButton
+            variant="secondary"
+            onClick={run}
+            disabled={running}
+            className="px-5 py-2.5 font-instrument text-[14px]"
+          >
+            {running ? 'Working…' : `Find sentences for ${remaining} form${remaining === 1 ? '' : 's'}`}
+          </GlassButton>
+          {/* Second, because the corpus is free and human-written; the LLM is
+              for what it misses and costs the user's own quota. */}
+          {hasKey && (
+            <GlassButton
+              variant="secondary"
+              onClick={generate}
+              disabled={running}
+              className="px-5 py-2.5 font-instrument text-[14px]"
+            >
+              {running ? 'Working…' : 'Write the rest with your LLM'}
+            </GlassButton>
+          )}
+        </div>
       )}
 
       {result && (
         <p className="font-instrument text-[13px] text-ink/45">{result}</p>
       )}
 
-      {/* CC BY 2.0 FR requires crediting Tatoeba wherever its sentences appear. */}
-      <p className="font-instrument text-[11px] text-ink/30">{CORPUS_ATTRIBUTION}</p>
+      {/* CC BY 2.0 FR requires crediting Tatoeba wherever its sentences appear —
+          and only there. Crediting it for sentences an LLM wrote would be wrong
+          in the other direction. */}
+      {stored?.some(q => q.source === 'corpus') && (
+        <p className="font-instrument text-[11px] text-ink/30">{CORPUS_ATTRIBUTION}</p>
+      )}
     </div>
   )
 }
