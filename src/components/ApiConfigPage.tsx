@@ -423,6 +423,12 @@ export default function ApiConfigPage({ onSave }: Props) {
           <span className="material-symbols-rounded text-[22px] ink-glyph">school</span>
         </Row>
 
+        {/* A byline, not fine print: sits above the licence and privacy notes
+            and one step brighter than them. */}
+        <p className="mt-4 font-instrument text-[14px] text-ink/70">
+          Created &amp; Designed by Thomas Jaglin
+        </p>
+
         {/* The corpus is CC BY 2.0 FR: crediting Tatoeba is a licence
             obligation, not a courtesy. The quiz credits it where its sentences
             appear, but that view is conditional — this one always renders. */}
