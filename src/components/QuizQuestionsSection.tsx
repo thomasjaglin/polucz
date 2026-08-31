@@ -3,6 +3,7 @@ import type { VocabEntry, SentenceEntry } from '../data/types'
 import { getSentences } from '../lib/sentenceStorage'
 import { paradigmQuestionsForCard, slotKey } from '../lib/paradigmQuestions'
 import { generateCorpusQuestionsForCard } from '../lib/corpusQuestions'
+import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
 import { haptics } from '../lib/haptics'
 import GlassButton from './GlassButton'
 
@@ -15,7 +16,6 @@ import GlassButton from './GlassButton'
 export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
   const [stored, setStored] = useState<SentenceEntry[] | null>(null)
   const [running, setRunning] = useState(false)
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [result, setResult] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -38,27 +38,23 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
   async function run() {
     if (running || !stored) return
     haptics.tap()
-    setRunning(true); setResult(null); setProgress({ done: 0, total: 0 })
+    setRunning(true); setResult(null)
     try {
-      const r = await generateCorpusQuestionsForCard(entry, stored, (done, total) =>
-        setProgress({ done, total }))
+      const r = await generateCorpusQuestionsForCard(entry, stored)
       await load()
       setResult(
-        // A failure to reach the corpus must never read as "no sentences exist".
-        r.added === 0 && r.failed > 0
-          ? 'The sentence corpus is not responding — try again later'
-          : r.added > 0 && r.failed > 0
-            ? `Added ${r.added}; ${r.failed} lookup${r.failed === 1 ? '' : 's'} could not reach the corpus`
-            : r.added > 0
-              ? `Added ${r.added} sentence${r.added === 1 ? '' : 's'} from real usage`
-              : r.skipped === slots.length
-                ? 'Every form already has a sentence'
-                : 'No real sentences found for these forms',
+        r.unavailable
+          ? 'The sentence corpus could not be loaded'
+          : r.added > 0
+            ? `Added ${r.added} sentence${r.added === 1 ? '' : 's'} from real usage`
+            : r.skipped === slots.length
+              ? 'Every form already has a sentence'
+              : 'No real sentences found for these forms',
       )
     } catch {
       setResult('Could not reach the sentence corpus')
     } finally {
-      setRunning(false); setProgress(null)
+      setRunning(false)
     }
   }
 
@@ -85,17 +81,16 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
           disabled={running}
           className="px-5 py-2.5 font-instrument text-[14px]"
         >
-          {running
-            ? progress && progress.total > 0
-              ? `Searching… ${progress.done}/${progress.total}`
-              : 'Searching…'
-            : `Find sentences for ${remaining} form${remaining === 1 ? '' : 's'}`}
+          {running ? 'Searching…' : `Find sentences for ${remaining} form${remaining === 1 ? '' : 's'}`}
         </GlassButton>
       )}
 
       {result && (
         <p className="font-instrument text-[13px] text-ink/45">{result}</p>
       )}
+
+      {/* CC BY 2.0 FR requires crediting Tatoeba wherever its sentences appear. */}
+      <p className="font-instrument text-[11px] text-ink/30">{CORPUS_ATTRIBUTION}</p>
     </div>
   )
 }

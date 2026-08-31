@@ -33,10 +33,9 @@ function openDB(): Promise<IDBDatabase> {
         store.createIndex('cardLemma', 'cardLemma', { unique: false })
         store.createIndex('cardType', 'cardType', { unique: false })
       }
-      // v2: what the corpus returned for a form, INCLUDING when it returned
-      // nothing. Without negative entries the ~third of forms the corpus will
-      // never cover get re-queried on every attempt, hammering a volunteer
-      // service for a result that cannot change.
+      // v2: created for a per-form network cache that the bundled snapshot made
+      // unnecessary (see corpusSnapshot.ts). Left in place because removing a
+      // store needs another version bump for no benefit; nothing writes to it.
       if (!req.result.objectStoreNames.contains(CORPUS_STORE)) {
         req.result.createObjectStore(CORPUS_STORE, { keyPath: 'form' })
       }

@@ -1,0 +1,7 @@
+public/pol-corpus.txt is a filtered snapshot of Polish sentences from Tatoeba
+(https://tatoeba.org), built by scripts/build-corpus.mjs.
+
+Tatoeba sentence data is released under CC BY 2.0 FR:
+https://creativecommons.org/licenses/by/2.0/fr/
+
+Attribution to Tatoeba is required wherever these sentences are displayed.
