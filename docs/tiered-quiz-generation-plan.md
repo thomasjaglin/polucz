@@ -253,6 +253,34 @@ These are weaker than LanguageTool at grammar and **stronger at the failure that
 actually breaks a question** — the target form not being present. Say exactly
 that in any user-facing copy; do not imply grammatical validation.
 
+Evidence for both halves of that claim, found while running phase 4 over the
+real vocabulary:
+
+**What they catch that LanguageTool did not.** Two stored questions did not
+contain their own target form, so they could not be blanked and would show no
+gap. Both were enrichment errors rather than sentence errors — `wyjście`
+carrying the malformed genitive plural `wyść` against a sentence with the
+correct `wyjść`, and `dziecko` carrying `dzieckem` against `dzieckiem`.
+LanguageTool passed them because the sentences are perfectly grammatical.
+
+**What they cannot catch: homographs.** A corpus sentence matched on string, not
+on grammatical form:
+
+> *W klasie zostawiono ___ aparat.* — asked as "accusative plural of *droga*"
+
+`drogi` is both the accusative plural of *droga* (road) and the masculine
+adjective *drogi* (expensive). The sentence contains the string but demonstrates
+the adjective. The question stays answerable and the answer stays correct, so
+this is a quality wart rather than a correctness failure — but the sentence does
+not show what it claims to.
+
+Detecting this needs part-of-speech tagging, which is exactly what dropping
+LanguageTool gave up. It is the clearest argument for the two optional
+mitigations: a bundled Polish dictionary (§14 decision 6) would not help, since
+`drogi` is a real word either way, but **the desktop curation tool (§8) would**,
+because LanguageTool tags parts of speech. Worth weighting when deciding how
+much the curation pass matters.
+
 **Optional addition, not yet decided:** `nspell` + `dictionary-pl` bundles
 offline Polish spell checking into the web build for about 5 MB of pure
 JavaScript, no native code and no network. It covers the `misspelling` half of
@@ -489,6 +517,10 @@ desktop tool still has to generate, and it would be doing two jobs at once.
   covers slightly less. Worth a re-download prompt, not worth engineering around.
 - **Corpus sentences are uncontrolled text.** They may be idiomatic, archaic or
   odd. Human-written is not the same as pedagogically ideal.
+- **Homographs pass every local check.** A form that is also a different word in
+  another part of speech will match on string and produce a sentence that does
+  not demonstrate the grammar being asked about. Observed, not hypothetical —
+  see §7. Only part-of-speech tagging would catch it.
 - **Grammar validation is now optional and off-device.** Most users will never
   run the curation tool, so in practice their questions get Layer 1 only. That is
   a deliberate trade — §7 says what it does and does not catch — but it means the
