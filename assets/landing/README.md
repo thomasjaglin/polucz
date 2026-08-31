@@ -1,8 +1,10 @@
 # Landing page assets
 
 Captured from the shipping app with `scripts/capture-landing-assets.mjs`.
-Every asset uses the **bundled 26-word starter deck**, never the real vocabulary —
-nothing personal appears in a marketing image.
+Assets were captured with a bundled sample vocabulary, never the real one —
+nothing personal appears in a marketing image. (They predate the switch to the
+two-word *dzień dobry* welcome, so the list shots still show a longer list;
+re-run the capture script if you want them to match the shipping first run.)
 
 ## Transparent element cut-outs
 

@@ -42,11 +42,20 @@ describe('the deck itself', () => {
     }
   })
 
-  it('covers all three quizzable word types', () => {
-    const types = new Set(STARTER_DECK.map(c => c.type))
-    expect(types).toContain('noun')
-    expect(types).toContain('verb')
-    expect(types).toContain('adjective')
+  // The deck is a greeting, not a vocabulary: dzień + dobry = "dzień dobry".
+  // If either word or its translation changes, the welcome stops making sense.
+  it('is the greeting', () => {
+    expect(STARTER_DECK.map(c => c.id)).toEqual(['dzień', 'dobry'])
+    expect(STARTER_DECK.map(c => c.en)).toEqual(['day', 'good'])
+  })
+
+  it('keeps dzień irregular, which is why it earns a place as a first card', () => {
+    const dzien = STARTER_DECK.find(c => c.id === 'dzień')!
+    if (dzien.type !== 'noun') throw new Error('dzień should be a noun')
+    // The stem drops to dni- everywhere but the nominative and accusative singular.
+    expect(dzien.declensions?.singular).toEqual(
+      ['dzień', 'dnia', 'dniowi', 'dzień', 'dniem', 'dniu', 'dniu'])
+    expect(dzien.declensions?.plural[0]).toBe('dni')
   })
 
   it('carries a translation and no blank forms', () => {
@@ -68,9 +77,12 @@ describe('the deck makes the quiz work with no key and no network', () => {
     }
   })
 
-  it('yields enough questions for a real session', () => {
+  // Two words is a deliberately thin quiz — 11 questions, against 158 from the
+  // 26-word deck this replaced. The bar is that a first session is possible at
+  // all without a key, not that it is a long one.
+  it('yields enough questions for a first session', () => {
     const total = STARTER_DECK.reduce((n, c) => n + paradigmQuestionsForCard(c).length, 0)
-    expect(total).toBeGreaterThan(50)
+    expect(total).toBeGreaterThanOrEqual(10)
   })
 
   it('asks only for forms the card actually contains', () => {

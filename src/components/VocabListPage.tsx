@@ -8,7 +8,7 @@ import type { WordType, VocabEntry } from '../data/types'
 import { getAllReviews } from '../lib/reviewStorage'
 import { isConquered } from '../lib/scheduler'
 import { getLlmConfig } from '../lib/llmConfig'
-import { installStarterDeck, STARTER_COUNT } from '../lib/starterDeck'
+import { installStarterDeck } from '../lib/starterDeck'
 import GlassButton from './GlassButton'
 import type { PageId } from '../data/types'
 
@@ -259,7 +259,7 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               <p className="max-w-[300px] font-instrument text-[14px] leading-relaxed ink-tertiary">
                 {hasLlmKey
                   ? 'Add a Polish word and Polucz fills in the rest — translation, forms and examples — then schedules it for review.'
-                  : `Flashcards, the quiz and pronunciation all work with no setup. Start with ${STARTER_COUNT} common Polish words and see how it feels.`}
+                  : 'Begin with two words: dzień dobry, “good day”. Both come fully declined, ready to review, and Polucz will say them out loud — no setup, no key.'}
               </p>
               <GlassButton
                 variant="primary"
@@ -270,14 +270,14 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
                 }}
                 className="mt-1 px-6 py-3 font-instrument text-[15px]"
               >
-                {hasLlmKey ? 'Add your first word' : `Start with ${STARTER_COUNT} common words`}
+                {hasLlmKey ? 'Add your first word' : 'Start with dzień dobry'}
               </GlassButton>
               {hasLlmKey ? (
                 <button
                   onClick={() => { installStarterDeck(); onCardsChanged?.() }}
                   className="max-w-[300px] font-instrument text-[13px] ink-tertiary underline underline-offset-4"
                 >
-                  Or start with {STARTER_COUNT} common words
+                  Or start with dzień dobry
                 </button>
               ) : (
                 <p className="max-w-[300px] font-instrument text-[13px] leading-relaxed ink-tertiary">

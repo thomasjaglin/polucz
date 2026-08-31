@@ -1,10 +1,16 @@
-// A small bundled vocabulary, so the app does something on a fresh install.
+// The app's first two words: dzień and dobry — "dzień dobry", good day.
 //
-// Without this, an unconfigured install is an empty list whose only next step
-// is to go and fetch an API key from a provider's website — the flashcards,
-// the quiz and pronunciation all work with no key at all, but there is nothing
-// for them to work on. The deck turns the keys into an upgrade rather than a
-// gate.
+// Without them an unconfigured install is an empty list whose only next step is
+// to go and fetch an API key from a provider's website. Flashcards, the quiz and
+// pronunciation all work with no key at all; they just had nothing to work on.
+// This turns the key into an upgrade rather than a gate.
+//
+// Two words rather than a vocabulary, because the point is the greeting: the app
+// says hello in the language it is about to teach, and the pair is genuinely
+// worth knowing. `dzień` also earns its place as a first card — its stem drops
+// to dni- in every form but the nominative and accusative singular, so the card
+// shows immediately what the app is for. The cost is a thin first quiz: 11
+// questions, against 158 from the 26-word deck this replaced.
 //
 // Installing is a deliberate action, never automatic. A previous build seeded
 // four demo words straight into storage, and the problem was that nobody could
@@ -42,7 +48,10 @@ export function installStarterDeck(): number {
   const existing = getCards()
   const have = new Set(existing.map(c => c.id))
   const fresh = STARTER_DECK.filter(c => !have.has(c.id))
-  if (fresh.length > 0) replaceAllCards([...existing, ...fresh])
+  // Written back to front. The list renders newest-first, so appending in
+  // reading order would put "dobry" above "dzień" and show the greeting
+  // backwards — the one thing this deck exists to get right.
+  if (fresh.length > 0) replaceAllCards([...existing, ...[...fresh].reverse()])
   return fresh.length
 }
 

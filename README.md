@@ -12,10 +12,10 @@ Polucz server, and nothing to sign up for.
 
 - **Vocabulary** — add a Polish word and the app fills in its translation, part
   of speech and inflected forms. Browse, search, and filter by tag or type.
-- **A starter deck** — 26 common words, fully declined and conjugated, offered
-  on first run. Flashcards and the quiz work immediately, before any key is
-  entered; the samples are marked, and App settings can remove them in one tap
-  without touching words you added.
+- **A welcome, not an empty list** — the app opens with *dzień dobry*: two
+  words, fully declined, ready to review and to hear. Flashcards and the quiz
+  work immediately, before any key is entered; both are marked as starter cards,
+  and App settings removes them in one tap without touching words you added.
 - **Flashcards** — spaced repetition with an SRS schedule, plus a hard mode for
   the cards you keep missing.
 - **Quiz** — fill-in-the-blank questions over the forms of your own words. See
@@ -133,9 +133,9 @@ npm run check:deck     # spell-check every form in the starter deck
 
 `check:deck` runs `src/data/starterDeck.json` through the Hunspell Polish
 dictionary. The deck ships as fact — a new user meets it before they can judge
-whether the Polish is right — so its 581 forms are machine-checked rather than
-trusted. The check catches malformed forms; it cannot catch a real word in the
-wrong grammatical slot.
+whether the Polish is right — so all 54 of its forms are machine-checked rather
+than trusted, `dzień`'s irregular stem included. The check catches malformed
+forms; it cannot catch a real word in the wrong grammatical slot.
 
 ## About `api/`
 
