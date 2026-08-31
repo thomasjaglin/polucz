@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { checkAnswer, grammarPrompt } from '../../lib/quizLogic'
 import { haptics } from '../../lib/haptics'
@@ -71,21 +72,38 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
       {/* Progress — shared glass bar with the count on the right */}
       <ProgressBar done={currentIdx + 1} total={questions.length} />
 
-      {type === 'declension' ? (
-        <DeclensionQuestion
+      {/* Questions used to replace each other instantly, which made a session
+          read as a series of unrelated screens rather than as progress through
+          one. Answered leaves to the left, next arrives from the right — the
+          direction is always forward because the quiz only goes forward.
+
+          mode="wait" so the two never overlap: they are the same size and
+          would otherwise cross over each other. The exit is deliberately
+          shorter than the entrance, which is what stops a transition from
+          feeling like a delay. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
           key={current.id}
-          sentence={current}
-          cards={cards}
-          sentences={sentences}
-          onAnswered={handleAnswered}
-        />
-      ) : (
-        <ConjugationQuestion
-          key={current.id}
-          sentence={current}
-          onAnswered={handleAnswered}
-        />
-      )}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -16, transition: { duration: 0.16, ease: 'easeIn' } }}
+          transition={{ duration: 0.26, ease: [0.33, 1, 0.68, 1] }}
+        >
+          {type === 'declension' ? (
+            <DeclensionQuestion
+              sentence={current}
+              cards={cards}
+              sentences={sentences}
+              onAnswered={handleAnswered}
+            />
+          ) : (
+            <ConjugationQuestion
+              sentence={current}
+              onAnswered={handleAnswered}
+            />
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {canReject && (
         <button

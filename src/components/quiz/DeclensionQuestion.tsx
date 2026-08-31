@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { getDistractors, checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
 import GlassPane from '../GlassPane'
 import GlassButton from '../GlassButton'
+import { answerMotion } from './answerMotion'
 
 interface Props {
   sentence: SentenceEntry
@@ -44,18 +46,18 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
       return 'border-ink/10 text-ink/80 hover:border-ink/20'
     }
     if (checkAnswer(opt, sentence.targetForm)) {
-      return 'border-green-400/40 text-green-300'
+      return 'border-ok/50 text-ok'
     }
     if (opt === chosen) {
-      return 'border-red-400/40 text-red-300'
+      return 'border-err/50 text-err'
     }
     return 'border-ink/5 ink-tertiary'
   }
 
   function getPaneTint(opt: string): string {
     if (chosen === null) return 'bg-ink/5'
-    if (checkAnswer(opt, sentence.targetForm)) return 'bg-green-400/15'
-    if (opt === chosen) return 'bg-red-400/15'
+    if (checkAnswer(opt, sentence.targetForm)) return 'bg-ok/15'
+    if (opt === chosen) return 'bg-err/15'
     return 'bg-ink/[0.02]'
   }
 
@@ -81,16 +83,17 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
 
       <div className="grid grid-cols-2 gap-3">
         {options.map(opt => (
-          <GlassButton
-            key={opt}
-            onClick={() => { if (chosen === null) setChosen(opt) }}
-            disabled={chosen !== null}
-            radius={16}
-            pane={getPaneTint(opt)}
-            className={`border px-4 py-4 font-instrument text-[17px] font-medium disabled:cursor-default ${getButtonStyle(opt)}`}
-          >
-            {opt}
-          </GlassButton>
+          <motion.div key={opt} {...answerMotion(opt, chosen, checkAnswer(opt, sentence.targetForm))}>
+            <GlassButton
+              onClick={() => { if (chosen === null) setChosen(opt) }}
+              disabled={chosen !== null}
+              radius={16}
+              pane={getPaneTint(opt)}
+              className={`w-full border px-4 py-4 font-instrument text-[17px] font-medium disabled:cursor-default ${getButtonStyle(opt)}`}
+            >
+              {opt}
+            </GlassButton>
+          </motion.div>
         ))}
       </div>
     </div>

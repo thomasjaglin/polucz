@@ -17,6 +17,11 @@ export default {
         // Opaque panel fill — menus and chips that sit above the page rather
         // than being glass over it. Near-black on dark, near-white on light.
         surface: 'rgb(var(--surface-rgb) / <alpha-value>)',
+        // Right/wrong. Same reason again: the pale green that glows on a dark
+        // quiz screen is illegible on the light one, so each theme supplies its
+        // own channels rather than the UI reaching for green-300.
+        ok: 'rgb(var(--ok-rgb) / <alpha-value>)',
+        err: 'rgb(var(--err-rgb) / <alpha-value>)',
       },
     },
   },

@@ -24,6 +24,11 @@
      and washes out on a light one, so each theme gets its own. */
   --ok: #86efac;
   --err: #f87171;
+  /* Same pair as raw channels, so Tailwind's opacity modifiers work through
+     them (text-ok/70, border-err/40) exactly as they do for ink and accent.
+     The hex forms above stay for the couple of inline styles that use them. */
+  --ok-rgb: 134 239 172;
+  --err-rgb: 248 113 113;
   --blob-opacity: 0.6;
   --page-bg: #121212;
   /* The base wash AppBackground paints under the page gradient. */
@@ -45,6 +50,8 @@ html.theme-light {
   --aspect: #A21CAF;
   --ok: #15803D;
   --err: #B91C1C;
+  --ok-rgb: 21 128 61;
+  --err-rgb: 185 28 28;
   /* The blob screen-blends, which lightens — on a light page the same
      opacity reads far heavier and drags the controls over it down. */
   --blob-opacity: 0.4;

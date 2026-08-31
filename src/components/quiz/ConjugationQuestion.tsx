@@ -4,6 +4,7 @@ import { checkAnswer, blankSentence, grammarPrompt } from '../../lib/quizLogic'
 import { getGlassMode } from '../../lib/glassMode'
 import GlassPane from '../GlassPane'
 import GlassButton from '../GlassButton'
+import { motion } from 'framer-motion'
 
 interface Props {
   sentence: SentenceEntry
@@ -58,8 +59,8 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
   const display = sentence.polish ? blankSentence(sentence.polish, sentence.targetForm) : null
 
   const borderClass =
-    phase === 'correct' ? 'border-green-400/50 ring-1 ring-green-400/25' :
-    phase === 'wrong-can-retry' || phase === 'wrong-final' ? 'border-red-400/50 ring-1 ring-red-400/25' :
+    phase === 'correct' ? 'border-ok/50 ring-1 ring-ok/25' :
+    phase === 'wrong-can-retry' || phase === 'wrong-final' ? 'border-err/50 ring-1 ring-err/25' :
     'border-ink/20'
 
   // Same scoped frost as the translate input so webgl mode blurs the backdrop
@@ -107,8 +108,12 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
       </div>
 
       {phase === 'wrong-can-retry' && (
-        <div className="flex items-center gap-3">
-          <p className="font-instrument text-[14px] text-red-400/75">Not quite — try again</p>
+        <motion.div
+          className="flex items-center gap-3"
+          animate={{ x: [0, -4, 4, -2.5, 0] }}
+          transition={{ duration: 0.28, ease: 'easeOut' }}
+        >
+          <p className="font-instrument text-[14px] text-err/80">Not quite — try again</p>
           <GlassButton
             onClick={handleTryAgain}
             radius={12}
@@ -117,20 +122,30 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           >
             Try again
           </GlassButton>
-        </div>
+        </motion.div>
       )}
 
       {phase === 'wrong-final' && (
-        <div className="rounded-[16px] border border-red-400/20 bg-red-400/[0.06] px-4 py-3">
-          <p className="font-instrument text-[12px] text-red-400/60">Correct answer</p>
-          <p className="font-instrument text-[18px] font-medium text-red-300">{sentence.targetForm}</p>
-        </div>
+        <motion.div
+          className="rounded-[16px] border border-err/25 bg-err/[0.08] px-4 py-3"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.24, ease: [0.33, 1, 0.68, 1] }}
+        >
+          <p className="font-instrument text-[12px] text-err/70">Correct answer</p>
+          <p className="font-instrument text-[18px] font-medium text-err">{sentence.targetForm}</p>
+        </motion.div>
       )}
 
       {phase === 'correct' && (
-        <div className="rounded-[16px] border border-green-400/20 bg-green-400/[0.06] px-4 py-3">
-          <p className="font-instrument text-[15px] text-green-400">Correct!</p>
-        </div>
+        <motion.div
+          className="rounded-[16px] border border-ok/25 bg-ok/[0.08] px-4 py-3"
+          initial={{ opacity: 0, y: 6, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.26, ease: [0.33, 1, 0.68, 1] }}
+        >
+          <p className="font-instrument text-[15px] text-ok">Correct!</p>
+        </motion.div>
       )}
 
       {!locked && (
