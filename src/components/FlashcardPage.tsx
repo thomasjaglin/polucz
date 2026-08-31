@@ -320,7 +320,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                 </span>
               </div>
               {displayHardMode && (
-                <span className="font-instrument text-[11px] font-medium text-accent/50">hard</span>
+                <span className="font-instrument text-[11px] font-medium text-accent/80">hard</span>
               )}
             </div>
 
@@ -346,7 +346,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                   className="flex w-full flex-col items-center gap-3"
                 >
                   <div className="h-[1px] w-full bg-ink/10" />
-                  <p className="font-instrument text-[14px] text-ink/30">tap to reveal</p>
+                  <p className="font-instrument text-[14px] ink-tertiary">tap to reveal</p>
                 </motion.div>
               ) : (
                 <motion.div
@@ -375,7 +375,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                       onClick={e => { e.stopPropagation(); onReplay() }}
                       radius={16}
                       pane="bg-ink/5"
-                      className={`h-[32px] w-[32px] flex-shrink-0 border border-ink/10 ${ttsState === 'error' ? 'text-red-400/70' : 'text-ink/30 hover:text-ink/70'}`}
+                      className={`h-[32px] w-[32px] flex-shrink-0 border border-ink/10 ${ttsState === 'error' ? 'text-red-400/70' : 'ink-tertiary hover:text-ink/70'}`}
                     >
                       <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
                         {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}
@@ -401,7 +401,7 @@ function MasteryBadge({ count }: { count: number }) {
   return (
     <div className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
       <span className="material-symbols-rounded text-[15px] text-accent/80">military_tech</span>
-      <span className="font-instrument text-[12px] font-medium tabular-nums text-ink/55">
+      <span className="font-instrument text-[12px] font-medium tabular-nums ink-tertiary">
         {count} mastered
       </span>
     </div>
@@ -418,7 +418,7 @@ function RunComplete({ reviewed, onRestart, onBack }: { reviewed: number; onRest
     <div className="flex flex-col items-center gap-4 pt-16 text-center">
       <span className="material-symbols-rounded text-[56px] text-accent/60">{empty ? 'military_tech' : 'task_alt'}</span>
       <h2 className="font-instrument text-[26px] font-semibold text-ink/80">{empty ? 'All mastered here' : 'Run complete!'}</h2>
-      <p className="font-instrument text-[16px] text-ink/40">
+      <p className="font-instrument text-[16px] ink-tertiary">
         {empty ? 'Every card in this group is already mastered.' : `You reviewed all ${reviewed} cards this round.`}
       </p>
       <div className="mt-2 flex flex-col items-stretch gap-3">
@@ -683,7 +683,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <IconButton icon="arrow_back" onClick={() => { tts.stop(); setScreen('selector') }} />
-            <span className="font-instrument text-[13px] text-ink/50">{scopeLabel}</span>
+            <span className="font-instrument text-[13px] ink-tertiary">{scopeLabel}</span>
           </div>
           <div className="flex items-center gap-2">
             {/* Explicit hard-mode toggle (the two-finger rotate gesture still works

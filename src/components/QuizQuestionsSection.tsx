@@ -89,13 +89,13 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
   return (
     <div className="mt-4 flex flex-col gap-3 border-t border-ink/10 pt-4">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-instrument text-[14px] text-ink/45">Quiz questions</span>
-        <span className="font-instrument text-[13px] tabular-nums text-ink/35">
+        <span className="font-instrument text-[14px] ink-tertiary">Quiz questions</span>
+        <span className="font-instrument text-[13px] tabular-nums ink-tertiary">
           {withSentence} of {slots.length} with a sentence
         </span>
       </div>
 
-      <p className="font-instrument text-[13px] leading-relaxed text-ink/40">
+      <p className="font-instrument text-[13px] leading-relaxed ink-tertiary">
         All {slots.length} forms are already quizzable. Adding real sentences from
         the Tatoeba corpus gives each one context instead of a bare prompt.
       </p>
@@ -126,14 +126,14 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
       )}
 
       {result && (
-        <p className="font-instrument text-[13px] text-ink/45">{result}</p>
+        <p className="font-instrument text-[13px] ink-tertiary">{result}</p>
       )}
 
       {/* CC BY 2.0 FR requires crediting Tatoeba wherever its sentences appear —
           and only there. Crediting it for sentences an LLM wrote would be wrong
           in the other direction. */}
       {stored?.some(q => q.source === 'corpus') && (
-        <p className="font-instrument text-[11px] text-ink/30">{CORPUS_ATTRIBUTION}</p>
+        <p className="font-instrument text-[11px] ink-tertiary">{CORPUS_ATTRIBUTION}</p>
       )}
     </div>
   )

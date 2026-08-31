@@ -94,7 +94,7 @@ export default function FilterTag({ id, label, active, soloed = false, onToggle,
         )}
         <span
           className={`relative z-10 font-instrument text-[10px] transition-colors ${
-            soloed ? 'font-medium text-ink' : active ? 'font-normal text-ink' : 'font-normal text-ink/50'
+            soloed ? 'font-medium text-ink' : active ? 'font-normal text-ink' : 'font-normal ink-tertiary'
           }`}
         >
           {label}

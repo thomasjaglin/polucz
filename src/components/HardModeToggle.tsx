@@ -11,7 +11,7 @@ export default function HardModeToggle({ active, onToggle }: { active: boolean; 
       onClick={onToggle}
       aria-pressed={active}
       className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-full border px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] transition-colors ${
-        active ? 'border-[#e879f9]/40 text-ink' : 'border-ink/10 text-ink/55'
+        active ? 'border-[#e879f9]/40 text-ink' : 'border-ink/10 ink-tertiary'
       }`}
     >
       <GlassPane

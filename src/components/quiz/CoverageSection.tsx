@@ -81,15 +81,15 @@ export default function CoverageSection({
   return (
     <div className="mt-2 flex flex-col gap-3 border-t border-ink/10 pt-4">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-instrument text-[14px] text-ink/45">Question quality</span>
-        <span className="font-instrument text-[13px] tabular-nums text-ink/35">
+        <span className="font-instrument text-[14px] ink-tertiary">Question quality</span>
+        <span className="font-instrument text-[13px] tabular-nums ink-tertiary">
           {slotsWithSentence} of {slotsTotal} with a sentence
         </span>
       </div>
 
       {missing > 0 ? (
         <>
-          <p className="font-instrument text-[13px] leading-relaxed text-ink/40">
+          <p className="font-instrument text-[13px] leading-relaxed ink-tertiary">
             The other {missing} ask for the form directly. Real sentences give them context.
           </p>
 
@@ -119,20 +119,20 @@ export default function CoverageSection({
             </GlassButton>
           )}
           {hasKey && busy === null && (
-            <p className="font-instrument text-[12px] text-ink/30">
+            <p className="font-instrument text-[12px] ink-tertiary">
               Uses your own API key, hardest cards first. Roughly one call per card.
             </p>
           )}
         </>
       ) : (
-        <p className="font-instrument text-[13px] text-ink/40">
+        <p className="font-instrument text-[13px] ink-tertiary">
           Every form has a sentence.
         </p>
       )}
 
-      {result && <p className="font-instrument text-[13px] text-ink/45">{result}</p>}
+      {result && <p className="font-instrument text-[13px] ink-tertiary">{result}</p>}
       {sentences.some(q => q.source === 'corpus') && (
-        <p className="font-instrument text-[11px] text-ink/30">{CORPUS_ATTRIBUTION}</p>
+        <p className="font-instrument text-[11px] ink-tertiary">{CORPUS_ATTRIBUTION}</p>
       )}
     </div>
   )

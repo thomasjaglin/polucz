@@ -69,8 +69,8 @@ const VocabCard = forwardRef<HTMLDivElement, Props>(function VocabCard({ entry, 
                 </span>
                 {meta && (
                   <>
-                    <span className={mastered ? 'text-holo-meta' : 'text-ink/20'}>·</span>
-                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{meta}</span>
+                    <span className={mastered ? 'text-holo-meta' : 'ink-glyph'}>·</span>
+                    <span className={`font-instrument text-[13px] italic ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>{meta}</span>
                   </>
                 )}
               </div>

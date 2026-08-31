@@ -334,7 +334,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
             {prepProgress ? (
               <>
                 <h2 className="font-instrument text-[20px] font-semibold text-ink/90">Preparing audio…</h2>
-                <p className="font-instrument text-[14px] text-ink/50">
+                <p className="font-instrument text-[14px] ink-tertiary">
                   {prepProgress.done} / {prepProgress.total} cards. This keeps running in the background — you can close this and keep using the app.
                 </p>
                 <div className="h-[4px] w-full overflow-hidden rounded-full bg-ink/10">
@@ -352,13 +352,13 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
             ) : incompleteCount === 0 ? (
               <>
                 <h2 className="font-instrument text-[20px] font-semibold text-ink/90">All caught up</h2>
-                <p className="font-instrument text-[14px] text-ink/50">Every card already has its audio prepared.</p>
+                <p className="font-instrument text-[14px] ink-tertiary">Every card already has its audio prepared.</p>
                 <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} mt-1 w-full border-ink/20 text-ink/80`}>Close</GlassButton>
               </>
             ) : (
               <>
                 <h2 className="font-instrument text-[20px] font-semibold text-ink/90">Prepare audio</h2>
-                <p className="font-instrument text-[14px] text-ink/50">
+                <p className="font-instrument text-[14px] ink-tertiary">
                   Generate and cache audio for <span className="text-accent">{incompleteCount}</span> {incompleteCount === 1 ? 'card' : 'cards'}. It's rate-limited, so it runs slowly in the background (~{Math.ceil((incompleteCount * PREP_SPACING_MS) / 60000)} min) — you can keep using the app.
                 </p>
                 <div className="mt-1 flex gap-3">

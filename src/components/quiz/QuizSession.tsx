@@ -90,7 +90,7 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
       {canReject && (
         <button
           onClick={reject}
-          className="self-center font-instrument text-[12px] text-ink/30 underline underline-offset-2 transition-colors hover:text-ink/60"
+          className="self-center font-instrument text-[12px] ink-tertiary underline underline-offset-2 transition-colors hover:text-ink/60"
         >
           Report a bad sentence
         </button>

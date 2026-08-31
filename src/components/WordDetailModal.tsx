@@ -128,7 +128,7 @@ function ParadigmGrid({
             key={key}
             onClick={tip ? () => { haptics.tap(); setOpenKey(open ? null : key) } : undefined}
             className={[
-              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-holo-meta' : 'text-ink/40'}`,
+              `relative px-2 pb-2.5 font-instrument text-[12px] leading-tight ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`,
               tip ? 'cursor-pointer select-none' : '',
             ].join(' ')}
           >
@@ -158,7 +158,7 @@ function ParadigmGrid({
                 // Tighten the gap between the label column and the values by
                 // trimming the label cell's right padding.
                 isLabel
-                  ? `pl-2 pr-0.5 ${mastered ? 'text-holo-meta' : 'text-ink/45'}`
+                  ? `pl-2 pr-0.5 ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`
                   : `px-2 italic ${mastered ? 'text-holo-meta' : 'text-ink/85'}`,
                 tip ? 'cursor-pointer select-none' : '',
                 zebra ? (mastered ? 'bg-ink/[0.1]' : 'bg-ink/[0.04]') : '',
@@ -179,7 +179,7 @@ function ParadigmGrid({
 
 function EnrichingSkeleton() {
   return (
-    <div className="mb-8 flex flex-col items-center gap-3 py-6 text-ink/30">
+    <div className="mb-8 flex flex-col items-center gap-3 py-6 ink-tertiary">
       <span className="material-symbols-rounded animate-spin text-[28px]">progress_activity</span>
       <span className="font-instrument text-[14px]">Loading grammar…</span>
     </div>
@@ -207,7 +207,7 @@ function VerbSection({ entry, mastered }: { entry: VocabVerb; mastered: boolean 
 
       {entry.otherForm && (
         <div className="mb-2 flex items-center gap-4">
-          <span className={`font-instrument text-[15px] ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{entry.otherForm.label}</span>
+          <span className={`font-instrument text-[15px] ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>{entry.otherForm.label}</span>
           <span className={`font-instrument text-[18px] italic text-accent ${mastered ? 'holo-outline' : ''}`}>{entry.otherForm.word}</span>
         </div>
       )}
@@ -237,7 +237,7 @@ function NounSection({ entry, mastered }: { entry: VocabNoun; mastered: boolean 
 function GradeRow({ label, form, mastered }: { label: string; form: string; mastered: boolean }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{label}</span>
+      <span className={`w-[76px] shrink-0 font-instrument text-[13px] ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>{label}</span>
       <span className={`font-instrument text-[16px] text-accent ${mastered ? 'holo-outline' : ''}`}>{form}</span>
     </div>
   )
@@ -257,7 +257,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
       {gradable && (
         <>
           <div className="flex flex-col">
-            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>stopniowanie</span>
+            <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>stopniowanie</span>
             <div className="flex flex-col gap-2">
               <GradeRow label="równy" form={entry.pl} mastered={mastered} />
               {entry.comparative && <GradeRow label="wyższy" form={entry.comparative} mastered={mastered} />}
@@ -270,7 +270,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
 
       {/* Singular: cases, m., f., n. */}
       <div className="flex flex-col">
-        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>l. pojedyncza</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>l. pojedyncza</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.', 'f.', 'n.']}
@@ -286,7 +286,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
 
       {/* Plural: cases, m.os. (virile), nm.os. (non-virile) */}
       <div className="flex flex-col">
-        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>l. mnoga</span>
+        <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>l. mnoga</span>
         <ParadigmGrid
           colTemplate="auto minmax(0,1fr) minmax(0,1fr)"
           headers={['', 'm.os.', 'nm.os.']}
@@ -393,14 +393,14 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
     return (
       <div className="mt-4 flex flex-col gap-4 border-t border-ink/10 pt-4">
         <div className="flex items-center justify-between">
-          <span className={`font-instrument text-[14px] ${mastered ? 'text-holo-meta' : 'text-ink/20'}`}>
+          <span className={`font-instrument text-[14px] ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>
             Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
           </span>
           <button
             onClick={handleRefresh}
             disabled={loading}
             aria-label="Get different examples"
-            className="relative flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 text-ink/40 transition-all hover:scale-105 hover:text-ink/80 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+            className="relative flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 ink-tertiary transition-all hover:scale-105 hover:text-ink/80 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
           >
             <GlassPane borderRadius={15} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
             <span className={`material-symbols-rounded relative z-10 text-[16px]${loading ? ' animate-spin' : ''}`}>refresh</span>
@@ -413,7 +413,7 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
               {/* Smallest purple copy: keep the soft inherited card-mastered
                   text-shadow (same as the small white grammar text) rather than
                   the heavier crisp drop-shadow outline used on the larger words. */}
-              <p className="font-instrument text-[14px] italic leading-snug text-accent/70">{ex.en}</p>
+              <p className="font-instrument text-[14px] italic leading-snug text-accent/80">{ex.en}</p>
             </div>
           ))}
         </div>
@@ -430,16 +430,16 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
       className="mt-4 w-full py-4 font-instrument text-[16px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"
     >
       {loading ? (
-        <span className="material-symbols-rounded animate-spin text-ink/40">progress_activity</span>
+        <span className="material-symbols-rounded animate-spin ink-tertiary">progress_activity</span>
       ) : error ? (
         <>
           <span className="material-symbols-rounded text-[16px] text-red-400/70">error</span>
-          <span className="text-ink/40">
+          <span className="ink-tertiary">
             {errorCode === 'not_configured' ? llmErrorMessage(errorCode) : 'Unavailable — tap to retry'}
           </span>
         </>
       ) : (
-        <span className="text-ink/40">Fetch examples</span>
+        <span className="ink-tertiary">Fetch examples</span>
       )}
     </GlassButton>
   )
@@ -646,7 +646,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                     onClick={() => setConfirmDelete(false)}
                     radius={20}
                     pane="bg-ink/5"
-                    className="h-[38px] border border-ink/10 px-4 font-instrument text-[13px] text-ink/50 hover:text-ink"
+                    className="h-[38px] border border-ink/10 px-4 font-instrument text-[13px] ink-tertiary hover:text-ink"
                   >
                     Cancel
                   </GlassButton>
@@ -666,7 +666,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                   <button
                     onClick={doEnrich}
                     disabled={enriching}
-                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-ink/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'text-ink/50 hover:text-ink'}`}
+                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-ink/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'ink-tertiary hover:text-ink'}`}
                   >
                     <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
                     <span className={`material-symbols-rounded relative z-10 text-[20px]${enriching ? ' animate-spin' : ''}`}>
@@ -699,7 +699,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 <button
                   onClick={handleSpeaker}
                   disabled={false}
-                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'text-ink/50 hover:text-ink'}`}
+                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'ink-tertiary hover:text-ink'}`}
                 >
                   <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
                   <span className={`material-symbols-rounded relative z-10 text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>
@@ -708,12 +708,12 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 </button>
               </div>
               {entry.type === 'noun' && (
-                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-holo-meta' : 'text-ink/40'}`}>{entry.plAlt}</h3>
+                <h3 className={`mb-1 mt-1 font-instrument text-[20px] leading-none ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>{entry.plAlt}</h3>
               )}
               <h2 className={`mt-1 font-instrument text-[22px] font-medium text-accent ${mastered ? 'holo-outline' : ''}`}>{entry.en}</h2>
               {/* Secondary senses filled during enrichment */}
               {entry.definitions && entry.definitions.length > 0 && (
-                <p className="font-instrument text-[14px] leading-snug text-ink/45">
+                <p className="font-instrument text-[14px] leading-snug ink-tertiary">
                   {entry.definitions.join(' · ')}
                 </p>
               )}

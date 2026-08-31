@@ -202,7 +202,7 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
             </AnimatePresence>
 
             {/* Total / filtered card count */}
-            <p className="-mt-[7px] pl-2 font-instrument text-[13px] text-ink/55">{countLabel}</p>
+            <p className="-mt-[7px] pl-2 font-instrument text-[13px] ink-tertiary">{countLabel}</p>
           </div>
         </div>
       </div>
@@ -252,11 +252,11 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               animate={{ opacity: 1, y: 0 }}
               className="mt-10 flex flex-col items-center gap-4 px-4 text-center"
             >
-              <span className="material-symbols-rounded text-[44px] text-ink/35">book_2</span>
+              <span className="material-symbols-rounded text-[44px] ink-glyph">book_2</span>
               <h2 className="font-instrument text-[20px] font-semibold text-ink/85">
                 Your vocabulary starts here
               </h2>
-              <p className="max-w-[300px] font-instrument text-[14px] leading-relaxed text-ink/55">
+              <p className="max-w-[300px] font-instrument text-[14px] leading-relaxed ink-tertiary">
                 {hasLlmKey
                   ? 'Add a Polish word and Polucz fills in the rest — translation, forms and examples — then schedules it for review.'
                   : `Flashcards, the quiz and pronunciation all work with no setup. Start with ${STARTER_COUNT} common Polish words and see how it feels.`}
@@ -275,12 +275,12 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               {hasLlmKey ? (
                 <button
                   onClick={() => { installStarterDeck(); onCardsChanged?.() }}
-                  className="max-w-[300px] font-instrument text-[13px] text-ink/45 underline underline-offset-4"
+                  className="max-w-[300px] font-instrument text-[13px] ink-tertiary underline underline-offset-4"
                 >
                   Or start with {STARTER_COUNT} common words
                 </button>
               ) : (
-                <p className="max-w-[300px] font-instrument text-[13px] leading-relaxed text-ink/45">
+                <p className="max-w-[300px] font-instrument text-[13px] leading-relaxed ink-tertiary">
                   Adding your own words needs an API key —{' '}
                   <button
                     onClick={() => onChangePage('api_config')}
@@ -290,7 +290,7 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
                   </button>.
                 </p>
               )}
-              <p className="max-w-[300px] font-instrument text-[13px] text-ink/45">
+              <p className="max-w-[300px] font-instrument text-[13px] ink-tertiary">
                 Already have a backup? Use Import JSON in the settings menu.
               </p>
             </motion.div>
@@ -305,10 +305,10 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               animate={{ opacity: 1 }}
               className="mt-6 flex flex-col items-center gap-2.5 px-4 text-center"
             >
-              <span className="material-symbols-rounded text-[32px] text-ink/30">
+              <span className="material-symbols-rounded text-[32px] ink-glyph">
                 {searchQuery.trim() ? 'search_off' : 'filter_alt_off'}
               </span>
-              <p className="max-w-[300px] font-instrument text-[15px] text-ink/55">
+              <p className="max-w-[300px] font-instrument text-[15px] ink-tertiary">
                 {searchQuery.trim()
                   ? `No words match \u201c${searchQuery.trim()}\u201d.`
                   : 'Nothing to show for the types you\u2019ve selected.'}

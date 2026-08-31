@@ -76,14 +76,14 @@ function GroupRow({ group, onPlay }: { group: GroupStat; onPlay: () => void }) {
             {done ? (
               <span className="material-symbols-rounded shrink-0 text-[18px] text-accent/80">military_tech</span>
             ) : (
-              <span className="shrink-0 font-instrument text-[12px] tabular-nums text-ink/40">{pct}%</span>
+              <span className="shrink-0 font-instrument text-[12px] tabular-nums ink-tertiary">{pct}%</span>
             )}
           </div>
           <GradedBar counts={group.counts} total={group.cards.length} />
-          <span className="mt-1.5 block font-instrument text-[11px] text-ink/35">{breakdown(group.counts)}</span>
+          <span className="mt-1.5 block font-instrument text-[11px] ink-tertiary">{breakdown(group.counts)}</span>
         </div>
         {!done && (
-          <span className="material-symbols-rounded shrink-0 text-[20px] text-ink/25">chevron_right</span>
+          <span className="material-symbols-rounded shrink-0 text-[20px] ink-glyph">chevron_right</span>
         )}
       </div>
     </GlassButton>
@@ -104,7 +104,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Flashcards</h2>
-          <p className="mt-1 font-instrument text-[14px] text-ink/40">
+          <p className="mt-1 font-instrument text-[14px] ink-tertiary">
             {playableTotal} to review
           </p>
         </div>
@@ -112,13 +112,13 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
           <HardModeToggle active={hardMode} onToggle={onToggleHardMode} />
           <div className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
             <span className="material-symbols-rounded text-[15px] text-accent/80">military_tech</span>
-            <span className="font-instrument text-[12px] font-medium tabular-nums text-ink/55">{conqueredCount}</span>
+            <span className="font-instrument text-[12px] font-medium tabular-nums ink-tertiary">{conqueredCount}</span>
           </div>
         </div>
       </div>
 
       {cards.length === 0 ? (
-        <p className="mt-8 text-center font-instrument text-[16px] text-ink/40">
+        <p className="mt-8 text-center font-instrument text-[16px] ink-tertiary">
           No cards yet — add some vocabulary first.
         </p>
       ) : playableTotal === 0 ? (
@@ -126,7 +126,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
         <div className="flex flex-col items-center gap-4 pt-10 text-center">
           <span className="material-symbols-rounded text-[56px] text-accent/60">military_tech</span>
           <h3 className="font-instrument text-[22px] font-semibold text-ink/80">All conquered!</h3>
-          <p className="font-instrument text-[15px] text-ink/40">You've mastered every card.</p>
+          <p className="font-instrument text-[15px] ink-tertiary">You've mastered every card.</p>
           <GlassButton variant="primary" onClick={onResetMastery} className="mt-1 px-6 py-3 font-instrument text-[15px]">
             <span className="material-symbols-rounded text-[18px]">replay</span>
             Play again (resets mastery)
@@ -143,7 +143,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
                   key={s}
                   onClick={() => changeSize(s)}
                   className={`relative z-10 rounded-full px-3.5 py-1 font-instrument text-[13px] font-medium tabular-nums transition-colors ${
-                    s === size ? 'bg-accent/20 text-ink' : 'text-ink/45 hover:text-ink/70'
+                    s === size ? 'bg-accent/20 text-ink' : 'ink-tertiary hover:text-ink/70'
                   }`}
                 >
                   {s}
@@ -165,16 +165,16 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
                 <span className="material-symbols-rounded shrink-0 text-[28px] text-accent">shuffle</span>
                 <div className="min-w-0">
                   <div className="font-instrument text-[17px] font-semibold text-ink/90">Go through everything</div>
-                  <div className="font-instrument text-[13px] text-ink/45">All {playableTotal} cards, shuffled</div>
+                  <div className="font-instrument text-[13px] ink-tertiary">All {playableTotal} cards, shuffled</div>
                 </div>
-                <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] text-ink/25">chevron_right</span>
+                <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] ink-glyph">chevron_right</span>
               </div>
             </GlassButton>
           </FlipOnChange>
 
           {/* Group list — each card flips with hard mode, staggered into a cascade. */}
           <div className="flex flex-col gap-3">
-            <span className="font-instrument text-[13px] uppercase tracking-wider text-ink/35">Or pick a group</span>
+            <span className="font-instrument text-[13px] uppercase tracking-wider ink-tertiary">Or pick a group</span>
             {groups.map(g => (
               <FlipOnChange key={g.index} trigger={hardMode} delay={Math.min(g.index * 0.03, 0.3)} className="w-full">
                 <GroupRow group={g} onPlay={() => onPlayGroup(g)} />

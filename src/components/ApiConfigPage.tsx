@@ -18,7 +18,7 @@ interface Props {
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
-      <h2 className="mb-2 px-2 font-instrument text-[13px] font-medium uppercase tracking-wider text-ink/40">
+      <h2 className="mb-2 px-2 font-instrument text-[13px] font-medium uppercase tracking-wider ink-tertiary">
         {title}
       </h2>
       <GlassCard contentClassName="flex flex-col p-6">{children}</GlassCard>
@@ -32,7 +32,7 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
         <p className="font-instrument text-[16px] text-ink/70">{label}</p>
-        {hint && <p className="mt-0.5 font-instrument text-[13px] text-ink/35">{hint}</p>}
+        {hint && <p className="mt-0.5 font-instrument text-[13px] ink-tertiary">{hint}</p>}
       </div>
       {children}
     </div>
@@ -84,7 +84,7 @@ export default function ApiConfigPage({ onSave }: Props) {
                   haptics.tap()
                 }}
                 className={`rounded-full px-3 py-1 font-instrument text-[13px] capitalize transition-colors ${
-                  theme === t ? 'bg-ink/15 text-ink' : 'text-ink/40'
+                  theme === t ? 'bg-ink/15 text-ink' : 'ink-tertiary'
                 }`}
               >
                 {t}
@@ -116,7 +116,7 @@ export default function ApiConfigPage({ onSave }: Props) {
       </Section>
 
       <Section title="API">
-        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-ink/40">
+        <p className="mb-5 font-instrument text-[13px] leading-relaxed ink-tertiary">
           Run the app's language features through your own LLM. A key is required:
           without one, examples, card details and sentence breakdowns won't load.
         </p>
@@ -141,7 +141,7 @@ export default function ApiConfigPage({ onSave }: Props) {
             ))}
           </select>
           {editing && (
-            <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-ink/50">
+            <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 ink-tertiary">
               expand_more
             </span>
           )}
@@ -175,7 +175,7 @@ export default function ApiConfigPage({ onSave }: Props) {
               ))}
             </select>
             {editing && (
-              <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 text-ink/50">
+              <span className="material-symbols-rounded pointer-events-none absolute right-4 top-1/2 z-10 -translate-y-1/2 ink-tertiary">
                 expand_more
               </span>
             )}
@@ -279,7 +279,7 @@ export default function ApiConfigPage({ onSave }: Props) {
       </Section>
 
       <Section title="Translation">
-        <p className="mb-5 font-instrument text-[13px] leading-relaxed text-ink/40">
+        <p className="mb-5 font-instrument text-[13px] leading-relaxed ink-tertiary">
           The translate page uses DeepL, which is a separate service from the LLM above
           and needs its own key. Free-tier keys end in <span className="font-mono">:fx</span>.
         </p>
@@ -375,17 +375,16 @@ export default function ApiConfigPage({ onSave }: Props) {
 
       <Section title="About">
         <Row label="Polucz" hint={`Version ${__APP_VERSION__}`}>
-          <span className="material-symbols-rounded text-[22px] text-ink/30">school</span>
+          <span className="material-symbols-rounded text-[22px] ink-glyph">school</span>
         </Row>
 
         {/* The corpus is CC BY 2.0 FR: crediting Tatoeba is a licence
             obligation, not a courtesy. The quiz credits it where its sentences
             appear, but that view is conditional — this one always renders. */}
-        <p className="mt-5 font-instrument text-[13px] leading-relaxed text-ink/45">
-          {CORPUS_ATTRIBUTION}. Example sentences come from tatoeba.org and are
-          used under CC BY 2.0 FR.
+        <p className="mt-5 font-instrument text-[13px] leading-relaxed ink-tertiary">
+          {CORPUS_ATTRIBUTION} — tatoeba.org
         </p>
-        <p className="mt-3 font-instrument text-[13px] leading-relaxed text-ink/45">
+        <p className="mt-3 font-instrument text-[13px] leading-relaxed ink-tertiary">
           Pronunciation uses your device&rsquo;s own speech engine. Your vocabulary,
           review history and API keys are stored on this device only.
         </p>

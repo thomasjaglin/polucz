@@ -17,7 +17,7 @@ export default function ProgressBar({ done, total }: { done: number; total: numb
           transition={{ type: 'spring', stiffness: 120, damping: 20 }}
         />
       </div>
-      <span className="font-instrument text-[13px] tabular-nums text-ink/30">
+      <span className="font-instrument text-[13px] tabular-nums ink-tertiary">
         {done}/{total}
       </span>
     </div>

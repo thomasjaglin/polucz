@@ -15,7 +15,7 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage }: P
     <div className="flex flex-col gap-4">
       <div>
         <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Quiz Game</h2>
-        <p className="mt-1 font-instrument text-[14px] text-ink/40">
+        <p className="mt-1 font-instrument text-[14px] ink-tertiary">
           {questionCount === 0
             ? 'No questions yet — add words and let their details fill in first.'
             : `${questionCount} question${questionCount === 1 ? '' : 's'} ready`}
@@ -34,9 +34,9 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage }: P
           <span className="material-symbols-rounded shrink-0 text-[24px] text-ink/70">table_chart</span>
           <div className="min-w-0">
             <div className="font-instrument text-[17px] font-semibold text-ink/90">Declension Quiz</div>
-            <div className="font-instrument text-[13px] text-ink/45">Multiple choice · nouns &amp; adjectives</div>
+            <div className="font-instrument text-[13px] ink-tertiary">Multiple choice · nouns &amp; adjectives</div>
           </div>
-          <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] text-ink/25">chevron_right</span>
+          <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] ink-glyph">chevron_right</span>
         </div>
       </GlassButton>
 
@@ -52,9 +52,9 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage }: P
           <span className="material-symbols-rounded shrink-0 text-[24px] text-ink/70">edit</span>
           <div className="min-w-0">
             <div className="font-instrument text-[17px] font-semibold text-ink/90">Conjugation Quiz</div>
-            <div className="font-instrument text-[13px] text-ink/45">Fill in the blank · verbs</div>
+            <div className="font-instrument text-[13px] ink-tertiary">Fill in the blank · verbs</div>
           </div>
-          <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] text-ink/25">chevron_right</span>
+          <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] ink-glyph">chevron_right</span>
         </div>
       </GlassButton>
 

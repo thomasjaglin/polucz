@@ -77,7 +77,7 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
                 />
               )}
               <span
-                className={`material-symbols-rounded relative text-[24px] transition-colors duration-200 ${active ? 'text-ink' : 'text-ink/55'}`}
+                className={`material-symbols-rounded relative text-[24px] transition-colors duration-200 ${active ? 'text-ink' : 'ink-tertiary'}`}
               >
                 {pages[id].icon}
               </span>

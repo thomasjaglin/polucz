@@ -49,7 +49,7 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
     if (opt === chosen) {
       return 'border-red-400/40 text-red-300'
     }
-    return 'border-ink/5 text-ink/25'
+    return 'border-ink/5 ink-tertiary'
   }
 
   function getPaneTint(opt: string): string {
@@ -71,13 +71,13 @@ export default function DeclensionQuestion({ sentence, cards, sentences, onAnswe
           <div className="relative z-10 p-5">
             <p className="font-instrument text-[20px] leading-relaxed text-ink/90">{display}</p>
             {sentence.english && (
-              <p className="mt-2 font-instrument text-[14px] italic text-ink/40">{sentence.english}</p>
+              <p className="mt-2 font-instrument text-[14px] italic ink-tertiary">{sentence.english}</p>
             )}
           </div>
         </div>
       )}
 
-      <p className="font-instrument text-[13px] text-ink/45">{grammarPrompt(sentence)}</p>
+      <p className="font-instrument text-[13px] ink-tertiary">{grammarPrompt(sentence)}</p>
 
       <div className="grid grid-cols-2 gap-3">
         {options.map(opt => (

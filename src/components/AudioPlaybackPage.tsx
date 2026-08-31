@@ -313,9 +313,9 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             animate={{ opacity: 1 }}
             className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
           >
-            <span className="material-symbols-rounded text-[56px] text-ink/30">headphones</span>
+            <span className="material-symbols-rounded text-[56px] ink-glyph">headphones</span>
             <h2 className="font-instrument text-[22px] font-semibold text-ink/60">No audio ready yet</h2>
-            <p className="font-instrument text-[15px] text-ink/30 px-4">
+            <p className="font-instrument text-[15px] ink-tertiary px-4">
               Open a word to prepare its audio, or use “Prepare all” on the vocabulary page — prepared words play here.
             </p>
           </motion.div>
@@ -331,7 +331,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                 the play-choice buttons stay centered in the space below. */}
             <div>
               <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Audio review</h2>
-              <p className="mt-1 font-instrument text-[14px] text-ink/40">{availableCount} cards ready</p>
+              <p className="mt-1 font-instrument text-[14px] ink-tertiary">{availableCount} cards ready</p>
             </div>
             <div className="flex flex-1 flex-col items-center justify-center gap-4">
               <GlassButton
@@ -362,7 +362,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
           >
             <span className="material-symbols-rounded text-[56px] text-accent/60">check_circle</span>
             <h2 className="font-instrument text-[26px] font-semibold text-ink/80">All caught up</h2>
-            <p className="font-instrument text-[16px] text-ink/40">
+            <p className="font-instrument text-[16px] ink-tertiary">
               You've listened to all {totalCount} cards.
             </p>
             <GlassButton
@@ -469,8 +469,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                           </span>
                           {cardMeta(current) && (
                             <>
-                              <span className="text-ink/20">·</span>
-                              <span className="font-instrument text-[13px] italic text-ink/40">{cardMeta(current)}</span>
+                              <span className="ink-glyph">·</span>
+                              <span className="font-instrument text-[13px] italic ink-tertiary">{cardMeta(current)}</span>
                             </>
                           )}
                         </div>
@@ -531,7 +531,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                     className={`relative flex h-[46px] w-[46px] items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${rate !== 1 ? 'border-accent/40' : 'border-ink/10'}`}
                   >
                     <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${rate !== 1 ? 'bg-accent/15' : 'bg-ink/5'}`} />
-                    <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${rate !== 1 ? 'text-accent' : 'text-ink/55'}`}>
+                    <span className={`relative z-10 font-instrument text-[13px] font-semibold tabular-nums ${rate !== 1 ? 'text-accent' : 'ink-tertiary'}`}>
                       {rate === 1 ? '1×' : `${rate}×`}
                     </span>
                   </button>
@@ -545,7 +545,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
                   className={`absolute flex h-[46px] w-[46px] items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-accent/40' : 'border-ink/10'}`}
                 >
                   <GlassPane borderRadius={24} className={`absolute inset-0 z-0 rounded-full ${repeatOne ? 'bg-accent/15' : 'bg-ink/5'}`} />
-                  <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-accent' : 'text-ink/50'}`}>
+                  <span className={`material-symbols-rounded relative z-10 text-[20px] ${repeatOne ? 'text-accent' : 'ink-tertiary'}`}>
                     repeat_one
                   </span>
                 </button>

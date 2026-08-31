@@ -182,10 +182,10 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
       </span>
       <span className="min-w-0 truncate font-instrument text-[15px] font-medium text-ink/90">{word.lemma}</span>
       {word.gender && <span className="shrink-0 font-instrument text-[13px] italic " style={{ color: 'var(--aspect)' }}>{word.gender}</span>}
-      <span className="shrink-0 text-ink/20">·</span>
-      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] text-ink/50">{word.english}</span>
+      <span className="shrink-0 ink-glyph">·</span>
+      <span className="min-w-0 flex-1 truncate font-instrument text-[13px] ink-tertiary">{word.english}</span>
       {isSaved ? (
-        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] text-ink/25">✓ In vocabulary</span>
+        <span className="shrink-0 whitespace-nowrap font-instrument text-[11px] ink-tertiary">✓ In vocabulary</span>
       ) : (
         <button
           onClick={onAdd}
@@ -422,13 +422,13 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
   const canSwipe = !!(result?.isSingleWord && !added && !alreadySaved)
 
   const wordListBlock = wordPhase === 'loading' ? (
-    <div className="flex items-center gap-2 pt-4 text-ink/30">
+    <div className="flex items-center gap-2 pt-4 ink-tertiary">
       <span className="material-symbols-rounded animate-spin text-[16px]">progress_activity</span>
       <span className="font-instrument text-[13px]">Analysing words…</span>
     </div>
   ) : wordPhase === 'done' && words.length > 1 ? (
     <div className="pt-4">
-      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider text-ink/25">
+      <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider ink-tertiary">
         {srcTop ? 'Words in this sentence' : 'Words in the Polish translation'}
       </p>
       {words.map(word => (
@@ -453,7 +453,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
           placeholder={srcTop ? 'Wpisz tekst…' : 'Translate text…'}
           rows={2}
-          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-ink/95 placeholder:text-ink/40 outline-none"
+          className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-ink/95 placeholder-tertiary outline-none"
         />
         {!!input && (
           <button
@@ -528,7 +528,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
         )}
         <motion.div style={{ opacity: clearOpacity }}
           className="pointer-events-none absolute inset-0 z-10 flex items-center justify-start rounded-[24px] pl-6">
-          <span className="font-instrument text-[18px] font-semibold text-ink/50">← Clear</span>
+          <span className="font-instrument text-[18px] font-semibold ink-tertiary">← Clear</span>
         </motion.div>
 
         <div className="relative z-20 flex flex-col gap-4 p-6">
@@ -560,7 +560,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
                   </div>
                 </div>
                 {result.canonicalEn && result.canonicalEn !== result.translation && (
-                  <span className="font-instrument text-[13px] text-ink/35">{result.canonicalEn}</span>
+                  <span className="font-instrument text-[13px] ink-tertiary">{result.canonicalEn}</span>
                 )}
               </div>
 
@@ -568,14 +568,14 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
                 <p className="font-instrument text-[13px] text-emerald-400/80">Added to vocabulary</p>
               )}
               {!added && alreadySaved && (
-                <p className="font-instrument text-[13px] text-ink/30">Already in your vocabulary</p>
+                <p className="font-instrument text-[13px] ink-tertiary">Already in your vocabulary</p>
               )}
             </>
           )}
         </div>
       </motion.div>
 
-      <p className="mt-4 font-instrument text-[11px] text-ink/20">
+      <p className="mt-4 font-instrument text-[11px] ink-tertiary">
         {canSwipe ? 'swipe right to save · swipe left to clear' : 'swipe left to clear'}
       </p>
     </>

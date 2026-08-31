@@ -53,6 +53,37 @@ html.theme-light {
   --nav-scrim: linear-gradient(to top, #F7F4F1 14%, rgba(247, 244, 241, 0.72) 42%, transparent 100%);
 }
 
+/* ─── Text tone ───────────────────────────────────────────── */
+/* Below the primary ink there is room for exactly two readable tiers, and the
+   light theme is what decides that. Its ink (#0F172A) on its page (#F7F4F1)
+   reaches WCAG AA — 4.5:1 — at 55% alpha and no lower: not even a pure black
+   would, which tops out at 3.9:1 at 50%. The scale this replaces spent six
+   alphas (20…55) in the band between 1.5:1 and 3.9:1, so most of the hierarchy
+   it expressed was hierarchy nobody could actually read.
+
+   Each tier therefore carries a different alpha per theme. The dark theme was
+   tuned by eye and keeps its values; the light theme gets what it needs to
+   match. Ratios below are against --page-bg — a gradient blob under the glass
+   shifts them slightly either way. */
+
+/* Supporting copy: hints, secondary lines, helper text. */
+.ink-secondary { color: rgb(var(--ink-rgb) / 0.70); }              /* 9.1:1 · light 6.4:1 */
+
+/* The quietest text still meant to be read: captions, counts, attribution. */
+.ink-tertiary  { color: rgb(var(--ink-rgb) / 0.55); }              /* 6.0:1 */
+html.theme-light .ink-tertiary { color: rgb(var(--ink-rgb) / 0.62); } /* 4.9:1 */
+
+/* Input placeholders. Tailwind's `placeholder:` variant cannot prefix a custom
+   class, so the pseudo-element gets its own rule at the tertiary alpha. */
+.placeholder-tertiary::placeholder { color: rgb(var(--ink-rgb) / 0.55); }
+html.theme-light .placeholder-tertiary::placeholder { color: rgb(var(--ink-rgb) / 0.62); }
+
+/* Glyphs and rules — not text. WCAG asks 3:1 of non-text UI, not 4.5:1, so
+   these stay lighter on purpose; anything carrying meaning in words does not
+   belong here. */
+.ink-glyph { color: rgb(var(--ink-rgb) / 0.35); }                  /* 3.1:1 */
+html.theme-light .ink-glyph { color: rgb(var(--ink-rgb) / 0.50); }    /* 3.3:1 */
+
 /* ─── Global body ─────────────────────────────────────────── */
 body {
   background-color: var(--page-bg);

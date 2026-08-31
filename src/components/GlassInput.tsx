@@ -18,7 +18,7 @@ export default function GlassInput({ placeholder, type = 'text', icon, value, on
     <div className={`relative w-full rounded-[36px] border border-ink/20 shadow-[0_4px_12px_rgba(0,0,0,0.1)] group ${disabled ? 'opacity-60' : ''} ${className}`}>
       <GlassPane borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] pane-field transition-colors" />
       <div className="relative z-10 flex items-center gap-3 px-[18px] py-3">
-        {icon && <span className="material-symbols-rounded text-[18px] text-ink/50 shrink-0">{icon}</span>}
+        {icon && <span className="material-symbols-rounded text-[18px] ink-tertiary shrink-0">{icon}</span>}
         <input
           type={type}
           placeholder={placeholder}
@@ -32,7 +32,7 @@ export default function GlassInput({ placeholder, type = 'text', icon, value, on
           <button
             onClick={() => onChange?.('')}
             aria-label="Clear input"
-            className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full bg-ink/10 text-ink/50 transition-colors hover:bg-ink/15 hover:text-ink"
+            className="flex h-[24px] w-[24px] shrink-0 items-center justify-center rounded-full bg-ink/10 ink-tertiary transition-colors hover:bg-ink/15 hover:text-ink"
           >
             <span className="material-symbols-rounded text-[16px]">close</span>
           </button>

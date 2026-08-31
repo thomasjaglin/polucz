@@ -76,13 +76,13 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
           <div className="relative z-10 p-5">
             <p className="font-instrument text-[20px] leading-relaxed text-ink/90">{display}</p>
             {sentence.english && (
-              <p className="mt-2 font-instrument text-[14px] italic text-ink/40">{sentence.english}</p>
+              <p className="mt-2 font-instrument text-[14px] italic ink-tertiary">{sentence.english}</p>
             )}
           </div>
         </div>
       )}
 
-      <p className="font-instrument text-[13px] text-ink/45">{grammarPrompt(sentence)}</p>
+      <p className="font-instrument text-[13px] ink-tertiary">{grammarPrompt(sentence)}</p>
 
       <div className="flex flex-col gap-1.5">
         <div
@@ -98,10 +98,10 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
             onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
             disabled={locked}
             placeholder="Type the missing form…"
-            className="relative z-10 w-full bg-transparent px-4 py-3.5 font-instrument text-[17px] text-ink/90 placeholder:text-ink/25 outline-none disabled:opacity-60"
+            className="relative z-10 w-full bg-transparent px-4 py-3.5 font-instrument text-[17px] text-ink/90 placeholder-tertiary outline-none disabled:opacity-60"
           />
         </div>
-        <p className="font-instrument text-[11px] text-ink/25">
+        <p className="font-instrument text-[11px] ink-tertiary">
           Enable Polish keyboard for ą ę ó ś ź ż ć ń ł
         </p>
       </div>
