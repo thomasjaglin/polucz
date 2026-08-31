@@ -53,7 +53,9 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
   }
 
   const locked = phase === 'correct' || phase === 'wrong-final'
-  const display = blankSentence(sentence.polish, sentence.targetForm)
+  // A paradigm question (tier 3) has no sentence — grammarPrompt below carries
+  // the whole question on its own, so the context card is simply omitted.
+  const display = sentence.polish ? blankSentence(sentence.polish, sentence.targetForm) : null
 
   const borderClass =
     phase === 'correct' ? 'border-green-400/50 ring-1 ring-green-400/25' :
@@ -68,13 +70,17 @@ export default function ConjugationQuestion({ sentence, onAnswered }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
-        <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-ink/[0.02]" />
-        <div className="relative z-10 p-5">
-          <p className="font-instrument text-[20px] leading-relaxed text-ink/90">{display}</p>
-          <p className="mt-2 font-instrument text-[14px] italic text-ink/40">{sentence.english}</p>
+      {display && (
+        <div className="relative rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+          <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-[20px] bg-ink/[0.02]" />
+          <div className="relative z-10 p-5">
+            <p className="font-instrument text-[20px] leading-relaxed text-ink/90">{display}</p>
+            {sentence.english && (
+              <p className="mt-2 font-instrument text-[14px] italic text-ink/40">{sentence.english}</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <p className="font-instrument text-[13px] text-ink/45">{grammarPrompt(sentence)}</p>
 

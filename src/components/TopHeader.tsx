@@ -6,7 +6,7 @@ import GlassButton from './GlassButton'
 import type { PageId, VocabEntry } from '../data/types'
 import { getCards, replaceAllCards } from '../lib/storage'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
-import { saveSentences } from '../lib/sentenceStorage'
+import { saveSentences, getSentences } from '../lib/sentenceStorage'
 import { useTTS } from '../lib/useTTS'
 import { pushToast } from '../lib/toastStore'
 import { useBackClose } from '../hooks/useBackClose'
@@ -94,12 +94,15 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     return () => document.removeEventListener('click', handleOutsideClick)
   }, [settingsOpen])
 
-  function buildPayload() {
-    return { version: 1, cards: getCards(), reviews: getAllReviews() }
+  async function buildPayload() {
+    // Sentences are included because they are now user-created data: the tiered
+    // plan generates them on the device, so a backup that omits them loses work.
+    // Import already accepts the field.
+    return { version: 1, cards: getCards(), reviews: getAllReviews(), sentences: await getSentences() }
   }
 
   async function handleExport() {
-    const json = JSON.stringify(buildPayload(), null, 2)
+    const json = JSON.stringify(await buildPayload(), null, 2)
     const filename = `polucz-backup-${new Date().toISOString().slice(0, 10)}.json`
     setSettingsOpen(false)
 
@@ -165,7 +168,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
 
   async function handleCopyToClipboard() {
     try {
-      await navigator.clipboard.writeText(JSON.stringify(buildPayload(), null, 2))
+      await navigator.clipboard.writeText(JSON.stringify(await buildPayload(), null, 2))
       setCopyLabel('copied')
       setTimeout(() => setCopyLabel('idle'), 2000)
     } catch {
@@ -182,7 +185,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (!Array.isArray(data.sentences)) throw new Error('Invalid format')
-      saveSentences(data.sentences)
+      await saveSentences(data.sentences)
       setSyncState('done')
       setTimeout(() => { setSyncState('idle'); setSettingsOpen(false) }, 1500)
     } catch {
@@ -200,7 +203,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string)
         if (!Array.isArray(data.cards) || typeof data.reviews !== 'object') {
@@ -210,7 +213,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         replaceAllCards(data.cards)
         replaceAllReviews(data.reviews)
         if (Array.isArray(data.sentences) && data.sentences.length > 0) {
-          saveSentences(data.sentences)
+          await saveSentences(data.sentences)
         }
         onImport()
         pushToast(`Imported ${data.cards.length} cards`, 'success')

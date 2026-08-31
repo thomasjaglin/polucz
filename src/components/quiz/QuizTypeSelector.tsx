@@ -1,21 +1,22 @@
 import GlassButton from '../GlassButton'
 
 interface Props {
-  sentenceCount: number
+  /** Questions ready to ask — stored sentences plus computed paradigm slots. */
+  questionCount: number
   onStart: (type: 'declension' | 'conjugation') => void
 }
 
-export default function QuizTypeSelector({ sentenceCount, onStart }: Props) {
-  const hasEnough = sentenceCount >= 4
+export default function QuizTypeSelector({ questionCount, onStart }: Props) {
+  const hasEnough = questionCount >= 4
 
   return (
     <div className="flex flex-col gap-4">
       <div>
         <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Quiz Game</h2>
         <p className="mt-1 font-instrument text-[14px] text-ink/40">
-          {sentenceCount === 0
-            ? 'No sentences loaded — use "Sync sentences" in settings first.'
-            : `${sentenceCount} sentences available`}
+          {questionCount === 0
+            ? 'No questions yet — add words and let their details fill in first.'
+            : `${questionCount} question${questionCount === 1 ? '' : 's'} ready`}
         </p>
       </div>
 

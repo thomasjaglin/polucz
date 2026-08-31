@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getSentences } from '../lib/sentenceStorage'
 import { getAllReviews } from '../lib/reviewStorage'
 import { getCards } from '../lib/storage'
 import { getSessionQuestions } from '../lib/quizLogic'
+import { paradigmQuestions, slotKey } from '../lib/paradigmQuestions'
 import { useBackClose } from '../hooks/useBackClose'
 import QuizTypeSelector from './quiz/QuizTypeSelector'
 import QuizSession, { type AnswerRecord } from './quiz/QuizSession'
@@ -12,9 +13,18 @@ import type { SentenceEntry, VocabEntry } from '../data/types'
 type Screen = 'selector' | 'session' | 'end'
 
 export default function QuizPage() {
-  const [sentences] = useState<SentenceEntry[]>(getSentences)
+  // Sentences now live in IndexedDB, so they arrive after first paint. Cards and
+  // reviews are still synchronous, and tier-3 paradigm questions come from the
+  // cards — so the quiz is playable before the sentences land.
+  const [sentences, setSentences] = useState<SentenceEntry[]>([])
   const [cards] = useState<VocabEntry[]>(getCards)
   const [reviews] = useState(getAllReviews)
+
+  useEffect(() => {
+    let cancelled = false
+    getSentences().then(s => { if (!cancelled) setSentences(s) })
+    return () => { cancelled = true }
+  }, [])
 
   const [screen, setScreen] = useState<Screen>('selector')
   const [quizType, setQuizType] = useState<'declension' | 'conjugation'>('declension')
@@ -28,7 +38,7 @@ export default function QuizPage() {
   const [sessionKey, setSessionKey] = useState(0)
 
   function handleStart(type: 'declension' | 'conjugation') {
-    const qs = getSessionQuestions(type, 10, sentences, reviews)
+    const qs = getSessionQuestions(type, 10, sentences, reviews, cards)
     if (qs.length === 0) return
     setQuizType(type)
     setQuestions(qs)
@@ -37,6 +47,16 @@ export default function QuizPage() {
     setSessionKey(k => k + 1)
     setScreen('session')
   }
+
+  // What the selector reports: stored sentences plus every paradigm slot they
+  // do not already cover. This is why a fresh install with enriched cards can
+  // quiz at all — no sentence has to exist first.
+  const questionCount = useMemo(() => {
+    const stored = sentences.filter(s => s.approved)
+    const covered = new Set(stored.map(slotKey))
+    const extra = paradigmQuestions(cards).filter(q => !covered.has(slotKey(q)))
+    return stored.length + extra.length
+  }, [sentences, cards])
 
   function handleComplete(records: AnswerRecord[]) {
     setAnswers(records)
@@ -48,7 +68,7 @@ export default function QuizPage() {
   }
 
   if (screen === 'selector') {
-    return <QuizTypeSelector sentenceCount={sentences.length} onStart={handleStart} />
+    return <QuizTypeSelector questionCount={questionCount} onStart={handleStart} />
   }
 
   if (screen === 'session') {

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { SentenceEntry, VocabEntry } from '../../data/types'
-import { checkAnswer } from '../../lib/quizLogic'
+import { checkAnswer, grammarPrompt } from '../../lib/quizLogic'
 import { haptics } from '../../lib/haptics'
 import DeclensionQuestion from './DeclensionQuestion'
 import ConjugationQuestion from './ConjugationQuestion'
@@ -29,7 +29,9 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
 
   const handleAnswered = useCallback((given: string) => {
     const record: AnswerRecord = {
-      polish: current.polish,
+      // Paradigm questions have no sentence; the end screen still needs
+      // something to show, so fall back to the grammatical prompt.
+      polish: current.polish ?? grammarPrompt(current),
       correct: current.targetForm,
       given,
       wasCorrect: checkAnswer(given, current.targetForm),

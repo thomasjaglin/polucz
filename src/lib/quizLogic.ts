@@ -1,10 +1,16 @@
-import type { SentenceEntry, SentenceNoun, SentenceAdjective, ReviewState, VocabEntry, VocabNoun, NounDeclensions } from '../data/types'
+import { paradigmQuestions, slotKey } from './paradigmQuestions'
+import type { SentenceEntry, SentenceNoun, SentenceAdjective, ReviewState, VocabEntry, VocabNoun, VocabAdjective, NounDeclensions } from '../data/types'
 
 // ─── Display helpers ──────────────────────────────────────────────────────────
 
 export function blankSentence(polish: string, targetForm: string): string {
   const escaped = targetForm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  return polish.replace(new RegExp(escaped, 'gi'), '___')
+  // Letter boundaries, not \b: \b is ASCII-only, so it mis-handles ł, ó and ż.
+  // Without them the target matches inside longer words — "dom" in "W domu"
+  // blanked as "W ___u", leaking the stem and mangling the sentence. Generated
+  // sentences mostly hid this by using the form standalone; corpus text will not.
+  const bounded = new RegExp(`(?<!\\p{L})${escaped}(?!\\p{L})`, 'giu')
+  return polish.replace(bounded, '___')
 }
 
 export function grammarPrompt(s: SentenceEntry): string {
@@ -29,12 +35,8 @@ export function checkAnswer(input: string, targetForm: string): boolean {
 const DEFAULT_EASE = 2.5
 
 /**
- * Returns up to `count` approved sentences of the given quiz type,
- * weighted so cards with a lower SRS easeFactor appear more often.
- *
- * Uses Efraimidis-Spirakis weighted reservoir sampling:
- * assign each item key = random^(1/weight), sort descending, take top N.
- * This gives weighted sampling without replacement in a single pass.
+ * Up to `count` questions of the given quiz type, drawn from stored sentences
+ * first and topped up from computed paradigm questions (tier 3).
  *
  * Result is shuffled so question order does not reflect weight ranking.
  */
@@ -43,26 +45,50 @@ export function getSessionQuestions(
   count: number,
   sentences: SentenceEntry[],
   reviews: Record<string, ReviewState>,
+  cards: VocabEntry[] = [],
 ): SentenceEntry[] {
-  const eligible = sentences.filter(s => {
-    if (!s.approved) return false
-    if (type === 'declension') return s.cardType === 'noun' || s.cardType === 'adjective'
-    return s.cardType === 'verb'
-  })
+  const ofType = (s: SentenceEntry) =>
+    type === 'declension'
+      ? s.cardType === 'noun' || s.cardType === 'adjective'
+      : s.cardType === 'verb'
 
-  if (eligible.length === 0) return []
-  if (eligible.length <= count) return shuffle(eligible.slice())
+  const stored = sentences.filter(s => s.approved && ofType(s))
 
-  // Weight: 1/easeFactor — harder cards (lower ease) get higher probability
-  const keyed = eligible.map(s => {
+  // Paradigm questions fill slots no stored sentence covers. A sentence is the
+  // better question — it has context — so it always wins its slot, and the
+  // paradigm pool only tops the session up when there are not enough.
+  const covered = new Set(stored.map(slotKey))
+  const paradigm = paradigmQuestions(cards).filter(q => ofType(q) && !covered.has(slotKey(q)))
+
+  const chosen = sample(stored, count, reviews)
+  if (chosen.length < count) {
+    chosen.push(...sample(paradigm, count - chosen.length, reviews))
+  }
+  return shuffle(chosen)
+}
+
+/**
+ * Efraimidis-Spirakis weighted reservoir sampling: assign each item
+ * key = random^(1/weight), sort descending, take top N. Weighted sampling
+ * without replacement in a single pass.
+ *
+ * Weight is 1/easeFactor, so cards the user finds harder come up more often.
+ */
+function sample(
+  pool: SentenceEntry[],
+  count: number,
+  reviews: Record<string, ReviewState>,
+): SentenceEntry[] {
+  if (count <= 0 || pool.length === 0) return []
+  if (pool.length <= count) return pool.slice()
+
+  const keyed = pool.map(s => {
     const ease = reviews[s.cardLemma]?.easeFactor ?? DEFAULT_EASE
     const weight = 1 / ease
-    const key = Math.random() ** (1 / weight)
-    return { s, key }
+    return { s, key: Math.random() ** (1 / weight) }
   })
-
   keyed.sort((a, b) => b.key - a.key)
-  return shuffle(keyed.slice(0, count).map(w => w.s))
+  return keyed.slice(0, count).map(w => w.s)
 }
 
 // ─── getDistractors ───────────────────────────────────────────────────────────
@@ -133,6 +159,74 @@ function getNounForm(d: NounDeclensions, caseName: string, number: 'singular' | 
  *
  * Adjective distractors are v2 — returns [] until a confusion map is added.
  */
+/**
+ * Distractors for an adjective, drawn from the card's own table.
+ *
+ * Closest-first, because a distractor is only useful if it is plausible:
+ * the same case in the other genders (the confusion the question is actually
+ * testing), then other cases within the asked gender, then the plural columns.
+ */
+function adjectiveDistractors(
+  correct: SentenceAdjective,
+  cards: VocabEntry[],
+  count: number,
+  sentences: SentenceEntry[] = [],
+): string[] {
+  const card = cards.find(c => c.id === correct.cardLemma) as VocabAdjective | undefined
+  const decl = card?.declensions
+  if (!decl) return []
+
+  const caseIndex = decl.cases.findIndex(
+    c => c.trim().toLowerCase() === correct.targetCase.trim().toLowerCase(),
+  )
+  // Enrichment writes Polish case names; the question carries English ones, so a
+  // lookup miss is expected. Nominative is row 0 in every column.
+  const row = caseIndex >= 0 ? caseIndex : 0
+
+  const GENDERS = ['masculine', 'feminine', 'neuter'] as const
+  const columns: (keyof typeof decl)[] = [...GENDERS, 'pluralMasc', 'pluralNonMasc']
+  const otherGenders = GENDERS.filter(g => g !== correct.targetGender)
+
+  const candidates: string[] = []
+  // 1. same case, other genders
+  for (const g of otherGenders) candidates.push(decl[g]?.[row])
+  // 2. other cases, asked gender
+  const askedColumn = (GENDERS as readonly string[]).includes(correct.targetGender)
+    ? (correct.targetGender as 'masculine' | 'feminine' | 'neuter')
+    : 'masculine'
+  decl[askedColumn]?.forEach((f, i) => { if (i !== row) candidates.push(f) })
+  // 3. anything else in the table
+  for (const col of columns) decl[col]?.forEach(f => candidates.push(f))
+
+  // Cross-word fallback, as nouns already have: an indeclinable adjective has
+  // one form in every cell, so its own table yields nothing. Other adjectives
+  // in the vocabulary are still plausible wrong answers.
+  if (candidates.filter(Boolean).length) {
+    for (const c of cards) {
+      if (c.id === correct.cardLemma || c.type !== 'adjective') continue
+      const d = (c as VocabAdjective).declensions
+      if (d) for (const g of GENDERS) candidates.push(d[g]?.[row] ?? d[g]?.[0])
+    }
+    for (const s of sentences) {
+      if (s.cardType === 'adjective' && s.cardLemma !== correct.cardLemma) candidates.push(s.targetForm)
+    }
+  }
+
+  const seen = new Set<string>([correct.targetForm.trim().toLowerCase()])
+  const result: string[] = []
+  for (const raw of candidates) {
+    if (result.length >= count) break
+    // Slash alternates ("pięknego/piękny") would show two answers in one button.
+    const form = raw?.split('/')[0].trim()
+    if (!form || form === '—') continue
+    const norm = form.toLowerCase()
+    if (seen.has(norm)) continue   // never offer a second correct answer (§2.3)
+    seen.add(norm)
+    result.push(form)
+  }
+  return result
+}
+
 export function getDistractors(
   correct: SentenceEntry,
   targetCase: string,
@@ -140,6 +234,13 @@ export function getDistractors(
   count: number,
   sentences: SentenceEntry[] = [],
 ): string[] {
+  // Adjectives have their own table shape (columns by gender, rows by case), so
+  // they get their own builder. Before this they fell through the `return []`
+  // below and every adjective question rendered a single option — the correct
+  // answer — which is a freebie, not a question.
+  if (correct.cardType === 'adjective') {
+    return adjectiveDistractors(correct, cards, count, sentences)
+  }
   if (correct.cardType !== 'noun') return []
   // correct is SentenceNoun from here (control-flow narrowing)
 
