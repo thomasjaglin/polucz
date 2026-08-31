@@ -190,7 +190,12 @@ card immediately, at zero cost, and it is the fallback everything else leans on.
 
 ---
 
-## 7. Shared verification
+## 7. Validation, in two layers
+
+Validation splits by what the device can actually do. Nothing here depends on
+LanguageTool being reachable from the phone — it is not, and §8 explains why.
+
+### Layer 1 — on device, always, free
 
 Applied to every record before it is stored, regardless of tier:
 
@@ -201,13 +206,113 @@ Applied to every record before it is stored, regardless of tier:
 5. it is not a duplicate of a sentence already stored for that card
 6. for generated records, the echoed form matches the requested slot
 
-These replace LanguageTool. They are weaker at grammar and **stronger at the
-failure that actually breaks a question** — the target form not being there.
-Say so plainly in any user-facing copy; do not imply grammatical validation.
+These are weaker than LanguageTool at grammar and **stronger at the failure that
+actually breaks a question** — the target form not being present. Say exactly
+that in any user-facing copy; do not imply grammatical validation.
+
+**Optional addition, not yet decided:** `nspell` + `dictionary-pl` bundles
+offline Polish spell checking into the web build for about 5 MB of pure
+JavaScript, no native code and no network. It covers the `misspelling` half of
+what the desktop script rejects on, catching invented words and typos. It will
+not catch a wrong case ending, and it false-positives on proper nouns, so it
+should rank candidates or require several unknown tokens rather than hard-reject
+on one. See §14.
+
+### Layer 2 — the desktop curation tool, optional
+
+Real grammar analysis, run on a Mac against the full LanguageTool rule engine.
+Described in §8. **The app is completely usable without it** — it is a quality
+pass, never a dependency.
 
 ---
 
-## 8. Selection at quiz time
+## 8. The desktop curation tool
+
+### Why it exists
+
+A phone cannot run LanguageTool. It is a JVM service, there is no Android build,
+and the free public API **prohibits automated requests** — self-hosting or an
+enterprise account are the documented alternatives. Pointing the app at a
+self-hosted instance was considered and rejected: Android blocks cleartext HTTP
+by default, so a LAN server at `http://192.168.1.20:8081` is refused by the
+platform before the request leaves the device, and the ways around that are
+either app-wide cleartext (weakens every request) or making the user front
+LanguageTool with TLS.
+
+So grammar validation stays on the desktop — but its job changes.
+
+### The job changes: generator → validator
+
+Today `scripts/generate-sentences.js` generates *and* validates. Once the app
+generates its own questions, desktop generation is redundant. What a laptop can
+do that a phone cannot is grammar analysis, so the tool should do only that.
+
+The flow becomes:
+
+> generate in the app → export → curate on the Mac → import back
+
+This is far cheaper than the current run:
+
+- **no LLM calls on the desktop** — no API key there, no cost, no hours-long run
+- **Tier 1 corpus sentences are skipped** — a human wrote them
+- **Tier 3 paradigm records have nothing to check** — there is no sentence
+- **only Tier 2 `generated` records are checked**, roughly a third of forms
+- **LanguageTool is local**, so no rate limit — thousands of checks in minutes
+- **only flagged sentences are reviewed**, not all of them
+
+Today every one of 1,541 sentences is swiped through by hand. Under this, only
+what LanguageTool flags is.
+
+### Setup — Docker is no longer needed
+
+Homebrew ships LanguageTool 6.8, depending only on a JDK:
+
+```
+brew install languagetool
+brew services start languagetool     # port 8081, restarts at login
+```
+
+That replaces Docker Desktop, the container and the manual `docker run`. Note the
+port differs from the script's current default of 8010.
+
+### Behaviour
+
+- **Input**: the newest `polucz-backup-*.json` in `~/Downloads`, found
+  automatically — no path argument. The app's export already lands there in one
+  tap.
+- **Scope**: records with `source: 'generated'` only.
+- **Check**: `POST /v2/check` with `language=pl`, rejecting on `issueType` of
+  `grammar` or `misspelling` — the same filter the script uses today.
+- **Review**: a local page showing **only flagged sentences**, with the offending
+  span highlighted and LanguageTool's explanation. Approve, reject, or edit in
+  place. `tools/review.html` already has the swipe UI, so this is a rework rather
+  than a rewrite.
+- **Rejection feeds back**: a rejected record is removed and its slot marked in
+  `formStatus` (§3.3), so the app can re-attempt it from another tier rather than
+  silently losing the question.
+- **Output**: written back to `~/Downloads`, ready to share to the phone.
+
+### The constraint that dictates the output format
+
+The app's import **replaces** everything — `replaceAllCards`,
+`replaceAllReviews`, `saveSentences`. So the curated file must be a **complete
+backup with the sentences amended**, never a sentences-only diff. Importing a
+partial file would wipe the vocabulary.
+
+This also depends on export including sentences, which it currently does not —
+see `in-app-sentence-generation-plan.md` §6. That fix is a prerequisite for the
+round trip, not an optional extra.
+
+### One command
+
+`npm run curate` replaces the current invocation with its environment variable,
+its `--input` path and its separate review page. Three moving parts — Docker, the
+CLI script, a standalone HTML page — collapse to one command plus a background
+service.
+
+---
+
+## 9. Selection at quiz time
 
 `getSessionQuestions` already samples with SRS-ease weighting. Extend it to:
 
@@ -220,7 +325,7 @@ Say so plainly in any user-facing copy; do not imply grammatical validation.
 
 ---
 
-## 9. Where the user meets this
+## 10. Where the user meets this
 
 - **Quiz selector** — replaces "N sentences available" with what is actually
   ready, and offers to improve coverage for the most-due cards. One action.
@@ -237,7 +342,7 @@ service's capacity.
 
 ---
 
-## 10. Lifecycle and cost
+## 11. Lifecycle and cost
 
 - Persist after **every form**, not every card; the WebView is killed when
   backgrounded and in-memory progress is lost — the prepare-audio batch's exact
@@ -254,7 +359,7 @@ it free and human-written.
 
 ---
 
-## 11. Build order
+## 12. Build order
 
 **Phase 1 — Tier 3 and the prerequisites.** §2.1, §2.2, §2.3, plus paradigm
 questions and the storage move. No network, no key, no generation. At the end of
@@ -268,11 +373,22 @@ per-card action in the word modal.
 **Phase 4 — coverage tools.** Quiz-selector top-up, bulk queue with progress and
 resumability, reject-and-retry in the quiz.
 
+**Phase 5 — the desktop curation tool (§8).** Repoint
+`scripts/generate-sentences.js` from generating to validating, move LanguageTool
+from Docker to the Homebrew service, rework `tools/review.html` to show only
+flagged sentences, and expose it as `npm run curate`.
+
+**Prerequisite for Phase 5:** export must include sentences
+(`in-app-sentence-generation-plan.md` §6). Without it the curated file cannot
+round-trip, because import replaces everything it is given.
+
 Phase 1 is independently shippable and is most of the user-visible value.
+Phase 5 is deliberately last: until the app generates its own questions, the
+desktop tool still has to generate, and it would be doing two jobs at once.
 
 ---
 
-## 12. How to prove each phase
+## 13. How to prove each phase
 
 - **§2.1** — `dom` against *W domu mieszka mój dom.* blanks only the last word
 - **§2.3** — a syncretic noun never produces a second correct option
@@ -282,10 +398,14 @@ Phase 1 is independently shippable and is most of the user-visible value.
 - **Phase 3** — a form with no corpus hit gets a generated sentence containing
   the exact form; a deliberately mismatched echo is discarded
 - **Phase 4** — a bulk run survives backgrounding the app and resumes
+- **Phase 5** — a round trip: export from the phone, curate on the Mac, import
+  back, and confirm the vocabulary and review history are intact afterwards.
+  That last check is the one that matters, because import replaces rather than
+  merges — a curated file missing `cards` would silently wipe the vocabulary.
 
 ---
 
-## 13. Open decisions
+## 14. Open decisions
 
 1. **Do paradigm questions count as "real" questions in the UI count?** They are
    valid but easier; showing 4,477 available may overstate the quiz's richness.
@@ -298,16 +418,28 @@ Phase 1 is independently shippable and is most of the user-visible value.
    demand-driven, but multiplies the form count.
 5. **What happens to the 47 `unknown`-type cards?** They have no paradigm and get
    nothing from any tier.
+6. **Bundle `nspell` + `dictionary-pl` (§7)?** About 5 MB, offline, spelling
+   only. It roughly doubles the APK, and it is the only validation a user who
+   never runs the desktop tool would ever get — which is almost all of them.
+7. **Does the curation tool stay private, or ship?** It assumes a Mac, Homebrew
+   and a JDK. As a personal tool that is fine; as something a user is expected to
+   run, it is not.
 
 ---
 
-## 14. Risks
+## 15. Risks
 
 - **Tatoeba load.** The heaviest new dependency, on a volunteer service. Caching
   and pacing are requirements, not optimisations.
 - **Corpus sentences are uncontrolled text.** They may be idiomatic, archaic or
   odd. Human-written is not the same as pedagogically ideal.
-- **No grammar validation.** Weaker than the script; §7 is the honest mitigation.
+- **Grammar validation is now optional and off-device.** Most users will never
+  run the curation tool, so in practice their questions get Layer 1 only. That is
+  a deliberate trade — §7 says what it does and does not catch — but it means the
+  shipped quality bar is the deterministic checks, not LanguageTool.
+- **The curation round trip is manual.** Export, transfer, curate, transfer back,
+  import. It is far shorter than today's process but it is still a round trip,
+  and it is the part most likely to go unused.
 - **Still no tests.** A generation bug that stores malformed questions would be
   silent, and this feature writes far more data than anything before it. The
   scheduler, storage and quiz-selection logic remain untested.

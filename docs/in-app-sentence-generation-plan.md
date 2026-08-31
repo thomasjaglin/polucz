@@ -63,7 +63,11 @@ on the main thread every time the quiz page mounts.
 > `tiered-quiz-generation-plan.md`, after measuring that 67% of inflected forms
 > have a real Tatoeba sentence when searched per form rather than per lemma.
 > §§1–2 (why the batch script cannot be ported) and §§6–8 (storage, the bundled
-> file, lifecycle) still stand.
+> file, lifecycle) still stand. **§4 is also superseded**: the free public
+> LanguageTool API prohibits automated requests outright, and a user-configured
+> endpoint founders on Android blocking cleartext HTTP. Validation is now split
+> between on-device deterministic checks and an optional desktop curation tool —
+> see `tiered-quiz-generation-plan.md` §§7–8.
 
 ## 3. The reframe
 
