@@ -1,0 +1,26 @@
+diff --git a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java
+index fd71370..44ddc5e 100644
+--- a/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java
++++ b/node_modules/@capacitor/android/capacitor/src/main/java/com/getcapacitor/plugin/SystemBars.java
+@@ -262,10 +262,17 @@ public class SystemBars extends Plugin {
+                     Locale.US,
+                     """
+                     try {
+-                      document.documentElement.style.setProperty("--safe-area-inset-top", "%dpx");
+-                      document.documentElement.style.setProperty("--safe-area-inset-right", "%dpx");
+-                      document.documentElement.style.setProperty("--safe-area-inset-bottom", "%dpx");
+-                      document.documentElement.style.setProperty("--safe-area-inset-left", "%dpx");
++                      // Inset callbacks can fire before the WebView has a
++                      // document, in which case documentElement is null and
++                      // there is nothing to set yet. A later callback carries
++                      // the same values, so skipping is not a loss — throwing
++                      // just fills the log with an error that reads like a bug.
++                      if (document.documentElement) {
++                        document.documentElement.style.setProperty("--safe-area-inset-top", "%dpx");
++                        document.documentElement.style.setProperty("--safe-area-inset-right", "%dpx");
++                        document.documentElement.style.setProperty("--safe-area-inset-bottom", "%dpx");
++                        document.documentElement.style.setProperty("--safe-area-inset-left", "%dpx");
++                      }
+                     } catch(e) { console.error('Error injecting safe area CSS:', e); }
+                     """,
+                     (int) topPx,

@@ -86,6 +86,20 @@ npm run cap:open     # open android/ in Android Studio
 The APK bundles `dist`, so it runs entirely offline and never depends on a URL
 being reachable.
 
+### A patched dependency
+
+`patches/@capacitor+android+8.4.2.patch` adds a null check to Capacitor's own
+`SystemBars.injectSafeAreaCSS`. Its inset callbacks can fire before the WebView
+has a document, and it then threw `Cannot read properties of null` into the log
+three times on most launches — noise that would hide a real error later. Gradle
+compiles Capacitor's Android sources straight out of `node_modules`, so the
+patch reaches the APK. `patch-package` reapplies it on `npm install`; if
+Capacitor is upgraded the patch will fail loudly rather than silently stop
+applying.
+
+The app itself reads `env(safe-area-inset-*)`, not the custom properties that
+injection sets, so nothing depended on it succeeding.
+
 ### Release builds
 
 `bundleRelease` needs a signing key and fails loudly without one. Copy
