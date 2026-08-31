@@ -14,6 +14,7 @@ import { AUDIO_NEEDS_PREPARING } from '../lib/audioAvailability'
 import { Capacitor } from '@capacitor/core'
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
+import { saveToDownloads } from '../lib/nativeDownloads'
 import { getGlassMode } from '../lib/glassMode'
 
 interface Props {
@@ -123,6 +124,16 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     // go to Files, Drive, email — anywhere. Directory.Cache is app-private and
     // needs no permission, and file_paths.xml already exposes cache-path to the
     // FileProvider the Share plugin resolves.
+    // Primary: drop a real file in Downloads, where the user can find it without
+    // choosing anything. MediaStore needs no permission from API 29.
+    const saved = await saveToDownloads(filename, json)
+    if (saved) {
+      pushToast(`Backup saved to ${saved.path}`, 'success')
+      return
+    }
+
+    // Fallback (API < 29, or MediaStore refused): write to the app's private
+    // cache and offer the share sheet, so there is still a way out of the app.
     try {
       await Filesystem.writeFile({
         path: filename,
@@ -136,6 +147,10 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         files: [uri],
         dialogTitle: 'Save or send your backup',
       })
+      // The cache copy is not a backup — Android evicts it and "Clear cache"
+      // deletes it. Once it has been handed off, drop it rather than leaving a
+      // ~1MB file per export lying around.
+      await Filesystem.deleteFile({ path: filename, directory: Directory.Cache }).catch(() => {})
     } catch (e) {
       // Dismissing the sheet rejects too — that is not a failure worth shouting about.
       const msg = e instanceof Error ? e.message : String(e)
