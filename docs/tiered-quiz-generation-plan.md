@@ -373,6 +373,14 @@ per-card action in the word modal.
 **Phase 4 — coverage tools.** Quiz-selector top-up, bulk queue with progress and
 resumability, reject-and-retry in the quiz.
 
+**Phase 4b — retire the bundled sentence file.** Delete
+`public/approved-sentences.json` (688 KB of the author's sentences for the
+author's vocabulary, shipped to every user) and the **Sync sentences** menu item
+that loads it. Safe from Phase 1 onward, since the paradigm tier means the quiz
+no longer needs seeded data — but do it after Phase 2 so users have a path to
+sentence-based questions before the seeded ones disappear. Rationale in
+`in-app-sentence-generation-plan.md` §7.
+
 **Phase 5 — the desktop curation tool (§8).** Repoint
 `scripts/generate-sentences.js` from generating to validating, move LanguageTool
 from Docker to the Homebrew service, rework `tools/review.html` to show only

@@ -198,6 +198,8 @@ user's own key and time, they become user-created data that a backup must carry.
 
 ## 7. The bundled file
 
+> Scheduled as **Phase 4b** in `tiered-quiz-generation-plan.md` §12.
+
 `public/approved-sentences.json` is 688 KB inside the APK, and **Sync sentences**
 loads it. It contains *your* 1,541 sentences for *your* vocabulary. Any other
 user gets a quiz about words they have never studied — the distractor logic falls
