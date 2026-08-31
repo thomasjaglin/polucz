@@ -11,6 +11,9 @@ import { useTTS } from '../lib/useTTS'
 import { pushToast } from '../lib/toastStore'
 import { useBackClose } from '../hooks/useBackClose'
 import { AUDIO_NEEDS_PREPARING } from '../lib/audioAvailability'
+import { Capacitor } from '@capacitor/core'
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 import { getGlassMode } from '../lib/glassMode'
 
 interface Props {
@@ -94,15 +97,52 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     return { version: 1, cards: getCards(), reviews: getAllReviews() }
   }
 
-  function handleExport() {
-    const blob = new Blob([JSON.stringify(buildPayload(), null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `polucz-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+  async function handleExport() {
+    const json = JSON.stringify(buildPayload(), null, 2)
+    const filename = `polucz-backup-${new Date().toISOString().slice(0, 10)}.json`
     setSettingsOpen(false)
+
+    // The browser can just download it.
+    if (!Capacitor.isNativePlatform()) {
+      const blob = new Blob([json], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+      return
+    }
+
+    // On Android that same code did NOTHING: Capacitor registers no
+    // DownloadListener, so an <a download href="blob:…"> click is swallowed with
+    // no file and no error — which is why "copy to clipboard" had to exist, and
+    // why a 761-card vocabulary once had no way out of the app.
+    //
+    // Write a real file instead and hand it to the system share sheet, so it can
+    // go to Files, Drive, email — anywhere. Directory.Cache is app-private and
+    // needs no permission, and file_paths.xml already exposes cache-path to the
+    // FileProvider the Share plugin resolves.
+    try {
+      await Filesystem.writeFile({
+        path: filename,
+        data: json,
+        directory: Directory.Cache,
+        encoding: Encoding.UTF8,
+      })
+      const { uri } = await Filesystem.getUri({ path: filename, directory: Directory.Cache })
+      await Share.share({
+        title: 'Polucz backup',
+        files: [uri],
+        dialogTitle: 'Save or send your backup',
+      })
+    } catch (e) {
+      // Dismissing the sheet rejects too — that is not a failure worth shouting about.
+      const msg = e instanceof Error ? e.message : String(e)
+      if (/cancel/i.test(msg)) return
+      console.error('Export failed', msg)
+      pushToast('Could not export — try Copy backup to clipboard', 'error')
+    }
   }
 
   const [copyLabel, setCopyLabel] = useState<'idle' | 'copied' | 'error'>('idle')

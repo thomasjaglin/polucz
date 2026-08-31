@@ -110,3 +110,6 @@ app/src/main/res/xml/config.xml
 keystore.properties
 *.jks
 *.keystore
+
+# Signature blocks extracted from a built .aab when verifying signing — never source.
+META-INF/
