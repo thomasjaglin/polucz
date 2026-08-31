@@ -5,6 +5,12 @@ user's quiz is built from *their* vocabulary with *their* key.
 
 No code here. This is the shape of the work and the decisions it needs.
 
+> **Read this for the constraints; read `tiered-quiz-generation-plan.md` for the
+> plan.** This document establishes why the batch script cannot be ported (§§1–2)
+> and the ground truth about storage, the bundled file and lifecycle (§§6–8). The
+> tiered plan is the plan of record: the source ladder, the build order and the
+> open decisions.
+
 ---
 
 ## 1. What exists today
@@ -237,36 +243,32 @@ Worth knowing before anyone starts:
 
 ---
 
-## 10. Phasing
+## 10. Phasing — moved
 
-**Phase 1 — per-card generation.** Word modal action, one call per card,
-deterministic validation, IndexedDB move, export fix. Delivers real value with no
-queue and no background work. This is the phase that matters.
+**Superseded in full.** The build order lives in
+`tiered-quiz-generation-plan.md` §12 and differs materially: Phase 1 there is the
+paradigm tier and the quiz prerequisites, not per-card generation, because the
+paradigm tables are already on the device and make the quiz work with no network,
+no key and no generation at all.
 
-**Phase 2 — quiz top-up.** From the quiz selector, generate for the N most-due
-cards. Makes the feature self-serving without the user thinking about it.
-
-**Phase 3 — bulk queue.** Progress pill, resumability, cancel, estimate. Only
-worth it for an established vocabulary like yours.
-
-**Phase 4 — optional extras.** LanguageTool endpoint setting; review screen;
-drop the bundled file.
+This section previously also listed a "LanguageTool endpoint setting", which was
+investigated and rejected — Android blocks cleartext HTTP by default. See
+`tiered-quiz-generation-plan.md` §8.
 
 ---
 
 ## 11. Open questions
 
+Only the ones this document still owns. The rest — adjective coverage,
+auto-regeneration, `unknown`-type cards, bundling a dictionary, whether the
+curation tool ships — are decisions **6** through **7** and **2**, **4**, **5** in
+`tiered-quiz-generation-plan.md` §14. Kept in one place so they cannot drift.
+
 1. **Auto-approve, or review first?** Recommendation in §5, but it is a stance,
    not a fact.
-2. **Do adjectives deserve more than nominative singular?** v1 covers 3 genders
-   only. In-app generation makes widening cheap — but multiplies the form count.
-3. **What happens to unenriched cards?** Generation needs the paradigm table, so
+2. **What happens to unenriched cards?** Every tier needs the paradigm table, so
    enrichment must come first. Should the action enrich-then-generate, or refuse
-   with an explanation?
-4. **Should a rejected sentence auto-regenerate?** Convenient, but it spends the
-   user's quota on a tap that reads as "delete".
-5. **Do the 47 `unknown`-type cards ever get quiz coverage?** They produce no
-   forms today and would stay invisible.
+   with an explanation? Not covered by the tiered plan.
 
 ---
 
