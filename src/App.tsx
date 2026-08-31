@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
+import { MotionConfig } from 'framer-motion'
 import AppBackground from './components/AppBackground'
 import PageGradient from './components/PageGradient'
 import GlassCanvas from './webgl/GlassCanvas'
@@ -270,6 +271,13 @@ export default function App() {
   }
 
   return (
+    // Motion is opt-out for anyone whose system asks for reduced motion. Doing
+    // it here rather than per component means a new <motion.*> inherits the
+    // behaviour instead of having to remember it: "user" keeps opacity fades and
+    // drops the transforms, which is the distinction the preference is actually
+    // about. Components that need finer control still call useReducedMotion —
+    // VocabListPage collapses its stagger and its height animation that way.
+    <MotionConfig reducedMotion="user">
     <div
       className="relative h-screen w-full"
       onTouchStart={handleTouchStart}
@@ -346,5 +354,6 @@ export default function App() {
       {/* Global toast stack (top of screen) */}
       <Toaster activeId={activeId} />
     </div>
+    </MotionConfig>
   )
 }

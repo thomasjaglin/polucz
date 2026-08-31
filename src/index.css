@@ -249,6 +249,9 @@ html.theme-light .kube-glass-bg::after {
 @media (prefers-reduced-motion: reduce) {
   :root::view-transition-old(page-content) { animation: vt-fade-out 0.15s linear both !important; }
   :root::view-transition-new(page-content) { animation: vt-fade-in  0.15s linear both !important; }
+  /* The page fade-in also travels 10px. Keep the fade, drop the movement —
+     the preference is about motion, not about things appearing. */
+  .animate-fade-in { animation: vt-fade-in 0.2s linear both; }
 }
 
 /* Page gradient: linger a bit longer so the colour wash is visible */
