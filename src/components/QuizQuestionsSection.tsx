@@ -44,15 +44,16 @@ export default function QuizQuestionsSection({ entry }: { entry: VocabEntry }) {
         setProgress({ done, total }))
       await load()
       setResult(
-        r.unreachable
-          ? r.added > 0
-            ? `Added ${r.added}, then the sentence corpus stopped responding — try again later`
-            : 'The sentence corpus is not responding — try again later'
-          : r.added > 0
-            ? `Added ${r.added} sentence${r.added === 1 ? '' : 's'} from real usage`
-            : r.skipped === slots.length
-              ? 'Every form already has a sentence'
-              : 'No real sentences found for these forms',
+        // A failure to reach the corpus must never read as "no sentences exist".
+        r.added === 0 && r.failed > 0
+          ? 'The sentence corpus is not responding — try again later'
+          : r.added > 0 && r.failed > 0
+            ? `Added ${r.added}; ${r.failed} lookup${r.failed === 1 ? '' : 's'} could not reach the corpus`
+            : r.added > 0
+              ? `Added ${r.added} sentence${r.added === 1 ? '' : 's'} from real usage`
+              : r.skipped === slots.length
+                ? 'Every form already has a sentence'
+                : 'No real sentences found for these forms',
       )
     } catch {
       setResult('Could not reach the sentence corpus')

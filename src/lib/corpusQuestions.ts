@@ -92,8 +92,14 @@ export interface CorpusRunResult {
   missed: number
   /** Slots that already had a stored question and were left alone. */
   skipped: number
-  /** True when the run stopped early because the corpus stopped answering. */
-  unreachable: boolean
+  /**
+   * Lookups that never reached the corpus. Distinct from `missed`: a miss means
+   * the corpus answered and had nothing, a failure means it did not answer, and
+   * conflating them tells the user no sentences exist when none were sought.
+   */
+  failed: number
+  /** True when the run gave up early after repeated refusals. */
+  stoppedEarly: boolean
 }
 
 /**
@@ -114,18 +120,20 @@ export async function generateCorpusQuestionsForCard(
   const existingText = existingQuestions.map(q => q.polish ?? '').filter(Boolean)
   const found: SentenceEntry[] = []
   let missed = 0
+  let failed = 0
   let consecutiveFailures = 0
-  let unreachable = false
+  let stoppedEarly = false
 
   for (let i = 0; i < todo.length; i++) {
     const slot = todo[i]
     const lookup = await hitsFor(slot.targetForm)
 
     if (!lookup.ok) {
+      failed++
       // Stop rather than keep knocking. Three refusals in a row means the corpus
       // is throttling or down, and the remaining slots would fail the same way;
       // every one of them still has its paradigm question regardless.
-      if (++consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) { unreachable = true; break }
+      if (++consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) { stoppedEarly = true; break }
       onProgress?.(i + 1, todo.length)
       await sleep(PACE_MS)
       continue
@@ -154,5 +162,5 @@ export async function generateCorpusQuestionsForCard(
   }
 
   await putSentences(found)
-  return { added: found.length, missed, skipped: slots.length - todo.length, unreachable }
+  return { added: found.length, missed, failed, skipped: slots.length - todo.length, stoppedEarly }
 }
