@@ -32,6 +32,13 @@ mockup.
 `screen-list`, `screen-detail`, `screen-flashcards`, `screen-quiz`, `screen-audio`
 — each in `-light` and `-dark`.
 
+## `upload/` — for Figma Make and friends
+
+Same images, long edge capped at 1400px (cut-outs) or 1000px (screens), so all twelve
+come to ~2.9 MB and can be attached to a prompt. Figma Make cannot open a link — not to
+the artifact, not to anything — so assets have to be uploaded and the brief pasted. See
+`docs/landing/figma-make-brief.md`.
+
 ## Regenerating
 
 ```sh
