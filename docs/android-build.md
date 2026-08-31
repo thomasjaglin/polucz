@@ -62,3 +62,36 @@ future upload.
 
 Minor and patch are capped at 99 by the scheme. The build fails with an
 explanatory error rather than silently producing a wrong code if you exceed it.
+
+## Curating quiz sentences (optional)
+
+The app generates its own quiz questions. This desktop pass is the one thing a
+phone cannot do: run them through the full LanguageTool rule engine and surface
+only what looks wrong.
+
+```
+brew install languagetool
+brew services start languagetool     # port 8081, restarts at login
+```
+
+Then, with a backup exported from the app (it lands in ~/Downloads):
+
+```
+npm run curate                       # newest backup, generated sentences only
+npm run curate -- --all              # also check corpus sentences
+```
+
+It writes `polucz-flagged-<date>.json`. Open `tools/review.html`, load that file,
+and keep or drop each flagged sentence — arrow keys work. Saving produces a
+complete backup to import back into the app.
+
+**Why only generated sentences by default:** corpus sentences were written by
+humans and are grammatical by construction. `--all` is still worth running
+occasionally, because a corpus sentence can match a form by spelling rather than
+by part of speech (see the homograph note in
+docs/tiered-quiz-generation-plan.md §7), and LanguageTool is the only thing in
+this pipeline that could notice.
+
+**The output is a complete backup, never a diff.** The app's import replaces
+cards, reviews and sentences with whatever it is given, so a sentences-only file
+would wipe the vocabulary on the way back in.
