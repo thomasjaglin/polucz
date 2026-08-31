@@ -5,6 +5,7 @@ import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
 import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
+import { hasStarterCards, removeStarterDeck } from '../lib/starterDeck'
 import { MODELS, PROVIDERS, clearDeepLKey, clearLlmConfig, getDeepLKey, getLlmConfig, saveDeepLKey, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
 
 interface Props {
@@ -56,6 +57,7 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [deeplKey, setDeeplKey] = useState('')
   const [theme, setThemeState] = useState<Theme>(() => getTheme())
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
+  const [starterPresent, setStarterPresent] = useState(() => hasStarterCards())
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
@@ -345,6 +347,31 @@ export default function ApiConfigPage({ onSave }: Props) {
           </div>
         )}
       </Section>
+
+      {/* Only rendered while there is something to remove: a permanent row for
+          an action most users will never need is clutter, and it names a
+          concept ("starter words") that means nothing once they are gone. */}
+      {starterPresent && (
+        <Section title="Starter words">
+          <Row
+            label="Remove the starter words"
+            hint="Deletes only the bundled samples. Words you added are untouched."
+          >
+            <button
+              onClick={() => {
+                const removed = removeStarterDeck()
+                setStarterPresent(false)
+                haptics.destructive()
+                if (removed > 0) onSave()
+              }}
+              className="relative flex h-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 px-5 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="relative z-10 font-instrument text-[14px] text-ink/70">Remove</span>
+            </button>
+          </Row>
+        </Section>
+      )}
 
       <Section title="About">
         <Row label="Polucz" hint={`Version ${__APP_VERSION__}`}>

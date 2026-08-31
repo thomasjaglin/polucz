@@ -49,6 +49,12 @@ interface VocabBase {
   id: string        // lemma — dedup key for localStorage
   enriched: boolean // false until enrich-card populates grammar tables
   audioReady?: boolean // true once the PL+EN TTS clips are cached in IndexedDB
+  /**
+   * Came from the bundled starter deck rather than from the user. Marks which
+   * cards a "remove the starter words" action may delete, so a new user can
+   * clear the samples without hunting for them among their own words.
+   */
+  starter?: boolean
   pl: string
   en: string                  // primary translation (set at card creation)
   definitions?: string[]      // secondary English senses, filled during enrichment

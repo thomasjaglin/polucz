@@ -8,6 +8,7 @@ import type { WordType, VocabEntry } from '../data/types'
 import { getAllReviews } from '../lib/reviewStorage'
 import { isConquered } from '../lib/scheduler'
 import { getLlmConfig } from '../lib/llmConfig'
+import { installStarterDeck, STARTER_COUNT } from '../lib/starterDeck'
 import GlassButton from './GlassButton'
 import type { PageId } from '../data/types'
 
@@ -27,9 +28,11 @@ interface Props {
   onChangePage: (id: PageId) => void
   /** Lets App drop the bottom scrim when there are no cards for it to fade. */
   onListEmptyChange?: (empty: boolean) => void
+  /** Empty state only: the starter deck writes to storage behind App's state. */
+  onCardsChanged?: () => void
 }
 
-export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange }: Props) {
+export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange, onCardsChanged }: Props) {
   const reduce = useReducedMotion()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -233,11 +236,16 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
                ONE action, deliberately. The obvious layout offers "add a word"
                AND "set your key" AND "import a backup", but competing calls to
                action leave a first-time user choosing instead of starting. So
-               the primary adapts to which step is actually next: with no key,
-               adding a word would fail at the LLM call and the failure wouldn't
-               explain itself, so the key IS the next step. Import stays plain
-               text — a different person (returning, with a backup), not a rival
-               button. */
+               the primary adapts to which step is actually next. Import stays
+               plain text — a different person (returning, with a backup), not a
+               rival button.
+
+               With no key the primary is the starter deck, not the key. Sending
+               someone to a provider's website before they have seen the app is
+               the wrong first step, and it isn't even necessary: flashcards, the
+               quiz and pronunciation all work with no key at all. The deck gives
+               them something to work on, which makes the key an upgrade rather
+               than a gate. */
             <motion.div
               key="first-run"
               initial={{ opacity: 0, y: 8 }}
@@ -251,15 +259,37 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               <p className="max-w-[300px] font-instrument text-[14px] leading-relaxed text-ink/55">
                 {hasLlmKey
                   ? 'Add a Polish word and Polucz fills in the rest — translation, forms and examples — then schedules it for review.'
-                  : 'Polucz fills in translations, forms and examples using an LLM of your choice. Add your key to get started.'}
+                  : `Flashcards, the quiz and pronunciation all work with no setup. Start with ${STARTER_COUNT} common Polish words and see how it feels.`}
               </p>
               <GlassButton
                 variant="primary"
-                onClick={() => onChangePage(hasLlmKey ? 'add_page' : 'api_config')}
+                onClick={() => {
+                  if (hasLlmKey) { onChangePage('add_page'); return }
+                  installStarterDeck()
+                  onCardsChanged?.()
+                }}
                 className="mt-1 px-6 py-3 font-instrument text-[15px]"
               >
-                {hasLlmKey ? 'Add your first word' : 'Add your API key'}
+                {hasLlmKey ? 'Add your first word' : `Start with ${STARTER_COUNT} common words`}
               </GlassButton>
+              {hasLlmKey ? (
+                <button
+                  onClick={() => { installStarterDeck(); onCardsChanged?.() }}
+                  className="max-w-[300px] font-instrument text-[13px] text-ink/45 underline underline-offset-4"
+                >
+                  Or start with {STARTER_COUNT} common words
+                </button>
+              ) : (
+                <p className="max-w-[300px] font-instrument text-[13px] leading-relaxed text-ink/45">
+                  Adding your own words needs an API key —{' '}
+                  <button
+                    onClick={() => onChangePage('api_config')}
+                    className="underline underline-offset-4"
+                  >
+                    set one up in App settings
+                  </button>.
+                </p>
+              )}
               <p className="max-w-[300px] font-instrument text-[13px] text-ink/45">
                 Already have a backup? Use Import JSON in the settings menu.
               </p>

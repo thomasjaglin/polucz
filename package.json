@@ -12,7 +12,8 @@
     "curate": "node scripts/curate.mjs",
     "build:corpus": "node scripts/build-corpus.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:deck": "node scripts/check-starter-deck.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -33,7 +34,9 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "dictionary-pl": "^2.0.0",
     "jsdom": "^25.0.1",
+    "nspell": "^2.1.5",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.5.3",

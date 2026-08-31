@@ -12,6 +12,10 @@ Polucz server, and nothing to sign up for.
 
 - **Vocabulary** — add a Polish word and the app fills in its translation, part
   of speech and inflected forms. Browse, search, and filter by tag or type.
+- **A starter deck** — 26 common words, fully declined and conjugated, offered
+  on first run. Flashcards and the quiz work immediately, before any key is
+  entered; the samples are marked, and App settings can remove them in one tap
+  without touching words you added.
 - **Flashcards** — spaced repetition with an SRS schedule, plus a hard mode for
   the cards you keep missing.
 - **Quiz** — fill-in-the-blank questions over the forms of your own words. See
@@ -29,7 +33,7 @@ the features that call a provider.
 
 | Feature | Needs | Notes |
 |---|---|---|
-| Pronunciation, flashcards, quiz, browsing | nothing | Works on a fresh install |
+| Pronunciation, flashcards, quiz, browsing | nothing | Works on a fresh install, on the starter deck |
 | Adding and enriching words, sentence analysis | an LLM key | Google Gemini, Anthropic Claude, or any OpenAI-compatible endpoint |
 | Translation | a DeepL key | Free tier is enough |
 
@@ -109,7 +113,14 @@ three providers.
 ```sh
 npm run build:corpus   # rebuild the Tatoeba snapshot from a fresh export
 npm run curate         # check an exported collection against a local LanguageTool
+npm run check:deck     # spell-check every form in the starter deck
 ```
+
+`check:deck` runs `src/data/starterDeck.json` through the Hunspell Polish
+dictionary. The deck ships as fact — a new user meets it before they can judge
+whether the Polish is right — so its 581 forms are machine-checked rather than
+trusted. The check catches malformed forms; it cannot catch a real word in the
+wrong grammatical slot.
 
 ## About `api/`
 

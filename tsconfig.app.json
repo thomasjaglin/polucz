@@ -17,7 +17,9 @@
     "noFallthroughCasesInSwitch": true,
     // shared/llmTasks.js is plain JS so a Vercel function can read it too.
     "allowJs": true,
-    "checkJs": false
+    "checkJs": false,
+    // src/data/starterDeck.json is imported as data by src/lib/starterDeck.ts.
+    "resolveJsonModule": true
   },
   "include": ["src", "shared"]
 }

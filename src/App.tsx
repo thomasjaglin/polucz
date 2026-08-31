@@ -253,13 +253,13 @@ export default function App() {
   const topPad = compactTop ? '1.25rem' : secondaryTop ? '58px' : '94px'
 
   function renderContent() {
-    if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} onChangePage={changePage} onListEmptyChange={setListEmpty} />
+    if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} onChangePage={changePage} onListEmptyChange={setListEmpty} onCardsChanged={() => setCards(getCards())} />
     if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} onChangePage={changePage} />
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
     if (activeId === 'question_mark') return <QuizPage />
     if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
-    if (activeId === 'api_config') return <ApiConfigPage onSave={() => changePage('folder')} />
+    if (activeId === 'api_config') return <ApiConfigPage onSave={() => { setCards(getCards()); changePage('folder') }} />
     return (
       <div className="animate-fade-in flex h-full flex-col items-center justify-center gap-4 text-center">
         <span className="material-symbols-rounded text-6xl text-ink/70">{page.icon}</span>
