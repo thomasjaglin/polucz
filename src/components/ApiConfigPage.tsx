@@ -4,6 +4,7 @@ import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
+import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
 import { MODELS, PROVIDERS, clearDeepLKey, clearLlmConfig, getDeepLKey, getLlmConfig, saveDeepLKey, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
 
 interface Props {
@@ -343,6 +344,24 @@ export default function ApiConfigPage({ onSave }: Props) {
             </button>
           </div>
         )}
+      </Section>
+
+      <Section title="About">
+        <Row label="Polucz" hint={`Version ${__APP_VERSION__}`}>
+          <span className="material-symbols-rounded text-[22px] text-ink/30">school</span>
+        </Row>
+
+        {/* The corpus is CC BY 2.0 FR: crediting Tatoeba is a licence
+            obligation, not a courtesy. The quiz credits it where its sentences
+            appear, but that view is conditional — this one always renders. */}
+        <p className="mt-5 font-instrument text-[13px] leading-relaxed text-ink/45">
+          {CORPUS_ATTRIBUTION}. Example sentences come from tatoeba.org and are
+          used under CC BY 2.0 FR.
+        </p>
+        <p className="mt-3 font-instrument text-[13px] leading-relaxed text-ink/45">
+          Pronunciation uses your device&rsquo;s own speech engine. Your vocabulary,
+          review history and API keys are stored on this device only.
+        </p>
       </Section>
     </div>
   )

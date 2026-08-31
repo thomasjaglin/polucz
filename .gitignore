@@ -27,3 +27,12 @@ polucz-backup-*.json
 polon-backup-*.json
 Vocab-list*.json
 sentences.json
+
+# Agent tooling — local scratch, not part of the app.
+.claude/
+.agents/
+skills-lock.json
+
+# Design sources for the icons and backdrops. The exported assets the app
+# actually loads live in public/.
+material/
