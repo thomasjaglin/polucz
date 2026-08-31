@@ -1,4 +1,5 @@
 import { paradigmQuestions, slotKey } from './paradigmQuestions'
+import { countOccurrences } from './questionChecks'
 import type { SentenceEntry, SentenceNoun, SentenceAdjective, ReviewState, VocabEntry, VocabNoun, VocabAdjective, NounDeclensions } from '../data/types'
 
 // ─── Display helpers ──────────────────────────────────────────────────────────
@@ -58,6 +59,13 @@ export function getSessionQuestions(
   const bySlot = new Map<string, SentenceEntry>()
   for (const s of sentences) {
     if (!s.approved || !ofType(s)) continue
+    // A sentence that does not contain its own target form cannot be blanked,
+    // so the question would show no gap and be unanswerable. Real cases exist
+    // in data written before the form was checked: "wyjście" carries the
+    // malformed form "wyść" while its sentence has the correct "wyjść", an
+    // enrichment error LanguageTool could never catch. Drop them at the point
+    // of use rather than trusting every writer forever.
+    if (s.polish && countOccurrences(s.polish, s.targetForm) !== 1) continue
     const key = slotKey(s)
     const held = bySlot.get(key)
     if (!held || rank(s) > rank(held)) bySlot.set(key, s)

@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react'
 import type { SentenceEntry, VocabEntry } from '../../data/types'
 import { checkAnswer, grammarPrompt } from '../../lib/quizLogic'
 import { haptics } from '../../lib/haptics'
+import { deleteSentence } from '../../lib/sentenceStorage'
+import { pushToast } from '../../lib/toastStore'
 import DeclensionQuestion from './DeclensionQuestion'
 import ConjugationQuestion from './ConjugationQuestion'
 import ProgressBar from '../ProgressBar'
@@ -46,6 +48,21 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
     }
   }, [current, answers, currentIdx, questions.length, onComplete])
 
+  // Reject a bad question mid-quiz. Only sentence-backed questions can be
+  // rejected: a paradigm question is the card's own table, so there is nothing
+  // to be wrong with it and nothing to fall back to.
+  const canReject = !!current?.polish
+
+  async function reject() {
+    if (!current) return
+    haptics.tap()
+    await deleteSentence(current.id)
+    // The slot is not lost — it reverts to its paradigm question, and any tier
+    // can fill it again later.
+    pushToast('Question removed', 'info')
+    handleAnswered('')
+  }
+
   if (!current) return null
 
   return (
@@ -68,6 +85,15 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
           sentence={current}
           onAnswered={handleAnswered}
         />
+      )}
+
+      {canReject && (
+        <button
+          onClick={reject}
+          className="self-center font-instrument text-[12px] text-ink/30 underline underline-offset-2 transition-colors hover:text-ink/60"
+        >
+          Report a bad sentence
+        </button>
       )}
     </div>
   )

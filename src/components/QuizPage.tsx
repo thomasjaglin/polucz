@@ -6,6 +6,7 @@ import { getSessionQuestions } from '../lib/quizLogic'
 import { paradigmQuestions, slotKey } from '../lib/paradigmQuestions'
 import { useBackClose } from '../hooks/useBackClose'
 import QuizTypeSelector from './quiz/QuizTypeSelector'
+import CoverageSection from './quiz/CoverageSection'
 import QuizSession, { type AnswerRecord } from './quiz/QuizSession'
 import SessionEndScreen from './quiz/SessionEndScreen'
 import type { SentenceEntry, VocabEntry } from '../data/types'
@@ -58,6 +59,17 @@ export default function QuizPage() {
     return stored.length + extra.length
   }, [sentences, cards])
 
+  // Slot coverage drives the phase-4 tools: how many forms have a real sentence
+  // rather than a bare prompt.
+  const coverage = useMemo(() => {
+    const slots = paradigmQuestions(cards)
+    const withSentence = new Set(sentences.filter(s => s.polish).map(slotKey))
+    return {
+      total: slots.length,
+      filled: slots.filter(s => withSentence.has(slotKey(s))).length,
+    }
+  }, [sentences, cards])
+
   function handleComplete(records: AnswerRecord[]) {
     setAnswers(records)
     setScreen('end')
@@ -68,7 +80,22 @@ export default function QuizPage() {
   }
 
   if (screen === 'selector') {
-    return <QuizTypeSelector questionCount={questionCount} onStart={handleStart} />
+    return (
+      <QuizTypeSelector
+        questionCount={questionCount}
+        onStart={handleStart}
+        coverage={
+          <CoverageSection
+            cards={cards}
+            sentences={sentences}
+            reviews={reviews}
+            slotsTotal={coverage.total}
+            slotsWithSentence={coverage.filled}
+            onChanged={() => { void getSentences().then(setSentences) }}
+          />
+        }
+      />
+    )
   }
 
   if (screen === 'session') {

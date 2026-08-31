@@ -17,7 +17,7 @@ import { rejectReason } from './questionChecks'
 import { putSentences } from './sentenceStorage'
 import { paradigmQuestionsForCard, slotKey } from './paradigmQuestions'
 import { QUIZ_SENTENCES_SCHEMA, QUIZ_SENTENCES_PROMPTS } from '../../shared/llmTasks.js'
-import type { VocabEntry, SentenceEntry } from '../data/types'
+import type { VocabEntry, SentenceEntry, ReviewState } from '../data/types'
 
 /** Describes one slot to the model in the terms the prompt expects. */
 function describeSlot(q: SentenceEntry): string {
@@ -82,6 +82,8 @@ export interface GeneratedRunResult {
   missed: number
   /** True when no LLM key is configured — nothing was attempted. */
   notConfigured: boolean
+  /** What was written, so a bulk caller can dedupe later cards against it. */
+  questions: SentenceEntry[]
 }
 
 /**
@@ -94,11 +96,11 @@ export async function generateLlmQuestionsForCard(
   card: VocabEntry,
   existingQuestions: SentenceEntry[],
 ): Promise<GeneratedRunResult> {
-  if (!getLlmConfig()) return { added: 0, missed: 0, notConfigured: true }
+  if (!getLlmConfig()) return { added: 0, missed: 0, notConfigured: true, questions: [] }
 
   const covered = new Set(existingQuestions.filter(q => q.polish).map(slotKey))
   const todo = paradigmQuestionsForCard(card).filter(s => !covered.has(slotKey(s)))
-  if (todo.length === 0) return { added: 0, missed: 0, notConfigured: false }
+  if (todo.length === 0) return { added: 0, missed: 0, notConfigured: false, questions: [] }
 
   const existingText = existingQuestions.map(q => q.polish ?? '').filter(Boolean)
   let results = await askFor(card, todo, existingText)
@@ -129,5 +131,77 @@ export async function generateLlmQuestionsForCard(
     }))
 
   await putSentences(questions)
-  return { added: questions.length, missed: todo.length - questions.length, notConfigured: false }
+  return { added: questions.length, missed: todo.length - questions.length, notConfigured: false, questions }
+}
+
+const DEFAULT_EASE = 2.5
+
+export interface BulkProgress { done: number; total: number; card: string }
+
+export interface BulkRunResult {
+  added: number
+  cardsDone: number
+  /** Cards left untouched because the run was cancelled or hit its cap. */
+  remaining: number
+  notConfigured: boolean
+  /** The provider stopped answering; the rest were not attempted. */
+  failed: boolean
+}
+
+/**
+ * Generates for the cards most worth it: those with unfilled slots, hardest
+ * first by SRS ease — the same weighting the quiz itself uses, so spending
+ * happens where the user is actually struggling.
+ *
+ * Bounded by `maxCards` rather than open-ended. Every call costs the user's own
+ * quota, and an unbounded pass over 510 cards is an hour of spending decided by
+ * one tap.
+ */
+export async function generateLlmQuestionsForCards(
+  cards: VocabEntry[],
+  existingQuestions: SentenceEntry[],
+  reviews: Record<string, ReviewState>,
+  maxCards: number,
+  onProgress?: (p: BulkProgress) => void,
+  shouldStop?: () => boolean,
+): Promise<BulkRunResult> {
+  if (!getLlmConfig()) {
+    return { added: 0, cardsDone: 0, remaining: 0, notConfigured: true, failed: false }
+  }
+
+  const covered = new Set(existingQuestions.filter(q => q.polish).map(slotKey))
+  const needy = cards
+    .filter(c => paradigmQuestionsForCard(c).some(s => !covered.has(slotKey(s))))
+    .sort((a, b) =>
+      (reviews[a.id]?.easeFactor ?? DEFAULT_EASE) - (reviews[b.id]?.easeFactor ?? DEFAULT_EASE))
+
+  const batch = needy.slice(0, maxCards)
+  // Grows as we go, so later cards see earlier sentences and cannot duplicate them.
+  const known = [...existingQuestions]
+  let added = 0, cardsDone = 0, failed = false
+
+  for (const card of batch) {
+    if (shouldStop?.()) break
+    onProgress?.({ done: cardsDone, total: batch.length, card: card.id })
+    try {
+      const r = await generateLlmQuestionsForCard(card, known)
+      added += r.added
+      // The records themselves, not their slots: later cards dedupe against the
+      // sentence TEXT, and a slot carries none.
+      known.push(...r.questions)
+    } catch {
+      // One provider failure ends the run rather than burning quota on calls
+      // that will fail the same way.
+      failed = true
+      break
+    }
+    cardsDone++
+  }
+  onProgress?.({ done: cardsDone, total: batch.length, card: '' })
+
+  return {
+    added, cardsDone,
+    remaining: Math.max(0, needy.length - cardsDone),
+    notConfigured: false, failed,
+  }
 }

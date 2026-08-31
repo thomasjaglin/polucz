@@ -194,3 +194,21 @@ export async function putSentences(sentences: SentenceEntry[]): Promise<void> {
     console.error('Could not store quiz questions', e)
   }
 }
+
+/**
+ * Removes one question. Used by the in-quiz reject: the slot falls back to its
+ * paradigm question immediately, and another tier can fill it again later.
+ */
+export async function deleteSentence(id: string): Promise<void> {
+  try {
+    const db = await openDB()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite')
+      tx.objectStore(STORE).delete(id)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (e) {
+    console.error('Could not remove question', e)
+  }
+}

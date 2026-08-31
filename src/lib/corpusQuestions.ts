@@ -93,3 +93,64 @@ export async function generateCorpusQuestionsForCard(
   await putSentences(questions)
   return { added: questions.length, missed, skipped, unavailable: false }
 }
+
+/**
+ * Fills every card's slots in ONE pass over the snapshot.
+ *
+ * This is why tier 1 stopped needing a queue. The network version was ~4,000
+ * requests at up to 10s each; the snapshot answers every form in a single scan,
+ * because the cost is per-scan, not per-form. Progress is still reported so a
+ * slow device can show something, but this is seconds, not hours.
+ */
+export async function generateCorpusQuestionsForAll(
+  cards: VocabEntry[],
+  existingQuestions: SentenceEntry[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<CorpusRunResult> {
+  const covered = new Set(existingQuestions.filter(q => q.polish).map(slotKey))
+  const todo: SentenceEntry[] = []
+  for (const card of cards) {
+    for (const slot of paradigmQuestionsForCard(card)) {
+      if (!covered.has(slotKey(slot))) todo.push(slot)
+    }
+  }
+  if (todo.length === 0) return { added: 0, missed: 0, skipped: 0, unavailable: false }
+  if (!(await corpusAvailable())) {
+    return { added: 0, missed: 0, skipped: 0, unavailable: true }
+  }
+
+  const found = await findSentences(todo.map(s => s.targetForm))
+
+  // Dedupe across the whole vocabulary, not just within a card: the same
+  // sentence can contain forms of two different words, and using it twice would
+  // make one of the two questions answerable from memory of the other.
+  const existingText = existingQuestions.map(q => q.polish ?? '').filter(Boolean)
+  const used = new Set(existingText.map(t => t.trim().toLowerCase()))
+  const questions: SentenceEntry[] = []
+  let missed = 0
+
+  for (let i = 0; i < todo.length; i++) {
+    const slot = todo[i]
+    const candidates = (found.get(slot.targetForm.trim().toLowerCase()) ?? [])
+      .filter(c => !used.has(c.trim().toLowerCase()))
+    const sentence = pickSentence(candidates, slot.targetForm, [])
+    if (sentence) {
+      used.add(sentence.trim().toLowerCase())
+      questions.push({
+        ...slot, id: slotKey(slot), polish: sentence,
+        source: 'corpus', approved: true,
+      })
+    } else {
+      missed++
+    }
+    // Yield occasionally so the progress bar can paint on a long list.
+    if (i % 200 === 0) {
+      onProgress?.(i, todo.length)
+      await new Promise(r => setTimeout(r, 0))
+    }
+  }
+  onProgress?.(todo.length, todo.length)
+
+  await putSentences(questions)
+  return { added: questions.length, missed, skipped: 0, unavailable: false }
+}

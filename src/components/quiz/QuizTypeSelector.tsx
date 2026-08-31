@@ -4,9 +4,11 @@ interface Props {
   /** Questions ready to ask — stored sentences plus computed paradigm slots. */
   questionCount: number
   onStart: (type: 'declension' | 'conjugation') => void
+  /** Coverage tools, rendered below the two quiz types. */
+  coverage?: React.ReactNode
 }
 
-export default function QuizTypeSelector({ questionCount, onStart }: Props) {
+export default function QuizTypeSelector({ questionCount, onStart, coverage }: Props) {
   const hasEnough = questionCount >= 4
 
   return (
@@ -55,6 +57,8 @@ export default function QuizTypeSelector({ questionCount, onStart }: Props) {
           <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] text-ink/25">chevron_right</span>
         </div>
       </GlassButton>
+
+      {coverage}
     </div>
   )
 }
