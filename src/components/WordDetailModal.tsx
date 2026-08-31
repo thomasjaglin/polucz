@@ -8,6 +8,7 @@ import {
   typeLabel,
 } from '../data/types'
 import GlassPane from './GlassPane'
+import QuizQuestionsSection from './QuizQuestionsSection'
 import GlassButton from './GlassButton'
 import MasteredBurst from './MasteredBurst'
 import MasteredLightBands from './MasteredLightBands'
@@ -726,6 +727,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
 
             {/* Translation via DeepL */}
             <ExamplesSection word={entry.pl} mastered={mastered} />
+            <QuizQuestionsSection entry={entry} />
             </div>
           </div>
         </div>

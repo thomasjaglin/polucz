@@ -15,7 +15,8 @@ import type { SentenceEntry } from '../data/types'
 
 const DB_NAME = 'polucz-quiz'
 const STORE = 'sentences'
-const VERSION = 1
+const CORPUS_STORE = 'corpusCache'
+const VERSION = 2
 const LEGACY_KEY = 'polucz_sentences'
 
 let dbPromise: Promise<IDBDatabase> | null = null
@@ -31,6 +32,13 @@ function openDB(): Promise<IDBDatabase> {
         // select by card and by question type.
         store.createIndex('cardLemma', 'cardLemma', { unique: false })
         store.createIndex('cardType', 'cardType', { unique: false })
+      }
+      // v2: what the corpus returned for a form, INCLUDING when it returned
+      // nothing. Without negative entries the ~third of forms the corpus will
+      // never cover get re-queried on every attempt, hammering a volunteer
+      // service for a result that cannot change.
+      if (!req.result.objectStoreNames.contains(CORPUS_STORE)) {
+        req.result.createObjectStore(CORPUS_STORE, { keyPath: 'form' })
       }
     }
     req.onsuccess = () => resolve(req.result)
@@ -125,4 +133,65 @@ export async function clearSentences(): Promise<void> {
   try {
     await writeAll(await openDB(), [])
   } catch { /* nothing to clear */ }
+}
+
+// ─── Corpus cache (tier 1) ───────────────────────────────────────────────────
+
+export interface CorpusHit { polish: string; english: string; ref?: string }
+
+export interface CorpusCacheEntry {
+  /** Exact inflected form searched for — the store's key. */
+  form: string
+  /** Empty when the corpus had nothing: a negative result worth remembering. */
+  hits: CorpusHit[]
+  fetchedAt: number
+}
+
+export async function getCorpusCache(form: string): Promise<CorpusCacheEntry | null> {
+  try {
+    const db = await openDB()
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(CORPUS_STORE, 'readonly').objectStore(CORPUS_STORE).get(form)
+      req.onsuccess = () => resolve((req.result as CorpusCacheEntry) ?? null)
+      req.onerror = () => reject(req.error)
+    })
+  } catch {
+    return null
+  }
+}
+
+export async function putCorpusCache(entry: CorpusCacheEntry): Promise<void> {
+  try {
+    const db = await openDB()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(CORPUS_STORE, 'readwrite')
+      tx.objectStore(CORPUS_STORE).put(entry)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch { /* a cache miss next time is the only cost */ }
+}
+
+// ─── Upsert (tiers 1 and 2) ──────────────────────────────────────────────────
+
+/**
+ * Adds or replaces individual questions, leaving the rest of the set alone.
+ * saveSentences() replaces everything, which is right for Import but wrong for
+ * a tier that fills one slot at a time.
+ */
+export async function putSentences(sentences: SentenceEntry[]): Promise<void> {
+  if (sentences.length === 0) return
+  try {
+    await ensureMigrated()
+    const db = await openDB()
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite')
+      const store = tx.objectStore(STORE)
+      for (const s of sentences) if (s?.id) store.put(s)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error)
+    })
+  } catch (e) {
+    console.error('Could not store quiz questions', e)
+  }
 }

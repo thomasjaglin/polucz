@@ -145,6 +145,8 @@ interface SentenceBase {
   approved: boolean
   /** Undefined on pre-tier data, which all came from the desktop script. */
   source?: QuestionSource
+  /** Corpus records only: the Tatoeba sentence id, so it can be traced back. */
+  sourceRef?: string
 }
 
 export interface SentenceNoun extends SentenceBase {

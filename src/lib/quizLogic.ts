@@ -52,7 +52,17 @@ export function getSessionQuestions(
       ? s.cardType === 'noun' || s.cardType === 'adjective'
       : s.cardType === 'verb'
 
-  const stored = sentences.filter(s => s.approved && ofType(s))
+  // One question per slot. Legacy script records key on a UUID while corpus and
+  // generated ones key on the slot, so the same form can be present twice; and a
+  // corpus sentence is preferred over a generated one because a human wrote it.
+  const bySlot = new Map<string, SentenceEntry>()
+  for (const s of sentences) {
+    if (!s.approved || !ofType(s)) continue
+    const key = slotKey(s)
+    const held = bySlot.get(key)
+    if (!held || rank(s) > rank(held)) bySlot.set(key, s)
+  }
+  const stored = [...bySlot.values()]
 
   // Paradigm questions fill slots no stored sentence covers. A sentence is the
   // better question — it has context — so it always wins its slot, and the
@@ -65,6 +75,13 @@ export function getSessionQuestions(
     chosen.push(...sample(paradigm, count - chosen.length, reviews))
   }
   return shuffle(chosen)
+}
+
+/** Corpus beats generated beats a record with no source (the desktop script). */
+function rank(s: SentenceEntry): number {
+  if (s.source === 'corpus') return 3
+  if (s.source === 'paradigm') return 1
+  return 2
 }
 
 /**
