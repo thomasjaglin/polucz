@@ -126,29 +126,72 @@ Move sentences from localStorage to IndexedDB, as set out in the previous plan
 
 ## 4. Tier 1 — corpus
 
-**Query.** The same Tatoeba endpoint the app already uses for card examples
-(`api_v0/search?query=<form>&from=pol&to=eng`), searched on the **exact inflected
-form**, not the lemma.
+**Revised after implementation.** Phase 2 was built against the live search API,
+then measured. The measurements say to use the offline corpus export instead.
 
-**Accept a result only if** the returned Polish sentence contains that form as a
-whole word (§2.1 matching), an English translation exists, and the sentence is
-within a sensible length band. Prefer the shortest passing sentence: short
-sentences make better cloze questions and are less likely to contain a second
-occurrence.
+### What the live API costs
 
-**Reject if** the sentence contains the target string more than once — blanking
-both leaves an unanswerable question.
+`tatoeba.org/en/api_v0/search`, one request per inflected form, works — but its
+latency swings from **0.3s to over 10s** for identical queries. A 6s client
+timeout turned that variance into apparent refusals, which is what the first
+implementation reported as "the corpus is not responding".
 
-**Pacing and politeness.** Tatoeba is a volunteer project. The app already
-depends on it, but this makes it a much heavier caller.
+At 10s a lookup, a single card is up to 80 seconds and any bulk pass is
+impossible. It also puts sustained load on a volunteer service for data that is
+published for download precisely so tools do not have to do that.
 
-- serial per card, with a short delay between requests; at most 2 concurrent
-- always consult `corpusCache` first, including negative entries
-- never run a bulk pass without an explicit user action
-- on any HTTP error or timeout, fall straight through to Tier 2 rather than
-  retrying — a slow corpus should never block a question
+### What the offline export costs — measured
 
-**Cost of a card:** roughly 8 lookups, a few seconds. Free.
+Tatoeba publishes weekly per-language exports, and states plainly that bulk
+download is the intended path for language tools.
+
+| | |
+|---|---|
+| `pol_sentences.tsv.bz2` | **1.74 MB** compressed, 6.6 MB raw, **137,150 sentences** |
+| `pol-eng_links.tsv.bz2` | **0.52 MB** compressed |
+| Download time | **0.6s** |
+| Index build | **0.5s** for all 137,150 |
+| Licence | CC BY 2.0 FR — **attribution required** |
+
+Coverage against the real vocabulary, over every form rather than a sample:
+
+- **3,784** distinct forms wanted (fewer than the 4,477 slots, because
+  syncretism means slots share strings)
+- **2,031 covered — 54%**, median **7** sentences per covered form
+
+The earlier 67% came from an 18-form sample skewed toward common words. 54% is
+the real figure.
+
+### English translations are not worth their price
+
+`eng_sentences.tsv.bz2` is **24.85 MB** — eleven times the Polish data. And
+requiring a translation *reduces* coverage to **1,738 forms (46%)**, because
+only 78,570 of the 137,150 Polish sentences are linked to English.
+
+So: ship Polish only. `english` is already optional on the record, and the
+declension question omits the translation line when it is absent. An 8-point
+coverage gain and a 92% smaller download both argue the same way.
+
+### The design that follows
+
+1. **Download the snapshot once**, on an explicit action, over ~2.3 MB.
+2. **Build an inverted index** form → sentence ids, in memory or IndexedDB.
+   Half a second for the whole corpus.
+3. **Every lookup is local**: instant, offline, no latency variance, no rate
+   limit, no politeness budget, and no need for a negative cache — a form either
+   is in the snapshot or is not, and that answer is free to recompute.
+4. **Re-download occasionally**, since exports refresh weekly. Nothing breaks if
+   the snapshot is stale.
+5. **Attribute Tatoeba** wherever corpus sentences are shown. CC BY 2.0 FR
+   requires it, and it is the right thing regardless.
+
+This deletes most of §4's original complexity: the pacing, the concurrency cap,
+the negative-cache TTL, and the stop-after-three-refusals rule all existed to
+manage a network dependency that no longer exists per lookup.
+
+**What the live API is still good for:** nothing this app needs. It is not worth
+keeping as a fallback for the 46% the snapshot misses — those forms fall to
+tier 2 or tier 3, which is what the ladder is for.
 
 ---
 
@@ -365,8 +408,10 @@ it free and human-written.
 questions and the storage move. No network, no key, no generation. At the end of
 this phase the quiz works for all 759 enriched cards for the first time.
 
-**Phase 2 — Tier 1.** Corpus lookup, cache with negative entries, verification,
-per-card action in the word modal.
+**Phase 2 — Tier 1.** Corpus lookup, verification, per-card action in the word
+modal. **Partly built against the live API and now superseded by §4's offline
+export** — the verification, storage, dedupe and UI all carry over; the
+per-form network lookup, its pacing and its negative cache do not.
 
 **Phase 3 — Tier 2.** LLM fill-in for missing slots, echo verification, retry.
 
@@ -437,8 +482,11 @@ desktop tool still has to generate, and it would be doing two jobs at once.
 
 ## 15. Risks
 
-- **Tatoeba load.** The heaviest new dependency, on a volunteer service. Caching
-  and pacing are requirements, not optimisations.
+- **Tatoeba load — largely resolved.** Moving to the offline export means one
+  ~2.3 MB download instead of thousands of requests. Attribution (CC BY 2.0 FR)
+  becomes the outstanding obligation.
+- **A stale snapshot.** Exports refresh weekly; a snapshot from months ago simply
+  covers slightly less. Worth a re-download prompt, not worth engineering around.
 - **Corpus sentences are uncontrolled text.** They may be idiomatic, archaic or
   odd. Human-written is not the same as pedagogically ideal.
 - **Grammar validation is now optional and off-device.** Most users will never

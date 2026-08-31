@@ -19,7 +19,9 @@ import {
 import { paradigmQuestionsForCard, slotKey } from './paradigmQuestions'
 import type { VocabEntry, SentenceEntry } from '../data/types'
 
-const SEARCH_TIMEOUT_MS = 6000
+// Measured: identical queries answer anywhere from 0.3s to over 10s. Six
+// seconds reported healthy-but-slow responses as refusals.
+const SEARCH_TIMEOUT_MS = 15000
 /** Politeness gap between lookups. Tatoeba is volunteer-run. */
 const PACE_MS = 350
 /** A cached miss is trusted for this long before it is worth asking again. */
