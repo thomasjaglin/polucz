@@ -5,6 +5,7 @@ import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import type { PageId, VocabEntry } from '../data/types'
 import { getCards, replaceAllCards } from '../lib/storage'
+import { buildBackup, backupFilename, parseBackup } from '../lib/backup'
 import { getAllReviews, replaceAllReviews } from '../lib/reviewStorage'
 import { saveSentences, getSentences } from '../lib/sentenceStorage'
 import { useTTS } from '../lib/useTTS'
@@ -95,15 +96,12 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
   }, [settingsOpen])
 
   async function buildPayload() {
-    // Sentences are included because they are now user-created data: the tiered
-    // plan generates them on the device, so a backup that omits them loses work.
-    // Import already accepts the field.
-    return { version: 1, cards: getCards(), reviews: getAllReviews(), sentences: await getSentences() }
+    return buildBackup(getCards(), getAllReviews(), await getSentences())
   }
 
   async function handleExport() {
     const json = JSON.stringify(await buildPayload(), null, 2)
-    const filename = `polucz-backup-${new Date().toISOString().slice(0, 10)}.json`
+    const filename = backupFilename()
     setSettingsOpen(false)
 
     // The browser can just download it.
@@ -189,18 +187,17 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
     const reader = new FileReader()
     reader.onload = async (ev) => {
       try {
-        const data = JSON.parse(ev.target?.result as string)
-        if (!Array.isArray(data.cards) || typeof data.reviews !== 'object') {
-          pushToast('Invalid backup file', 'error')
+        const result = parseBackup(ev.target?.result as string)
+        if (!result.ok) {
+          pushToast(result.reason, 'error')
           return
         }
-        replaceAllCards(data.cards)
-        replaceAllReviews(data.reviews)
-        if (Array.isArray(data.sentences) && data.sentences.length > 0) {
-          await saveSentences(data.sentences)
-        }
+        const { cards, reviews, sentences } = result.backup
+        replaceAllCards(cards)
+        replaceAllReviews(reviews)
+        if (sentences.length > 0) await saveSentences(sentences)
         onImport()
-        pushToast(`Imported ${data.cards.length} cards`, 'success')
+        pushToast(`Imported ${cards.length} cards`, 'success')
       } catch {
         pushToast('Could not read the file — not a valid Polucz backup', 'error')
       }

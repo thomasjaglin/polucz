@@ -91,6 +91,19 @@ it in, or set `POLUCZ_KEYSTORE_FILE`, `POLUCZ_KEYSTORE_PASSWORD`,
 
 The version code is derived from `package.json`'s `version`, so bump it there.
 
+### Tests
+
+```sh
+npm test          # once
+npm run test:watch
+```
+
+Vitest, covering the places where a silent bug costs data rather than pixels:
+the SRS schedule in `src/lib/scheduler.ts`, the card store in
+`src/lib/storage.ts`, backup parsing in `src/lib/backup.ts`, and the
+schema-strictify step in `src/lib/llmClient.ts` that adapts one shared schema to
+three providers.
+
 ### Other scripts
 
 ```sh

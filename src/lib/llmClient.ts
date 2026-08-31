@@ -44,7 +44,7 @@ export function withTimeout<T>(p: Promise<T>, ms: number, label: string): Promis
 // Anthropic and OpenAI's strict mode reject objects that don't close themselves
 // off, and OpenAI additionally wants every property listed in `required`. The
 // shared schemas are written for Gemini, which asks for neither.
-function strictify(schema: unknown, requireAll: boolean): unknown {
+export function strictify(schema: unknown, requireAll: boolean): unknown {
   if (!schema || typeof schema !== 'object') return schema
   if (Array.isArray(schema)) return schema.map(s => strictify(s, requireAll))
 
