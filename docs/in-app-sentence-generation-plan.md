@@ -58,6 +58,13 @@ on the main thread every time the quiz page mounts.
 
 ---
 
+> **Superseded in part.** §3's per-card generation model was replaced by a source
+> ladder — corpus first, LLM second, paradigm table as a floor — in
+> `tiered-quiz-generation-plan.md`, after measuring that 67% of inflected forms
+> have a real Tatoeba sentence when searched per form rather than per lemma.
+> §§1–2 (why the batch script cannot be ported) and §§6–8 (storage, the bundled
+> file, lifecycle) still stand.
+
 ## 3. The reframe
 
 **Stop thinking in batches over a vocabulary. Generate per card, on demand.**
