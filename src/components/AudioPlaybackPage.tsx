@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Capacitor } from '@capacitor/core'
 import { motion, AnimatePresence } from 'framer-motion'
 import { type VocabEntry, typeLabel } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
 import { hasCachedClips } from '../lib/audioCache'
+import { AUDIO_NEEDS_PREPARING, isAudioAvailable } from '../lib/audioAvailability'
 import { usePlaybackRate, setPlaybackRate, RATE_OPTIONS } from '../lib/playbackRate'
 import { useBackClose } from '../hooks/useBackClose'
 import GlassPane from './GlassPane'
@@ -115,7 +115,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
   // outright) and playSequence speaks uncached text directly. The cache is
   // therefore always empty on Android, and verifying against it emptied a page
   // whose cards were all perfectly playable. Trust the flag there.
-  const verifyCache = !Capacitor.isNativePlatform()
+  const verifyCache = AUDIO_NEEDS_PREPARING
   const [cachedIds, setCachedIds] = useState<Set<string> | null>(null)
   useEffect(() => {
     if (!verifyCache) return
@@ -126,7 +126,10 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
     return () => { cancelled = true }
   }, [cards, verifyCache])
 
-  const isReady = (c: VocabEntry) => cachedIds ? cachedIds.has(c.id) : !!c.audioReady
+  // Natively every card plays via the device engine, so none are excluded —
+  // gating on the flag hid cards that were perfectly playable.
+  const isReady = (c: VocabEntry) =>
+    cachedIds ? cachedIds.has(c.id) : isAudioAvailable(c.audioReady)
   const availableCount = cards.filter(isReady).length
 
   // Refs that need to be readable inside effects without triggering re-renders

@@ -14,6 +14,7 @@ import MasteredLightBands from './MasteredLightBands'
 import { useTTS } from '../lib/useTTS'
 import { llmHeaders } from '../lib/llmConfig'
 import { haptics } from '../lib/haptics'
+import { isAudioAvailable, AUDIO_NEEDS_PREPARING } from '../lib/audioAvailability'
 import { getGlassMode } from '../lib/glassMode'
 import { useBackClose } from '../hooks/useBackClose'
 import { pushToast } from '../lib/toastStore'
@@ -507,7 +508,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
   // is how the vocabulary gets its audio without a burst that trips the rate
   // limit — the audio player then only uses cards that are already cached.
   useEffect(() => {
-    if (entry.audioReady) return
+    // Natively prefetch is a no-op that returns true, so this only wrote a flag
+    // meaning "a modal was opened once". Skip it rather than record that.
+    if (!AUDIO_NEEDS_PREPARING || entry.audioReady) return
     let cancelled = false
     tts.prefetch(entry.pl, entry.en).then(ok => {
       if (ok && !cancelled) onAudioReady(entry.id)
@@ -626,12 +629,12 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 )}
                 {entry.enriched && (
                   <span
-                    aria-label={entry.audioReady ? 'Fully prepared (details + audio)' : 'Details populated'}
+                    aria-label={AUDIO_NEEDS_PREPARING && isAudioAvailable(entry.audioReady) ? 'Fully prepared (details + audio)' : 'Details populated'}
                     // Same gating as the star above. Literal colour rather than
                     // the accent token because this modal is still dark-only.
                     className={`material-symbols-rounded shrink-0 text-[18px] leading-none ${mastered ? 'holo-icon' : 'text-accent/70'}`}
                   >
-                    {entry.audioReady ? 'done_all' : 'done'}
+                    {AUDIO_NEEDS_PREPARING && isAudioAvailable(entry.audioReady) ? 'done_all' : 'done'}
                   </span>
                 )}
               </div>

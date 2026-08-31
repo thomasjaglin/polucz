@@ -10,6 +10,7 @@ import { saveSentences } from '../lib/sentenceStorage'
 import { useTTS } from '../lib/useTTS'
 import { pushToast } from '../lib/toastStore'
 import { useBackClose } from '../hooks/useBackClose'
+import { AUDIO_NEEDS_PREPARING } from '../lib/audioAvailability'
 import { getGlassMode } from '../lib/glassMode'
 
 interface Props {
@@ -46,7 +47,9 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
   const [prepConfirm, setPrepConfirm] = useState(false)
   const [prepProgress, setPrepProgress] = useState<{ done: number; total: number } | null>(null)
   const prepCancel = useRef(false)
-  const incompleteCount = cards.filter(c => !c.audioReady).length
+  // Natively there is nothing to prepare — see audioAvailability.ts. The
+  // count stays 0 so the button and its modal never appear.
+  const incompleteCount = AUDIO_NEEDS_PREPARING ? cards.filter(c => !c.audioReady).length : 0
 
   async function runPrepare() {
     const todo = cards.filter(c => !c.audioReady)
@@ -195,7 +198,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
         >
           {/* Prepare audio for all cards missing it (left of add + settings).
               While running it becomes a glass pill: "done/total" + spinner. */}
-          {prepProgress ? (
+          {!AUDIO_NEEDS_PREPARING ? null : prepProgress ? (
             <button
               onClick={() => setPrepConfirm(true)}
               aria-label={`Preparing audio ${prepProgress.done} of ${prepProgress.total}`}
