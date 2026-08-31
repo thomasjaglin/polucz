@@ -3,6 +3,8 @@ import { Capacitor } from '@capacitor/core'
 import { TextToSpeech } from '@capacitor-community/text-to-speech'
 import { getCachedClip, putCachedClip } from './audioCache'
 import { getPlaybackRate, subscribeRate } from './playbackRate'
+import { isMissingVoiceError, noteMissingVoice, MISSING_VOICE_MESSAGE } from './ttsVoice'
+import { pushToast } from './toastStore'
 
 // On Android the device's own speech engine does the talking. It needs no key,
 // no network and no preparation, and it works whichever LLM the user picked —
@@ -221,8 +223,16 @@ export function useTTS() {
       }
 
       if (!abortRef.current) setState('idle')
-    } catch {
-      if (!abortRef.current) setState('error')
+    } catch (e) {
+      if (abortRef.current) return
+      setState('error')
+      // The engine refusing Polish is not a fault the user can read off a
+      // two-second error icon: the app is simply mute, with nothing saying why.
+      // Name it, and point at the fix — App settings carries the button.
+      if (isMissingVoiceError(e)) {
+        noteMissingVoice()
+        pushToast(`${MISSING_VOICE_MESSAGE} — see App settings`, 'error')
+      }
     }
   }, [stop, getBlob, getCachedBlob, playOne])
 

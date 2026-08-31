@@ -21,7 +21,8 @@ Polucz server, and nothing to sign up for.
 - **Quiz** — fill-in-the-blank questions over the forms of your own words. See
   [Where quiz questions come from](#where-quiz-questions-come-from).
 - **Pronunciation** — the device's own speech engine reads Polish aloud. Needs
-  no key and no network.
+  no key and no network. If the device has no Polish voice installed, App
+  settings says so and opens the screen where one can be added.
 - **Import / export** — the whole collection as one JSON file, written to your
   Downloads folder.
 

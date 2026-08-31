@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
@@ -6,6 +6,7 @@ import { haptics } from '../lib/haptics'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
 import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
 import { hasStarterCards, removeStarterDeck } from '../lib/starterDeck'
+import { polishVoiceStatus, openVoiceSettings, MISSING_VOICE_MESSAGE, type VoiceStatus } from '../lib/ttsVoice'
 import { MODELS, PROVIDERS, clearDeepLKey, clearLlmConfig, getDeepLKey, getLlmConfig, saveDeepLKey, saveLlmConfig, type LlmConfig, type Provider } from '../lib/llmConfig'
 
 interface Props {
@@ -58,6 +59,11 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [theme, setThemeState] = useState<Theme>(() => getTheme())
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
   const [starterPresent, setStarterPresent] = useState(() => hasStarterCards())
+  // Asked once when the page opens, and again after a trip to the install
+  // screen: the answer only changes while the user is out of the app.
+  const [voice, setVoice] = useState<VoiceStatus | null>(null)
+  const [voiceNote, setVoiceNote] = useState<string | null>(null)
+  useEffect(() => { polishVoiceStatus().then(setVoice) }, [])
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
@@ -347,6 +353,45 @@ export default function ApiConfigPage({ onSave }: Props) {
           </div>
         )}
       </Section>
+
+      {/* Pronunciation depends on something the app does not ship. Only shown
+          when the engine says it cannot speak Polish, or when it could not be
+          asked — a working device should not be told about a problem it does
+          not have. */}
+      {(voice === 'missing' || voice === 'unknown') && (
+        <Section title="Pronunciation">
+          <Row
+            label={voice === 'missing' ? MISSING_VOICE_MESSAGE : 'Could not check the speech engine'}
+            hint={voice === 'missing'
+              ? 'Polish words will be silent until one is added. Everything else works.'
+              : 'Pronunciation may not work on this device.'}
+          >
+            <button
+              onClick={async () => {
+                const opened = await openVoiceSettings()
+                haptics.tap()
+                if (opened === 'none') {
+                  setVoiceNote('This device has no screen for that. Look under Settings → System → Languages & input → Text-to-speech output.')
+                  return
+                }
+                setVoiceNote(opened === 'settings'
+                  ? 'Opened text-to-speech settings — add Polish under your engine’s language data.'
+                  : null)
+                // Re-ask on the way back rather than assuming it worked.
+                setVoice(null)
+                polishVoiceStatus().then(setVoice)
+              }}
+              className="relative flex h-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 px-5 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+            >
+              <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
+              <span className="relative z-10 font-instrument text-[14px] text-ink/70">Add a voice</span>
+            </button>
+          </Row>
+          {voiceNote && (
+            <p className="mt-4 font-instrument text-[13px] leading-relaxed ink-tertiary">{voiceNote}</p>
+          )}
+        </Section>
+      )}
 
       {/* Only rendered while there is something to remove: a permanent row for
           an action most users will never need is clutter, and it names a
