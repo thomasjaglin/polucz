@@ -560,12 +560,14 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
       </p>
       <p className="mt-1.5 font-instrument text-[13px] leading-relaxed text-ink/70">
         It is separate from the LLM key, and free-tier keys end in <code>:fx</code>. Everything
-        else in Polucz works without it —{' '}
+        else in Polucz works without it — set it up in the{' '}
+        {/* Only the destination is the link: underlining the whole sentence
+            makes the words around it look clickable too. */}
         <button
           onClick={() => onChangePage('api_config')}
           className="font-medium text-err underline underline-offset-4"
         >
-          set it up in the App settings
+          App settings
         </button>.
       </p>
     </div>

@@ -1289,56 +1289,56 @@
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 602,
+      "line": 604,
       "kind": "text",
       "text": "Add →"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 607,
+      "line": 609,
       "kind": "text",
       "text": "← Clear"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 644,
+      "line": 646,
       "kind": "text",
       "text": "Added to vocabulary"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 647,
+      "line": 649,
       "kind": "text",
       "text": "Already in your vocabulary"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 712,
+      "line": 714,
       "kind": "text",
       "text": "Polish"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 721,
+      "line": 723,
       "kind": "label",
       "text": "Swap languages"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 721,
+      "line": 723,
       "kind": "aria-label",
       "text": "Swap languages"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 751,
+      "line": 753,
       "kind": "text",
       "text": "English"
     },
