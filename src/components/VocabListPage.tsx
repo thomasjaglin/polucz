@@ -252,16 +252,10 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               className="mt-6"
             >
               <EmptyLibraryState
-                icon="book_2"
+                useLogo
                 title="Your vocabulary starts here"
                 onChangePage={onChangePage}
-              >
-                Polucz keeps the words you meet, with every form and real examples, and brings them
-                back until you know them.
-              </EmptyLibraryState>
-              <p className="mt-4 text-center font-instrument text-[13px] ink-tertiary">
-                Already have a backup? Use Import JSON in the settings menu.
-              </p>
+              />
             </motion.div>
           ) : (
             /* Cards exist; the current view just excludes them. Name which of
