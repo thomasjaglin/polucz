@@ -41,3 +41,23 @@ export const tagImages: Record<string, string> = {
   adjective: '/tags/Adj.png',
   unknown: '/tags/Other.png',
 }
+
+// Blob wash behind the committing action on a screen — the "solid pill" button.
+// Same recipe as the tags (overlapping blurred ellipses) but a single colourway:
+// buttons have no taxonomy to encode, so one wash reads as a system where five
+// would read as five arbitrary choices.
+//
+// Traced from the design system file, node 20:64. The ellipses live in a padded
+// 573×263 field so the blur never meets an edge; the button's own rounded
+// overflow does the masking, which is what the Figma mask group does there.
+// Sixty units of that padding are pure margin — the button occupies x 112–488,
+// y 118–168 of the field.
+//
+// Figma layers three blurs (group 38.1, ellipses 17.4/4/17.4). Gaussians compose
+// as sqrt(a²+b²), which puts all three between 19.2 and 20.9, so one pass at 20
+// is indistinguishable and avoids SVG filter-region clipping. Figma's per-ellipse
+// NOISE at 25% is dropped: it sits under a 20px blur and cannot survive it.
+//
+// Unlike the tag gradients this blends normally rather than screening, so it
+// holds its colour on the light page instead of washing out to white.
+export const buttonGradient = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 573 263" preserveAspectRatio="none" class="h-full w-full"><defs><filter id="polucz-btn-wash" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="20"/></filter></defs><g filter="url(#polucz-btn-wash)"><g transform="matrix(0.9748,-0.223,0.6966,0.7174,60,103.351)"><ellipse cx="97.205" cy="54.575" rx="97.205" ry="54.575" fill="#4AE2F3"/></g><ellipse cx="289.7" cy="168" rx="162.245" ry="35" fill="#DC6EF5" fill-opacity="0.74"/><ellipse cx="449.5" cy="125.5" rx="63.5" ry="27.5" fill="#223EB8" fill-opacity="0.97"/></g></svg>`

@@ -2,6 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
+import SolidButton from './SolidButton'
 import { haptics } from '../lib/haptics'
 import { getThemePreference, setThemePreference, type ThemePreference } from '../lib/theme'
 import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
@@ -214,7 +215,7 @@ export default function ApiConfigPage({ onSave }: Props) {
         {editing ? (
           <div className="flex gap-3">
             {stored && (
-              <button
+              <SolidButton
                 onClick={() => {
                   setEditing(false)
                   setApiKey('')
@@ -222,13 +223,13 @@ export default function ApiConfigPage({ onSave }: Props) {
                   setModel(stored.model)
                   setBaseUrl(stored.baseUrl)
                 }}
-                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                emphasis="quiet"
+                className="flex-1"
               >
-                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-                <span className="relative z-10 font-instrument text-[16px] text-ink/70">Cancel</span>
-              </button>
+                Cancel
+              </SolidButton>
             )}
-            <button
+            <SolidButton
               onClick={() => {
                 const trimmedKey = apiKey.trim()
                 const trimmedModel = model.trim()
@@ -246,27 +247,26 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.tap()
                 onSave()
               }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              gradient
+              className="flex-1"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Save configuration</span>
-            </button>
+              Save configuration
+            </SolidButton>
           </div>
         ) : (
           <div className="flex gap-3">
-            <button
+            <SolidButton
               onClick={() => {
                 // Clear the fields rather than pre-fill them: the stored key is
                 // never readable back, so an edit always means entering a new one.
                 setEditing(true)
                 setApiKey('')
               }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="flex-1"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Change API key</span>
-            </button>
-            <button
+              Change API key
+            </SolidButton>
+            <SolidButton
               onClick={() => {
                 clearLlmConfig()
                 setStored(null)
@@ -278,11 +278,11 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.destructive()
               }}
               aria-label="Remove saved key"
-              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              emphasis="quiet"
+              className="w-[50px] shrink-0"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="material-symbols-rounded relative z-10 text-[20px] text-ink/60">delete</span>
-            </button>
+              <span className="material-symbols-rounded text-[20px]">delete</span>
+            </SolidButton>
           </div>
         )}
       </Section>
@@ -306,15 +306,15 @@ export default function ApiConfigPage({ onSave }: Props) {
         {deeplEditing ? (
           <div className="flex gap-3">
             {deeplStored && (
-              <button
+              <SolidButton
                 onClick={() => { setDeeplEditing(false); setDeeplKey('') }}
-                className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                emphasis="quiet"
+                className="flex-1"
               >
-                <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-                <span className="relative z-10 font-instrument text-[16px] text-ink/70">Cancel</span>
-              </button>
+                Cancel
+              </SolidButton>
             )}
-            <button
+            <SolidButton
               onClick={() => {
                 const k = deeplKey.trim()
                 if (!k) return
@@ -324,22 +324,21 @@ export default function ApiConfigPage({ onSave }: Props) {
                 setDeeplEditing(false)
                 haptics.tap()
               }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              gradient
+              className="flex-1"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Save DeepL key</span>
-            </button>
+              Save DeepL key
+            </SolidButton>
           </div>
         ) : (
           <div className="flex gap-3">
-            <button
+            <SolidButton
               onClick={() => { setDeeplEditing(true); setDeeplKey('') }}
-              className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              className="flex-1"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Change DeepL key</span>
-            </button>
-            <button
+              Change DeepL key
+            </SolidButton>
+            <SolidButton
               onClick={() => {
                 clearDeepLKey()
                 setDeeplStored(null)
@@ -348,11 +347,11 @@ export default function ApiConfigPage({ onSave }: Props) {
                 haptics.destructive()
               }}
               aria-label="Remove saved DeepL key"
-              className="relative flex h-[50px] w-[50px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 transition-all hover:scale-[1.02] active:scale-[0.98] group"
+              emphasis="quiet"
+              className="w-[50px] shrink-0"
             >
-              <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="material-symbols-rounded relative z-10 text-[20px] text-ink/60">delete</span>
-            </button>
+              <span className="material-symbols-rounded text-[20px]">delete</span>
+            </SolidButton>
           </div>
         )}
       </Section>
