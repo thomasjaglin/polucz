@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import GlassButton from './GlassButton'
+import SolidButton from './SolidButton'
 import Logo from './Logo'
 
 // What a page says when it has nothing to show.
@@ -40,13 +40,13 @@ export default function EmptyState({ icon, useLogo, title, children, action, sec
       )}
 
       {action && (
-        <GlassButton
-          variant="primary"
+        <SolidButton
+          gradient
           onClick={action.onClick}
-          className="mt-1 px-6 py-3 font-instrument text-[15px]"
+          className="mt-1 shrink-0 px-8"
         >
           {action.label}
-        </GlassButton>
+        </SolidButton>
       )}
 
       {secondary && (
