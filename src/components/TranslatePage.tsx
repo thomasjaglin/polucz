@@ -4,6 +4,7 @@ import { readLlmError, llmErrorMessage, type LlmErrorCode } from '../lib/llmErro
 import { motion, AnimatePresence, useMotionValue, useTransform, useMotionValueEvent, animate } from 'framer-motion'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
+import SolidButton from './SolidButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import { llmHeaders, getDeepLKey } from '../lib/llmConfig'
@@ -551,25 +552,21 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
   )
 
   // Translation is the one feature that cannot work without its own key, so the
-  // notice takes the place of the answer: full width, in the target half, in the
-  // error colour, because it is a blocker rather than a hint.
+  // notice takes the place of the answer rather than sitting beside it. It says
+  // what is missing and offers the one way to fix it — the same shape the empty
+  // states use, so a blocked page reads the same wherever it is met.
   const deeplNotice = needsKey && (
-    <div className="w-full rounded-[20px] border border-err/35 bg-err/[0.08] px-5 py-4">
+    <div className="flex w-full flex-col items-center gap-4 py-6 text-center">
       <p className="font-instrument text-[15px] font-medium text-err">
         Translation needs a DeepL key
       </p>
-      <p className="mt-1.5 font-instrument text-[13px] leading-relaxed text-ink/70">
-        It is separate from the LLM key, and free-tier keys end in <code>:fx</code>. Everything
-        else in Polucz works without it — set it up in the{' '}
-        {/* Only the destination is the link: underlining the whole sentence
-            makes the words around it look clickable too. */}
-        <button
-          onClick={() => onChangePage('api_config')}
-          className="font-medium text-err underline underline-offset-4"
-        >
-          App settings
-        </button>.
-      </p>
+      <SolidButton
+        gradient
+        onClick={() => onChangePage('api_config')}
+        className="shrink-0 px-8"
+      >
+        Set up keys
+      </SolidButton>
     </div>
   )
 
