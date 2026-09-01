@@ -55,7 +55,7 @@
         {
           "text": "Analysing words…",
           "file": "src/components/TranslatePage.tsx",
-          "line": 483
+          "line": 474
         },
         {
           "text": "Loading grammar…",
@@ -1254,91 +1254,91 @@
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 197,
+      "line": 194,
       "kind": "text",
       "text": "✓ In vocabulary"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 483,
+      "line": 474,
       "kind": "text",
       "text": "Analysing words…"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 519,
-      "kind": "text",
-      "text": "add one"
-    },
-    {
-      "screen": "Translate",
-      "file": "src/components/TranslatePage.tsx",
-      "line": 539,
+      "line": 515,
       "kind": "label",
       "text": "Clear input"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 539,
+      "line": 515,
       "kind": "aria-label",
       "text": "Clear input"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 605,
+      "line": 562,
+      "kind": "text",
+      "text": ":fx"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 602,
       "kind": "text",
       "text": "Add →"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 610,
+      "line": 607,
       "kind": "text",
       "text": "← Clear"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 647,
+      "line": 644,
       "kind": "text",
       "text": "Added to vocabulary"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 650,
+      "line": 647,
       "kind": "text",
       "text": "Already in your vocabulary"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 715,
+      "line": 712,
       "kind": "text",
       "text": "Polish"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 724,
+      "line": 721,
       "kind": "label",
       "text": "Swap languages"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 724,
+      "line": 721,
       "kind": "aria-label",
       "text": "Swap languages"
     },
     {
       "screen": "Translate",
       "file": "src/components/TranslatePage.tsx",
-      "line": 754,
+      "line": 751,
       "kind": "text",
       "text": "English"
     },

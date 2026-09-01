@@ -9,9 +9,6 @@ import { findByLemma, getCards, saveCard } from '../lib/storage'
 import { llmHeaders, getDeepLKey } from '../lib/llmConfig'
 import { setAnchor } from './tour/anchors'
 import { TOUR_SENTENCE, TOUR_TRANSLATION, TOUR_LEMMAS, FAKE_LATENCY, fakeWait } from '../data/tourFixture'
-
-/** Set once the suggested first sentence has been offered. */
-const PREFILL_KEY = 'polucz_translate_prefilled'
 import { type VocabEntry, type WordType, type PageId, typeLabel } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
@@ -213,20 +210,14 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
   // so even someone who skipped everything finds a suggested sentence. Outside
   // the tour it is ordinary text: editable, clearable, and it does not come back
   // once they have made the page their own.
-  const [input, setInput] = useState(() => {
-    try {
-      if (localStorage.getItem(PREFILL_KEY)) return ''
-      localStorage.setItem(PREFILL_KEY, '1')
-      return TOUR_SENTENCE
-    } catch {
-      return ''
-    }
-  })
+  const [input, setInput] = useState('')
 
-  // A tour that starts after the page has already been used still needs its
-  // sentence in the box; the step that follows translates exactly this.
+  // The tour owns the sentence: it puts "Dzień dobry!" in the box for the step
+  // that translates exactly that, and takes it away again on the way out. The
+  // page itself opens empty — a prefilled field on a screen the user did not
+  // ask anything of is clutter.
   useEffect(() => {
-    if (tourActive) setInput(TOUR_SENTENCE)
+    setInput(tourActive ? TOUR_SENTENCE : '')
   }, [tourActive])
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   // Which failure it was, so the message can name the fix rather than blaming
@@ -505,21 +496,6 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
 
   const inputBlock = (
     <>
-      {/* Compact on purpose. This sits in a fixed-height band that is
-          bottom-aligned, so a tall notice pushes the input up and under the
-          status bar — which is exactly what a three-line version did on the
-          device. One row, and the explanation lives in settings. */}
-      {needsKey && (
-        <button
-          onClick={() => onChangePage('api_config')}
-          className="mb-3 flex items-center gap-2 self-start rounded-full border border-accent/30 bg-accent/[0.08] px-3.5 py-1.5"
-        >
-          <span className="material-symbols-rounded text-[15px] text-accent">key</span>
-          <span className="font-instrument text-[13px] text-ink/80">
-            Needs a DeepL key — <span className="text-accent underline underline-offset-2">add one</span>
-          </span>
-        </button>
-      )}
       <div ref={setAnchor('translate-input')} className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
         <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] pane-field-soft" />
         <textarea
@@ -549,7 +525,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
         ref={setAnchor('translate-button')}
         variant="primary"
         onClick={handleTranslate}
-        disabled={!input.trim() || phase === 'loading'}
+        disabled={!input.trim() || phase === 'loading' || needsKey}
         className="mt-3 w-full py-3.5 font-instrument text-[15px] disabled:opacity-35"
       >
         {phase === 'loading' ? 'Translating…' : 'Translate'}
@@ -572,6 +548,27 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
         </p>
       )}
     </>
+  )
+
+  // Translation is the one feature that cannot work without its own key, so the
+  // notice takes the place of the answer: full width, in the target half, in the
+  // error colour, because it is a blocker rather than a hint.
+  const deeplNotice = needsKey && (
+    <div className="w-full rounded-[20px] border border-err/35 bg-err/[0.08] px-5 py-4">
+      <p className="font-instrument text-[15px] font-medium text-err">
+        Translation needs a DeepL key
+      </p>
+      <p className="mt-1.5 font-instrument text-[13px] leading-relaxed text-ink/70">
+        It is separate from the LLM key, and free-tier keys end in <code>:fx</code>. Everything
+        else in Polucz works without it —{' '}
+        <button
+          onClick={() => onChangePage('api_config')}
+          className="font-medium text-err underline underline-offset-4"
+        >
+          set it up in the App settings
+        </button>.
+      </p>
+    </div>
   )
 
   const resultBlock = phase === 'done' && result && (
@@ -714,7 +711,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
       <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end overflow-hidden px-8 pb-[14vh] pt-[calc(0.5rem+env(safe-area-inset-top))]">
         <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">Polish</p>
         {srcTop ? inputBlock : (
-          <div ref={setAnchor('translate-result')} className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
+          <div ref={setAnchor('translate-result')} className="no-scrollbar overflow-y-auto">{deeplNotice}{resultBlock}{wordListBlock}</div>
         )}
       </div>
 
@@ -752,7 +749,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
         }}
       >
         <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">English</p>
-        {srcTop ? <div ref={setAnchor('translate-result')}>{resultBlock}{wordListBlock}</div> : inputBlock}
+        {srcTop ? <div ref={setAnchor('translate-result')}>{deeplNotice}{resultBlock}{wordListBlock}</div> : inputBlock}
       </div>
     </div>
   )
