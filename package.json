@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "check:deck": "node scripts/check-starter-deck.mjs",
     "postinstall": "patch-package",
-    "copy:extract": "node scripts/extract-copy.mjs"
+    "copy:extract": "node scripts/extract-copy.mjs",
+    "assets": "python3 scripts/build-app-assets.py && capacitor-assets generate --android"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -32,6 +33,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.1",

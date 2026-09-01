@@ -16,7 +16,20 @@
     </style>
 
 
+    <!--
+      Capacitor's template sets android:background="@drawable/splash" here, which
+      Android 12+ ignores: from then on the system draws the splash itself and
+      only reads the windowSplashScreen* attributes. targetSdk is 36, so on every
+      device this app supports the template line did nothing and the launch fell
+      back to a bare system default.
+
+      windowSplashScreenAnimatedIcon is masked to a circle and shows its inner
+      192dp of 288dp, the same 2/3 proportion as the adaptive icon, so the
+      foreground plate already fits it without a second export.
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

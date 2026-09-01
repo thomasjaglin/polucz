@@ -36,3 +36,14 @@ skills-lock.json
 # Design sources for the icons and backdrops. The exported assets the app
 # actually loads live in public/.
 material/
+
+# Derived icon/splash plates. build-app-assets.py regenerates these from the
+# -light/-dark sources next to them, and capacitor-assets consumes them under
+# these exact names; the Android res/ output is committed, so a clone only needs
+# them when regenerating.
+assets/icon-only.png
+assets/icon-background.png
+assets/icon-foreground.png
+assets/icon-foreground-monochrome.png
+assets/splash.png
+assets/splash-dark.png

@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  No <inset> on either layer, which is a deliberate departure from what
+  capacitor-assets writes. It emits inset="16.7%" on both, which assumes the
+  source plates are full-bleed art needing the safe-zone margin added for them.
+  Ours already reserve it: the foreground is a 454px mark centred in 1024, which
+  is the 72dp-of-108dp safe zone measured out in advance. Insetting again would
+  shrink the mark to 29.8% of the canvas instead of 44%.
+
+  The background must not be inset at all — it has to reach the corners, or the
+  launcher's mask cuts into empty space instead of the gradient.
+-->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@color/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <!-- Android 13+ themed icons: the system tints this shape to the wallpaper. -->
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
 </adaptive-icon>

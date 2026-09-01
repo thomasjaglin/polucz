@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the page colour the app itself paints, so the launch does not flash a
+         colour the first screen never uses. -->
+    <color name="splash_background">#F7F4F1</color>
+</resources>
