@@ -123,6 +123,8 @@ export const pageBackgrounds: Record<PageId, BgLayer[]> = {
     },
   ],
   api_config: [sideLayer(['#4A014A', '#8B098B', '#C82AC8', '#F57DF5', '#FFFFFF'])],
+  // Help sits beside settings in the menu, so it shares its backdrop.
+  help:          [sideLayer(['#4A014A', '#8B098B', '#C82AC8', '#F57DF5', '#FFFFFF'])],
 }
 
 export function hexToRgb(hex: string): [number, number, number] {

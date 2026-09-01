@@ -23,6 +23,7 @@ import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
 import { installStarterDeck } from './lib/starterDeck'
 import { useTour } from './components/tour/useTour'
 import Spotlight from './components/tour/Spotlight'
+import HelpPage from './components/HelpPage'
 import FirstRunGate from './components/tour/FirstRunGate'
 import { tourStatus, finishTour, shouldOfferTour, TOURS, type TourId } from './lib/tourState'
 import TourOffer from './components/tour/TourOffer'
@@ -293,7 +294,7 @@ export default function App() {
   // so leaving it up only crowds the bottom of the screen, where several steps
   // put their highlight. It stays for the step that points at it.
   const navHiddenByTour = tour.step !== null && tour.step.anchor !== 'nav-flashcards'
-  const showNav = activeId !== 'add_page' && activeId !== 'api_config' && !navHiddenByTour
+  const showNav = activeId !== 'add_page' && activeId !== 'api_config' && activeId !== 'help' && !navHiddenByTour
   const page = pages[activeId]
   // Top padding is sized to whatever TopHeader actually draws on this page, so
   // no page reserves space for a header it doesn't have:
@@ -302,7 +303,7 @@ export default function App() {
   //   secondary — add / settings show a lone back button at 1rem + 42px tall,
   //               so 58px puts content directly beneath it
   const compactTop = activeId === 'dynamic_feed' || activeId === 'question_mark' || activeId === 'spatial_audio'
-  const secondaryTop = activeId === 'add_page' || activeId === 'api_config'
+  const secondaryTop = activeId === 'add_page' || activeId === 'api_config' || activeId === 'help'
   const topPad = compactTop ? '1.25rem' : secondaryTop ? '58px' : '94px'
 
   function renderContent() {
@@ -333,6 +334,18 @@ export default function App() {
     if (activeId === 'question_mark') return <QuizPage onWelcome={handleWelcome} onTourEvent={tour.notify} />
     if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} onTourEvent={tour.notify} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
+    if (activeId === 'help') return (
+      <HelpPage
+        onPlay={id => {
+          // Each tour belongs to a page, so send the user there and start it.
+          const home: Record<string, PageId> = {
+            arrival: 'translate', flashcards: 'dynamic_feed', quiz: 'question_mark', audio: 'spatial_audio',
+          }
+          changePage(home[id])
+          tour.start(id)
+        }}
+      />
+    )
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => { setCards(getCards()); changePage('folder') }} />
     return (
       <div className="animate-fade-in flex h-full flex-col items-center justify-center gap-4 text-center">

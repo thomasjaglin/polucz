@@ -291,6 +291,13 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                   {copyLabel === 'copied' ? 'Copied!' : copyLabel === 'error' ? 'Copy failed' : 'Copy backup to clipboard'}
                 </button>
                 <button
+                  onClick={() => { onChangePage('help'); setSettingsOpen(false) }}
+                  className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
+                >
+                  <span className="material-symbols-rounded text-[18px]">help</span>
+                  Help
+                </button>
+                <button
                   onClick={() => { onChangePage('api_config'); setSettingsOpen(false) }}
                   className="flex w-full items-center gap-3 px-5 py-3.5 text-left font-instrument text-[15px] font-medium text-ink/80 transition-colors hover:bg-ink/10 hover:text-ink"
                 >

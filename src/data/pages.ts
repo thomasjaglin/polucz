@@ -92,6 +92,21 @@ export const pages: Record<PageId, PageConfig> = {
     `,
     gradientLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[12%] w-[880px] max-w-none opacity-[0.7] blur-[52px] mix-blend-multiply transition-all"><ellipse cx="110" cy="70" rx="205" ry="185" fill="#E9D4FF"/><ellipse cx="340" cy="160" rx="195" ry="175" fill="#F0DAF0"/><ellipse cx="205" cy="330" rx="235" ry="205" fill="#DADEFF"/><ellipse cx="70" cy="470" rx="205" ry="185" fill="#FFDAEE"/><ellipse cx="350" cy="520" rx="185" ry="175" fill="#DEE9FF"/></svg>`,
   },
+  help: {
+    title: 'Help',
+    icon: 'help',
+    desc: 'Guided walkthroughs of each part of the app.',
+    gradient: `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 401 463" fill="none" class="absolute -top-[5%] -left-[20%] w-[509px] max-w-none opacity-[0.28] blur-[46px] mix-blend-screen transition-all">
+        <ellipse cx="-11.3347" cy="72.7827" rx="254.534" ry="325.96" transform="rotate(-57.5101 -11.3347 72.7827)" fill="#4A014A"/>
+        <ellipse cx="-44.6114" cy="51.5914" rx="254.534" ry="286.508" transform="rotate(-57.5101 -44.6114 51.5914)" fill="#8B098B"/>
+        <ellipse cx="-84.4344" cy="26.2312" rx="254.534" ry="239.296" transform="rotate(-57.5101 -84.4344 26.2312)" fill="#C82AC8"/>
+        <ellipse cx="-128.622" cy="-1.90822" rx="254.534" ry="186.909" transform="rotate(-57.5101 -128.622 -1.90822)" fill="#F57DF5"/>
+        <ellipse cx="-165.171" cy="-25.184" rx="254.534" ry="143.577" transform="rotate(-57.5101 -165.171 -25.184)" fill="white"/>
+      </svg>
+    `,
+    gradientLight: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 412 598" fill="none" class="absolute -top-[12%] w-[880px] max-w-none opacity-[0.7] blur-[52px] mix-blend-multiply transition-all"><ellipse cx="110" cy="70" rx="205" ry="185" fill="#E9D4FF"/><ellipse cx="340" cy="160" rx="195" ry="175" fill="#F0DAF0"/><ellipse cx="205" cy="330" rx="235" ry="205" fill="#DADEFF"/><ellipse cx="70" cy="470" rx="205" ry="185" fill="#FFDAEE"/><ellipse cx="350" cy="520" rx="185" ry="175" fill="#DEE9FF"/></svg>`,
+  },
 }
 
 export const pageOrder: PageId[] = ['folder', 'translate', 'dynamic_feed', 'question_mark', 'spatial_audio']

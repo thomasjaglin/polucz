@@ -15,6 +15,7 @@ export type PageId =
   | 'spatial_audio'
   | 'add_page'
   | 'api_config'
+  | 'help'
 
 export interface PageConfig {
   title: string
