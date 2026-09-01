@@ -52,7 +52,7 @@ export default function SolidButton({
         />
       )}
       <span
-        className={`relative z-10 flex items-center justify-center gap-2 font-instrument text-[16px] ${
+        className={`relative z-10 flex items-center justify-center gap-2 whitespace-nowrap font-instrument text-[16px] ${
           raised ? 'font-semibold text-ink' : 'text-ink/70'
         }`}
       >

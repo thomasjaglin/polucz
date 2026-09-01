@@ -224,7 +224,7 @@ export default function ApiConfigPage({ onSave }: Props) {
                   setBaseUrl(stored.baseUrl)
                 }}
                 emphasis="quiet"
-                className="flex-1"
+                className="shrink-0 px-7"
               >
                 Cancel
               </SolidButton>
@@ -309,7 +309,7 @@ export default function ApiConfigPage({ onSave }: Props) {
               <SolidButton
                 onClick={() => { setDeeplEditing(false); setDeeplKey('') }}
                 emphasis="quiet"
-                className="flex-1"
+                className="shrink-0 px-7"
               >
                 Cancel
               </SolidButton>
