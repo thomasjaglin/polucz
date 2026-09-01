@@ -25,7 +25,10 @@ export default function EmptyState({ icon, useLogo, title, children, action, sec
   return (
     <div className="flex flex-col items-center gap-4 px-4 pt-10 text-center">
       {useLogo
-        ? <Logo size={72} className="opacity-90" />
+        // A watermark, not a headline: the mark sets the place, the title does
+        // the talking. Matched to the glyph tier the other empty states use so
+        // the four screens sit at the same weight.
+        ? <Logo size={76} className="opacity-30" />
         : <span className="material-symbols-rounded text-[44px] ink-glyph">{icon}</span>}
 
       <h2 className="font-instrument text-[20px] font-semibold text-ink/85">{title}</h2>
