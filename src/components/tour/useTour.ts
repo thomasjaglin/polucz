@@ -51,21 +51,30 @@ export function useTour(): Tour {
   }, [id, end])
 
   // A step marked skipIfMissing applies only to some cards — comparatives are on
-  // an adjective and not on a noun. Give the anchor a moment to mount, then move
-  // on rather than dimming the screen and pointing at nothing.
+  // an adjective and not on a noun.
+  //
+  // Resolved BEFORE the step is handed out, never after: showing "Adjectives
+  // also compare" for a moment on a noun and then yanking it away is worse than
+  // a slightly later prompt. The anchor is usually already mounted when the step
+  // begins, so this normally settles on the first check with nothing on screen
+  // in between; the poll only covers a slow mount.
+  const [resolved, setResolved] = useState(true)
   useEffect(() => {
-    if (!step?.skipIfMissing) return
+    if (!step?.skipIfMissing) { setResolved(true); return }
+    if (getAnchor(step.anchor)) { setResolved(true); return }
+    setResolved(false)
     let tries = 0
     const timer = setInterval(() => {
-      if (getAnchor(step.anchor)) { clearInterval(timer); return }
+      if (getAnchor(step.anchor)) { setResolved(true); clearInterval(timer); return }
       if (++tries >= 12) {
         clearInterval(timer)
+        setResolved(true)
         setIndex(i => {
           const list = id ? STEPS[id] ?? [] : []
           return i + 1 >= list.length ? i : i + 1
         })
       }
-    }, 50)
+    }, 25)
     return () => clearInterval(timer)
   }, [step, id])
 
@@ -82,7 +91,9 @@ export function useTour(): Tour {
 
   return {
     id,
-    step,
+    // Withheld while a conditional step is still deciding, so nothing is drawn
+    // that might be about to disappear.
+    step: resolved ? step : null,
     progress: { step: Math.min(index + 1, steps.length), total: steps.length },
     active: id !== null,
     start,
