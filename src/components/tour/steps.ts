@@ -79,6 +79,13 @@ export const ARRIVAL_STEPS: TourStep[] = [
     advanceOn: 'examples-loaded',
   },
   {
+    // The sentences are the payoff of the step before, so the tour waits here
+    // rather than moving on the moment they appear.
+    anchor: 'card-examples',
+    text: 'Real sentences from Tatoeba, showing the word as people actually use it. Take a moment with them.',
+    nextLabel: 'Next',
+  },
+  {
     anchor: 'modal-close',
     text: 'Close the card when you are done reading.',
     advanceOn: 'modal-closed',
@@ -103,6 +110,13 @@ export const ARRIVAL_STEPS: TourStep[] = [
     anchor: 'examples-button',
     text: 'Tap to load real sentences using this word.',
     advanceOn: 'examples-loaded',
+  },
+  {
+    // The sentences are the payoff of the step before, so the tour waits here
+    // rather than moving on the moment they appear.
+    anchor: 'card-examples',
+    text: 'Real sentences from Tatoeba, showing the word as people actually use it. Take a moment with them.',
+    nextLabel: 'Next',
   },
   {
     anchor: 'modal-close',

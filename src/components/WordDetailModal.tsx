@@ -411,7 +411,7 @@ function ExamplesSection({ word, mastered, tourActive = false, onTourEvent }: {
 
   if (examples) {
     return (
-      <div className="mt-4 flex flex-col gap-4 border-t border-ink/10 pt-4">
+      <div ref={setAnchor('card-examples')} className="mt-4 flex flex-col gap-4 border-t border-ink/10 pt-4">
         <div className="flex items-center justify-between">
           <span className={`font-instrument text-[14px] ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>
             Examples · {source === 'corpus' ? 'real usage (Tatoeba)' : 'AI-generated'}
