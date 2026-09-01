@@ -55,27 +55,35 @@ def splash(fg_path, bg_rgb, out, mark_px=620):
     canvas.save(out)
 
 
-def splash_icon(fg_path, out, plate=1152):
-    """The Android 12+ splash icon, which is a different job from the launcher.
+def splash_icon(out, plate=1152):
+    """The Android 12+ splash icon: the app's own badge, not a bare glyph.
 
-    That icon is drawn on a 288dp canvas and the system masks it to a CIRCLE of
-    the inner 192dp. 192/288 is therefore the circle's diameter, not the width a
-    square mark may occupy: a 192dp-wide square has corners at 136dp from centre
-    against a 96dp radius, and they get cut. Sizing the mark by its diagonal
-    instead puts the whole thing inside the circle.
+    The icon layer may be full colour -- only windowSplashScreenBackground is
+    restricted to a single flat colour, which is the one real limitation here.
+    So this draws the launcher icon's gradient full-bleed and lets the system's
+    circular mask cut it into the same badge that sits on the home screen. The
+    app then appears to open out of its own icon.
 
-    Resolution is the other half. At 450dpi the canvas is 810px, so feeding it
-    the 192px launcher plate meant a 4.2x upscale. A density-independent 1152px
-    plate covers every density up to 640dpi without upscaling.
+    Two geometries to respect, and they are different:
+
+      - The system masks to a CIRCLE of the inner 192dp of a 288dp canvas, so
+        192/288 is a diameter, not the width a square mark may occupy. A mark
+        sized by width has corners at 136dp against a 96dp radius and loses
+        them; sizing by the diagonal keeps the whole mark inside.
+      - The gradient is deliberately NOT inset: it fills the plate so the mask
+        crops it rather than revealing an edge inside the circle.
+
+    Resolution: at 450dpi that canvas is 810px, so the 192px launcher plate was
+    being upscaled 4.2x. 1152px covers every density to 640dpi.
     """
-    fg = Image.open(fg_path).convert('RGBA')
+    ground = Image.open(BG_DARK).convert('RGBA').resize((plate, plate), Image.LANCZOS)
+    fg = Image.open(FG_DARK).convert('RGBA')
     mark = fg.crop(fg.getbbox())
     # 0.95 keeps the strokes off the mask edge rather than tangent to it.
     side = int(plate * (192 / 288) / math.sqrt(2) * 0.95)
     mark = mark.resize((side, side), Image.LANCZOS)
-    canvas = Image.new('RGBA', (plate, plate), (0, 0, 0, 0))
-    canvas.paste(mark, ((plate - side) // 2, (plate - side) // 2), mark)
-    canvas.save(out)
+    ground.paste(mark, ((plate - side) // 2, (plate - side) // 2), mark)
+    ground.save(out)
     return plate, side
 
 
@@ -93,14 +101,13 @@ def main():
 
     # The splash icon is drawn straight into res/ rather than through
     # capacitor-assets, which only knows about launcher densities.
-    # One per theme, and the pairing inverts: the light splash has a light
-    # ground and therefore needs the DARK mark, and vice versa.
+    # One badge for both themes -- it is the launcher icon, and that does not
+    # change with the system theme either. Only the colour around it does.
     import os
-    for src, d in ((FG_LIGHT, 'drawable-nodpi'), (FG_DARK, 'drawable-night-nodpi')):
-        os.makedirs(f'android/app/src/main/res/{d}', exist_ok=True)
-        plate, side = splash_icon(src, f'android/app/src/main/res/{d}/splash_icon.png')
-        print(f'  {d}/splash_icon.png  {plate}x{plate}, mark {side}px '
-              f'({100*side/plate:.0f}% of the canvas)')
+    os.makedirs('android/app/src/main/res/drawable-nodpi', exist_ok=True)
+    plate, side = splash_icon('android/app/src/main/res/drawable-nodpi/splash_icon.png')
+    print(f'  splash_icon.png  {plate}x{plate}, mark {side}px '
+          f'({100*side/plate:.0f}% of the canvas), gradient full-bleed')
 
     # Splashes match the app's own page colours, not the icon's gradient, so the
     # launch does not flash a colour the first screen never uses.
