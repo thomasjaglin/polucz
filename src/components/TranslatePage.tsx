@@ -7,6 +7,11 @@ import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
 import { llmHeaders, getDeepLKey } from '../lib/llmConfig'
+import { setAnchor } from './tour/anchors'
+import { TOUR_SENTENCE, TOUR_TRANSLATION, TOUR_LEMMAS, FAKE_LATENCY, fakeWait } from '../data/tourFixture'
+
+/** Set once the suggested first sentence has been offered. */
+const PREFILL_KEY = 'polucz_translate_prefilled'
 import { type VocabEntry, type WordType, type PageId, typeLabel } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
@@ -159,6 +164,10 @@ interface Props {
   onAddCard: (entry: VocabEntry) => void
   /** Error states route here when the failure is a missing API key. */
   onChangePage: (id: PageId) => void
+  /** True while the arrival tour is running: no calls, scripted answers. */
+  tourActive?: boolean
+  /** Tells the tour the user did the thing it was waiting for. */
+  onTourEvent?: (e: 'translate-done' | 'words-added') => void
 }
 
 const isSingleWord = (text: string) => {
@@ -199,8 +208,26 @@ function WordRow({ word, isSaved, onAdd }: { word: AnalyzedWord; isSaved: boolea
   )
 }
 
-export default function TranslatePage({ onAddCard, onChangePage }: Props) {
-  const [input, setInput] = useState('')
+export default function TranslatePage({ onAddCard, onChangePage, tourActive = false, onTourEvent }: Props) {
+  // "Dzień dobry!" is waiting the first time this page is opened, tour or not —
+  // so even someone who skipped everything finds a suggested sentence. Outside
+  // the tour it is ordinary text: editable, clearable, and it does not come back
+  // once they have made the page their own.
+  const [input, setInput] = useState(() => {
+    try {
+      if (localStorage.getItem(PREFILL_KEY)) return ''
+      localStorage.setItem(PREFILL_KEY, '1')
+      return TOUR_SENTENCE
+    } catch {
+      return ''
+    }
+  })
+
+  // A tour that starts after the page has already been used still needs its
+  // sentence in the box; the step that follows translates exactly this.
+  useEffect(() => {
+    if (tourActive) setInput(TOUR_SENTENCE)
+  }, [tourActive])
   const [phase, setPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   // Which failure it was, so the message can name the fix rather than blaming
   // the network for a missing key.
@@ -286,6 +313,28 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
     x.set(0)
 
     const myId = ++translateIdRef.current
+
+    // The tour never calls anything. It walks the same states in the same order
+    // with the same shapes, so what the user learns here is what the app really
+    // does — only the answer is preloaded and the waiting is scripted.
+    if (tourActive) {
+      await fakeWait(FAKE_LATENCY.translate)
+      if (translateIdRef.current !== myId) return
+      setResult({
+        translation: TOUR_TRANSLATION,
+        lemma: '', type: 'unknown', gender: '',
+        isSingleWord: false, canonicalEn: '',
+        plSentence: TOUR_SENTENCE, enSentence: TOUR_TRANSLATION,
+      })
+      setPhase('done')
+      setWordPhase('loading')
+      await fakeWait(FAKE_LATENCY.lemmatise)
+      if (translateIdRef.current !== myId) return
+      setWords(TOUR_LEMMAS.map(l => ({ lemma: l.lemma, type: l.type, english: l.en, gender: l.note })))
+      setWordPhase('done')
+      onTourEvent?.('translate-done')
+      return
+    }
 
     try {
       const single = direction === 'pl-en' && isSingleWord(text)
@@ -397,7 +446,14 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
     const entry = buildMiningEntry(word, result.plSentence, result.enSentence)
     saveCard(entry)
     onAddCard(entry) // fires the global toast
-    setSavedSet(prev => new Set([...prev, word.lemma.toLowerCase()]))
+    setSavedSet(prev => {
+      const next = new Set([...prev, word.lemma.toLowerCase()])
+      // The step asks for both words, so it completes on the second one.
+      if (tourActive && words.length > 0 && words.every(w => next.has(w.lemma.toLowerCase()))) {
+        onTourEvent?.('words-added')
+      }
+      return next
+    })
   }
 
   function handleDragEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
@@ -427,7 +483,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
       <span className="font-instrument text-[13px]">Analysing words…</span>
     </div>
   ) : wordPhase === 'done' && words.length > 1 ? (
-    <div className="pt-4">
+    <div ref={setAnchor('lemma-rows')} className="pt-4">
       <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider ink-tertiary">
         {srcTop ? 'Words in this sentence' : 'Words in the Polish translation'}
       </p>
@@ -445,7 +501,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
   // Translation is the only thing this page does, and it is the one feature that
   // needs its own key. Saying so up front beats letting someone type a sentence,
   // press the button and meet a failure — which is what happened before.
-  const needsKey = !getDeepLKey()
+  const needsKey = !getDeepLKey() && !tourActive
 
   const inputBlock = (
     <>
@@ -464,18 +520,20 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
           </span>
         </button>
       )}
-      <div className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
+      <div ref={setAnchor('translate-input')} className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
         <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] pane-field-soft" />
         <textarea
           ref={textareaRef}
           value={input}
           onChange={e => { setInput(e.target.value); if (phase === 'error') setPhase('idle') }}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate() } }}
+          readOnly={tourActive}
+          tabIndex={tourActive ? -1 : undefined}
           placeholder={srcTop ? 'Wpisz tekst…' : 'Translate text…'}
           rows={2}
           className="relative z-10 w-full resize-none bg-transparent py-4 pl-6 pr-12 font-instrument text-[17px] text-ink/95 placeholder-tertiary outline-none"
         />
-        {!!input && (
+        {!!input && !tourActive && (
           <button
             onClick={() => setInput('')}
             aria-label="Clear input"
@@ -488,6 +546,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
       </div>
 
       <GlassButton
+        ref={setAnchor('translate-button')}
         variant="primary"
         onClick={handleTranslate}
         disabled={!input.trim() || phase === 'loading'}

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import GlassPane from './GlassPane'
 
 type Variant = 'primary' | 'secondary' | 'danger'
@@ -28,7 +28,10 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 // refraction + rim light) fills the button behind a z-raised content row.
 // Size, padding, borders, text and state colors stay on className; the pane
 // tint goes on `pane`.
-export default function GlassButton({
+// Forwards its ref so callers can point at the real <button> — the tour
+// spotlight needs a DOM node to measure, and wrapping this in a div to get one
+// would change the layout at every call site.
+const GlassButton = forwardRef<HTMLButtonElement, Props>(function GlassButton({
   variant,
   radius,
   pane,
@@ -37,13 +40,14 @@ export default function GlassButton({
   style,
   children,
   ...rest
-}: Props) {
+}, ref) {
   const v = variant ? VARIANTS[variant] : null
   const r = radius ?? v?.radius ?? 16
   const paneTint = pane ?? v?.pane ?? 'bg-ink/5'
   return (
     <button
       {...rest}
+      ref={ref}
       style={{ borderRadius: r, ...style }}
       className={`relative transition-all active:scale-[0.97] disabled:pointer-events-none ${v?.classes ?? ''} ${className}`}
     >
@@ -51,4 +55,6 @@ export default function GlassButton({
       <span className={`relative z-10 ${contentClassName}`}>{children}</span>
     </button>
   )
-}
+})
+
+export default GlassButton
