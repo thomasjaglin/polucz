@@ -3,7 +3,7 @@ import GlassCard from './GlassCard'
 import GlassInput from './GlassInput'
 import GlassPane from './GlassPane'
 import { haptics } from '../lib/haptics'
-import { getTheme, setTheme, type Theme } from '../lib/theme'
+import { getThemePreference, setThemePreference, type ThemePreference } from '../lib/theme'
 import { CORPUS_ATTRIBUTION } from '../lib/corpusSnapshot'
 import { hasStarterCards, removeStarterDeck } from '../lib/starterDeck'
 import { polishVoiceStatus, openVoiceSettings, MISSING_VOICE_MESSAGE, type VoiceStatus } from '../lib/ttsVoice'
@@ -56,7 +56,7 @@ export default function ApiConfigPage({ onSave }: Props) {
   const [deeplStored, setDeeplStored] = useState<string | null>(() => getDeepLKey())
   const [deeplEditing, setDeeplEditing] = useState(() => getDeepLKey() === null)
   const [deeplKey, setDeeplKey] = useState('')
-  const [theme, setThemeState] = useState<Theme>(() => getTheme())
+  const [theme, setThemeState] = useState<ThemePreference>(() => getThemePreference())
   const [hapticsOn, setHapticsOn] = useState(() => localStorage.getItem('polucz_haptics') !== 'false')
   const [starterPresent, setStarterPresent] = useState(() => hasStarterCards())
   // Asked once when the page opens, and again after a trip to the install
@@ -72,20 +72,25 @@ export default function ApiConfigPage({ onSave }: Props) {
       <Section title="Appearance">
         {/* Live. The hint names the scope rather than the control implying the
             whole app is themed — only the vocabulary list is, so far. */}
+        {/* No hint under the label: it would only apply to one of the three
+            states, so the row changed height as you switched. "System" is the
+            same word both phone platforms use, and needs no gloss. */}
         <Row label="Theme">
           <div
             role="radiogroup"
             aria-label="Theme"
             className="flex shrink-0 items-center gap-1 rounded-full border border-ink/10 p-1"
           >
-            {(['light', 'dark'] as Theme[]).map(t => (
+            {/* System first, because it is the default and the one a new user
+                should not have to go looking for. */}
+            {(['system', 'light', 'dark'] as ThemePreference[]).map(t => (
               <button
                 key={t}
                 role="radio"
                 aria-checked={theme === t}
                 onClick={() => {
                   if (theme === t) return
-                  setTheme(t)
+                  setThemePreference(t)
                   setThemeState(t)
                   haptics.tap()
                 }}
