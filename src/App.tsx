@@ -24,7 +24,10 @@ import { installStarterDeck } from './lib/starterDeck'
 import { useTour } from './components/tour/useTour'
 import Spotlight from './components/tour/Spotlight'
 import FirstRunGate from './components/tour/FirstRunGate'
-import { tourStatus, finishTour } from './lib/tourState'
+import { tourStatus, finishTour, shouldOfferTour, TOURS, type TourId } from './lib/tourState'
+import TourOffer from './components/tour/TourOffer'
+import { polishVoiceStatus } from './lib/ttsVoice'
+import { isAudioAvailable } from './lib/audioAvailability'
 import { haptics } from './lib/haptics'
 import { getAllReviews } from './lib/reviewStorage'
 import { isConquered } from './lib/scheduler'
@@ -257,6 +260,33 @@ export default function App() {
     () => getCards().length === 0 && tourStatus('arrival') === 'unseen',
   )
 
+  // Offer a page's tour the first time that page has something to demonstrate.
+  // Never on an empty page: a flashcards tour with nothing to review teaches
+  // nothing and spends the one moment the user was willing to be taught.
+  const [offer, setOffer] = useState<TourId | null>(null)
+  const [voiceOk, setVoiceOk] = useState<boolean | null>(null)
+  useEffect(() => { polishVoiceStatus().then(v => setVoiceOk(v === 'ok')) }, [])
+
+  useEffect(() => {
+    if (tour.active || gateOpen) return
+    const hasCards = cards.length > 0
+    const candidate: TourId | null =
+      activeId === 'dynamic_feed' && hasCards ? 'flashcards'
+      : activeId === 'question_mark' && hasCards ? 'quiz'
+      // Pronunciation needs two things: a Polish voice (a silent tour of a
+      // speaking feature is worse than none) and something the page will
+      // actually play. Natively every card is playable; in the browser only
+      // cards whose clips are cached are, which is what the page itself shows.
+      : activeId === 'spatial_audio' && voiceOk === true
+        && cards.some(c => isAudioAvailable(c.audioReady)) ? 'audio'
+      : null
+    if (candidate && shouldOfferTour(candidate, true)) {
+      const t = setTimeout(() => setOffer(candidate), 900)
+      return () => clearTimeout(t)
+    }
+    setOffer(null)
+  }, [activeId, cards.length, tour.active, gateOpen, voiceOk])
+
   const handleWelcome = () => { installStarterDeck(); setCards(getCards()) }
 
   // The nav is inert during a tour anyway — the spotlight swallows taps on it —
@@ -299,9 +329,9 @@ export default function App() {
         }}
       />
     )
-    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} />
-    if (activeId === 'question_mark') return <QuizPage onWelcome={handleWelcome} />
-    if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} />
+    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} onTourEvent={tour.notify} />
+    if (activeId === 'question_mark') return <QuizPage onWelcome={handleWelcome} onTourEvent={tour.notify} />
+    if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} onTourEvent={tour.notify} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => { setCards(getCards()); changePage('folder') }} />
     return (
@@ -404,6 +434,15 @@ export default function App() {
           onSetUpKeys={() => { setGateOpen(false); changePage('api_config') }}
           onTakeTour={() => { setGateOpen(false); changePage('translate'); tour.start('arrival') }}
           onSkip={() => { setGateOpen(false); finishTour('arrival', 'skipped') }}
+        />
+      )}
+
+      {offer && !tour.active && (
+        <TourOffer
+          title={TOURS.find(t => t.id === offer)?.title ?? ''}
+          blurb={TOURS.find(t => t.id === offer)?.blurb ?? ''}
+          onTake={() => { const id = offer; setOffer(null); tour.start(id) }}
+          onSkip={() => { finishTour(offer, 'skipped'); setOffer(null) }}
         />
       )}
 

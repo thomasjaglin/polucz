@@ -4,6 +4,7 @@ import { tagGradients } from '../data/gradients'
 import { type VocabEntry, typeLabel } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, replaceAllReviews } from '../lib/reviewStorage'
 import { applyEasy, applyHard, applyConquered, applyLapse, isConquered } from '../lib/scheduler'
+import { setAnchor } from './tour/anchors'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
@@ -60,7 +61,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
   const rotate = useTransform(x, [-300, 0, 300], [-18, 0, 18])
   const doubleTap = useDoubleTap(useCallback(() => { onOpenModal?.(entry) }, [onOpenModal, entry]))
 
-  const cardRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
   const rotationJustFired = useRef(false)
   const rotateYVal = useMotionValue(0)
 
@@ -237,7 +238,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
 
   return (
     <motion.div
-      ref={cardRef}
+      ref={el => { cardRef.current = el; setAnchor('fc-card')(el) }}
       style={{ x, y, rotate, perspective: '1200px' }}
       drag={revealed ? true : false}
       dragDirectionLock
@@ -473,9 +474,11 @@ interface Props {
   onOpenModal?: (entry: VocabEntry) => void
   /** Empty state only: install the welcome words and refresh the list. */
   onWelcome?: () => void
+  /** Tells the flashcards tour what the user just did. */
+  onTourEvent?: (e: 'fc-started' | 'fc-revealed' | 'fc-swiped') => void
 }
 
-export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) {
+export default function FlashcardPage({ cards, onOpenModal, onWelcome, onTourEvent }: Props) {
   // Overview-first: the game opens on the group selector, then plays a chosen
   // scope (a group, or all cards).
   const [screen, setScreen] = useState<'selector' | 'playing'>('selector')
@@ -516,6 +519,7 @@ export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) 
 
   // Start a run over a chosen scope (a group, or all cards) and switch to play.
   const startRunFor = useCallback((subset: VocabEntry[], label: string) => {
+    onTourEvent?.('fc-started')
     setScopeCards(subset)
     setScopeLabel(label)
     const deck = deckFrom(subset)
@@ -524,7 +528,7 @@ export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) 
     setReviewedIds(new Set())
     setRevealed(false)
     setScreen('playing')
-  }, [])
+  }, [onTourEvent])
 
   // Restart the current scope (the "Go again" action on the run-complete screen).
   const restart = useCallback(() => {
@@ -587,6 +591,7 @@ export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) 
 
   function handleReveal() {
     if (!current) return
+    onTourEvent?.('fc-revealed')
     setRevealed(true)
     tts.playSequence(current.pl, current.en)
   }
@@ -612,6 +617,7 @@ export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) 
   }
 
   function handleEasy() {
+    onTourEvent?.('fc-swiped')
     if (!current) return
     markReviewed(current.id)
     // Got it easily (right-swipe) → +1 strength AND advance toward conquerable:
@@ -625,6 +631,7 @@ export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) 
   }
 
   function handleHard() {
+    onTourEvent?.('fc-swiped')
     if (!current) return
     markReviewed(current.id)
     // Struggled (left-swipe) → schedule as hard and reset conquer progress: a miss

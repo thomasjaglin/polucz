@@ -8,6 +8,7 @@ import {
 } from '../lib/flashcardGroups'
 import GlassButton from './GlassButton'
 import EmptyState from './EmptyState'
+import { setAnchor } from './tour/anchors'
 import { installStarterDeck } from '../lib/starterDeck'
 import GlassPane from './GlassPane'
 import HardModeToggle from './HardModeToggle'
@@ -113,7 +114,9 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
           </p>
         </div>
         <div className="mb-1 flex shrink-0 items-center gap-2">
-          <HardModeToggle active={hardMode} onToggle={onToggleHardMode} />
+          <div ref={setAnchor('fc-hard-mode')}>
+            <HardModeToggle active={hardMode} onToggle={onToggleHardMode} />
+          </div>
           <div className="inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-ink/[0.04] px-2.5 py-1 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
             <span className="material-symbols-rounded text-[15px] text-accent/80">military_tech</span>
             <span className="font-instrument text-[12px] font-medium tabular-nums ink-tertiary">{conqueredCount}</span>
@@ -165,6 +168,7 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
           {/* Play everything — flips with hard mode, echoing the flashcard. */}
           <FlipOnChange trigger={hardMode} className="w-full">
             <GlassButton
+              ref={setAnchor('fc-play-all')}
               onClick={onPlayAll}
               radius={24}
               pane="bg-accent/[0.06]"

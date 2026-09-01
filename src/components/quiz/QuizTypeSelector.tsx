@@ -1,5 +1,6 @@
 import GlassButton from '../GlassButton'
 import EmptyState from '../EmptyState'
+import { setAnchor } from '../tour/anchors'
 
 interface Props {
   /** Questions ready to ask — stored sentences plus computed paradigm slots. */
@@ -32,13 +33,14 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage, onW
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
+      <div ref={setAnchor('quiz-count')}>
         <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Quiz Game</h2>
         <p className="mt-1 font-instrument text-[14px] ink-tertiary">
           {`${questionCount} question${questionCount === 1 ? '' : 's'} ready`}
         </p>
       </div>
 
+      <div ref={setAnchor('quiz-modes')} className="flex flex-col gap-4">
       <GlassButton
         onClick={() => onStart('declension')}
         disabled={!hasEnough}
@@ -74,6 +76,7 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage, onW
           <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] ink-glyph">chevron_right</span>
         </div>
       </GlassButton>
+      </div>
 
       {coverage}
     </div>

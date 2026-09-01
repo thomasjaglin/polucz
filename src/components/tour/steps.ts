@@ -10,7 +10,7 @@ import type { AnchorName } from './anchors'
 export type TourEvent =
   | 'translate-done' | 'words-added' | 'card-opened' | 'examples-loaded' | 'modal-closed'
   | 'nav-flashcards'
-  | 'fc-started' | 'fc-revealed' | 'fc-swiped-right' | 'fc-swiped-left'
+  | 'fc-started' | 'fc-revealed' | 'fc-swiped'
   | 'quiz-mode-picked' | 'quiz-answered'
   | 'audio-started'
 
@@ -28,6 +28,74 @@ export interface TourStep {
    */
   skipIfMissing?: boolean
 }
+
+// ─── Page tours ───────────────────────────────────────────────────────────────
+//
+// Nothing here is scripted. Flashcards, the quiz and pronunciation all work with
+// no key and no connection, so these tours narrate the real feature doing the
+// real thing — which also means they cannot go stale against a screen that
+// changes underneath them.
+
+export const FLASHCARD_STEPS: TourStep[] = [
+  {
+    anchor: 'fc-play-all',
+    text: 'Start with the lot, shuffled. Groups are for later, when you have hundreds of words.',
+    advanceOn: 'fc-started',
+  },
+  {
+    // The card is face down and is not draggable until it is revealed, so the
+    // swipe steps physically cannot come before this one.
+    anchor: 'fc-card',
+    text: 'Polish first. Say it out loud, then tap the card to check yourself.',
+    advanceOn: 'fc-revealed',
+  },
+  {
+    anchor: 'fc-card',
+    text: 'Knew it? Swipe right — Polucz waits longer before asking again. Struggled? Swipe left and it comes back sooner. There is no wrong answer, only honest ones.',
+    advanceOn: 'fc-swiped',
+  },
+  {
+    anchor: 'fc-hard-mode',
+    text: 'Hard mode turns the page red and counts every win double. Use it when a word will not stick.',
+    nextLabel: 'Done',
+  },
+]
+
+export const QUIZ_STEPS: TourStep[] = [
+  {
+    anchor: 'quiz-count',
+    text: 'These questions are built from the forms of your own words — no key, no connection needed. The quiz is still in beta, so expect the odd rough edge.',
+    nextLabel: 'Next',
+  },
+  {
+    anchor: 'quiz-modes',
+    text: 'Multiple choice for nouns and adjectives; type the answer for verbs. Pick one.',
+    advanceOn: 'quiz-mode-picked',
+  },
+  {
+    anchor: 'quiz-question',
+    text: 'Answer it. Right or wrong is not the point — seeing what happens next is.',
+    advanceOn: 'quiz-answered',
+  },
+]
+
+export const AUDIO_STEPS: TourStep[] = [
+  {
+    anchor: 'audio-play',
+    text: 'Hands-free listening: Polish, then English, then the next word. This one makes noise — turn your volume up.',
+    advanceOn: 'audio-started',
+  },
+  {
+    anchor: 'audio-speed',
+    text: 'Slow it down until you can hear the endings. That is where Polish hides its grammar.',
+    nextLabel: 'Next',
+  },
+  {
+    anchor: 'audio-repeat',
+    text: 'Loop a single word while you copy it out loud. This is your phone speaking, not a recording — it costs nothing and works offline.',
+    nextLabel: 'Done',
+  },
+]
 
 export const ARRIVAL_STEPS: TourStep[] = [
   {

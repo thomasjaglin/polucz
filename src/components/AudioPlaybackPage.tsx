@@ -11,6 +11,7 @@ import { useBackClose } from '../hooks/useBackClose'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import EmptyState from './EmptyState'
+import { setAnchor } from './tour/anchors'
 import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
 
@@ -23,6 +24,8 @@ interface Props {
   onOpenModal?: (entry: VocabEntry) => void
   /** Empty state only: install the welcome words. */
   onWelcome?: () => void
+  /** Tells the pronunciation tour that playback began. */
+  onTourEvent?: (e: 'audio-started') => void
 }
 
 // ─── Animated waveform ────────────────────────────────────────────────────────
@@ -78,7 +81,7 @@ function arcSlot(d: number) {
   }
 }
 
-export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome }: Props) {
+export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome, onTourEvent }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
   const [queue, setQueue]       = useState<VocabEntry[]>([])
@@ -351,7 +354,8 @@ export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome }: Pro
             <div className="flex flex-1 flex-col items-center justify-center gap-4">
               <GlassButton
                 variant="primary"
-                onClick={() => beginPlayback('list')}
+                ref={setAnchor('audio-play')}
+                onClick={() => { onTourEvent?.('audio-started'); beginPlayback('list') }}
                 className="px-7 py-3.5 font-instrument text-[16px]"
               >
                 <span className="material-symbols-rounded text-[20px]">play_arrow</span>
@@ -521,7 +525,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome }: Pro
                 {/* Playback speed — upper-left; tap to open the picker */}
                 <div ref={speedRef} className="absolute" style={{ left: 11, top: 28 }}>
                   {speedOpen && (
-                    <div className="absolute bottom-0 right-full z-10 mr-2 flex flex-col gap-1.5">
+                    <div ref={setAnchor('audio-speed')} className="absolute bottom-0 right-full z-10 mr-2 flex flex-col gap-1.5">
                       {[...RATE_OPTIONS].reverse().map(r => {
                         const active = r === rate
                         return (
@@ -555,6 +559,7 @@ export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome }: Pro
                 {/* Repeat current card — top */}
                 <button
                   onClick={() => setRepeatOne(r => !r)}
+                  ref={setAnchor('audio-repeat')}
                   aria-pressed={repeatOne}
                   style={{ left: 65, top: 0 }}
                   className={`absolute flex h-[46px] w-[46px] items-center justify-center rounded-full border transition-all hover:scale-105 active:scale-95 ${repeatOne ? 'border-accent/40' : 'border-ink/10'}`}

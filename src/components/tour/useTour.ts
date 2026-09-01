@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAnchor } from './anchors'
-import { ARRIVAL_STEPS, type TourEvent, type TourStep } from './steps'
+import { ARRIVAL_STEPS, FLASHCARD_STEPS, QUIZ_STEPS, AUDIO_STEPS, type TourEvent, type TourStep } from './steps'
 import { finishTour, saveTourStep, tourStep, type TourId } from '../../lib/tourState'
 
-const STEPS: Partial<Record<TourId, TourStep[]>> = {
+const STEPS: Record<TourId, TourStep[]> = {
   arrival: ARRIVAL_STEPS,
+  flashcards: FLASHCARD_STEPS,
+  quiz: QUIZ_STEPS,
+  audio: AUDIO_STEPS,
 }
 
 export interface Tour {
@@ -24,7 +27,15 @@ export function useTour(): Tour {
   const [id, setId] = useState<TourId | null>(null)
   const [index, setIndex] = useState(0)
 
-  const steps = id ? STEPS[id] ?? [] : []
+  // notify() must keep the same identity for the life of the app. Screens hand
+  // it to callbacks memoised with empty dependency arrays — startRunFor is one —
+  // and a notify that changed when the tour started would be captured in its
+  // null-tour form and silently do nothing. The id is read through a ref so the
+  // callback can stay stable without going stale.
+  const idRef = useRef<TourId | null>(null)
+  useEffect(() => { idRef.current = id }, [id])
+
+  const steps = id ? STEPS[id] : []
   const step = steps[index] ?? null
 
   // Persist as we go, so backgrounding mid-tour resumes in place.
@@ -42,9 +53,14 @@ export function useTour(): Tour {
     setIndex(0)
   }, [])
 
+  // Same reasoning as notify: keep the latest end() reachable from a stable
+  // callback without making that callback change.
+  const endRef = useRef(end)
+  useEffect(() => { endRef.current = end }, [end])
+
   const advance = useCallback(() => {
     setIndex(i => {
-      const list = id ? STEPS[id] ?? [] : []
+      const list = id ? STEPS[id] : []
       if (i + 1 >= list.length) { end('done'); return 0 }
       return i + 1
     })
@@ -70,7 +86,7 @@ export function useTour(): Tour {
         clearInterval(timer)
         setResolved(true)
         setIndex(i => {
-          const list = id ? STEPS[id] ?? [] : []
+          const list = id ? STEPS[id] : []
           return i + 1 >= list.length ? i : i + 1
         })
       }
@@ -82,12 +98,18 @@ export function useTour(): Tour {
     // Only the step that is waiting for this event reacts to it, so a stray
     // action elsewhere cannot skip the user forward.
     setIndex(i => {
-      const list = id ? STEPS[id] ?? [] : []
+      const current = idRef.current
+      const list = current ? STEPS[current] : []
       if (list[i]?.advanceOn !== e) return i
-      if (i + 1 >= list.length) { end('done'); return 0 }
+      if (i + 1 >= list.length) {
+        // Deferred: finishing sets state, and this runs inside a setState
+        // updater where doing so synchronously is not allowed.
+        queueMicrotask(() => endRef.current('done'))
+        return 0
+      }
       return i + 1
     })
-  }, [id, end])
+  }, [])
 
   return {
     id,

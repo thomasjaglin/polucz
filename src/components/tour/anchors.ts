@@ -11,7 +11,7 @@ export type AnchorName =
   | 'card-declensions' | 'card-comparative' | 'examples-button' | 'card-examples' | 'modal-close'
   | 'nav-flashcards'
   | 'fc-play-all' | 'fc-card' | 'fc-hard-mode'
-  | 'quiz-count' | 'quiz-modes' | 'quiz-coverage'
+  | 'quiz-count' | 'quiz-modes' | 'quiz-question'
   | 'audio-play' | 'audio-speed' | 'audio-repeat'
 
 const anchors = new Map<AnchorName, HTMLElement>()

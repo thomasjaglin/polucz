@@ -8,6 +8,7 @@ import { pushToast } from '../../lib/toastStore'
 import DeclensionQuestion from './DeclensionQuestion'
 import ConjugationQuestion from './ConjugationQuestion'
 import ProgressBar from '../ProgressBar'
+import { setAnchor } from '../tour/anchors'
 
 export interface AnswerRecord {
   polish: string
@@ -22,15 +23,18 @@ interface Props {
   cards: VocabEntry[]
   sentences: SentenceEntry[]
   onComplete: (answers: AnswerRecord[]) => void
+  /** Tells the quiz tour the user answered one. */
+  onTourEvent?: (e: 'quiz-answered') => void
 }
 
-export default function QuizSession({ questions, type, cards, sentences, onComplete }: Props) {
+export default function QuizSession({ questions, type, cards, sentences, onComplete, onTourEvent }: Props) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const [answers, setAnswers] = useState<AnswerRecord[]>([])
 
   const current = questions[currentIdx]
 
   const handleAnswered = useCallback((given: string) => {
+    onTourEvent?.('quiz-answered')
     const record: AnswerRecord = {
       // Paradigm questions have no sentence; the end screen still needs
       // something to show, so fall back to the grammatical prompt.
@@ -83,6 +87,7 @@ export default function QuizSession({ questions, type, cards, sentences, onCompl
           feeling like a delay. */}
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
+          ref={setAnchor('quiz-question')}
           key={current.id}
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}

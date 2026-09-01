@@ -17,9 +17,11 @@ interface Props {
   /** Empty state only: install the welcome words, then tell App so the
       vocabulary list agrees with what the quiz just gained. */
   onWelcome?: () => void
+  /** Tells the quiz tour what the user just did. */
+  onTourEvent?: (e: 'quiz-mode-picked' | 'quiz-answered') => void
 }
 
-export default function QuizPage({ onWelcome }: Props) {
+export default function QuizPage({ onWelcome, onTourEvent }: Props) {
   // Sentences now live in IndexedDB, so they arrive after first paint. Cards and
   // reviews are still synchronous, and tier-3 paradigm questions come from the
   // cards — so the quiz is playable before the sentences land.
@@ -47,6 +49,7 @@ export default function QuizPage({ onWelcome }: Props) {
   function handleStart(type: 'declension' | 'conjugation') {
     const qs = getSessionQuestions(type, 10, sentences, reviews, cards)
     if (qs.length === 0) return
+    onTourEvent?.('quiz-mode-picked')
     setQuizType(type)
     setQuestions(qs)
     setAnswers([])
@@ -114,6 +117,7 @@ export default function QuizPage({ onWelcome }: Props) {
         cards={cards}
         sentences={sentences}
         onComplete={handleComplete}
+        onTourEvent={onTourEvent}
       />
     )
   }
