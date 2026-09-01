@@ -7,6 +7,8 @@ import {
   type GroupSize, type GroupStat, type Grade,
 } from '../lib/flashcardGroups'
 import GlassButton from './GlassButton'
+import EmptyState from './EmptyState'
+import { installStarterDeck } from '../lib/starterDeck'
 import GlassPane from './GlassPane'
 import HardModeToggle from './HardModeToggle'
 import FlipOnChange from './FlipOnChange'
@@ -19,6 +21,8 @@ interface Props {
   onResetMastery: () => void
   onPlayAll: () => void
   onPlayGroup: (g: GroupStat) => void
+  /** Empty state only: install the welcome words. Absent when there is nothing to install. */
+  onWelcome?: () => void
 }
 
 // Soft per-grade gradients. The advanced grades run cool and cohesive —
@@ -90,7 +94,7 @@ function GroupRow({ group, onPlay }: { group: GroupStat; onPlay: () => void }) {
   )
 }
 
-export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode, onToggleHardMode, onResetMastery, onPlayAll, onPlayGroup }: Props) {
+export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode, onToggleHardMode, onResetMastery, onPlayAll, onPlayGroup , onWelcome }: Props) {
   const [size, setSize] = useState<GroupSize>(getGroupSize)
   const reviews = getAllReviews()
   const groups = buildGroups(cards, size, reviews)
@@ -118,9 +122,15 @@ export default function FlashcardGroupSelector({ cards, conqueredCount, hardMode
       </div>
 
       {cards.length === 0 ? (
-        <p className="mt-8 text-center font-instrument text-[16px] ink-tertiary">
-          No cards yet — add some vocabulary first.
-        </p>
+        <EmptyState
+          icon="style"
+          title="Nothing to review yet"
+          action={onWelcome && { label: 'Start with dzień dobry', onClick: onWelcome }}
+          footnote="Or add your own words from the vocabulary tab."
+        >
+          Flashcards need words, and need nothing else — no key, no connection.
+          Start with <em>dzień dobry</em>: two words, fully declined, due right away.
+        </EmptyState>
       ) : playableTotal === 0 ? (
         // Everything is mastered — nothing left to drill; offer a mastery reset.
         <div className="flex flex-col items-center gap-4 pt-10 text-center">

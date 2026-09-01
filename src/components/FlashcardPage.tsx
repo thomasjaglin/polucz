@@ -471,9 +471,11 @@ function ActionButtons({ conquerable, onConquered, onLapse }: { conquerable: boo
 interface Props {
   cards: VocabEntry[]
   onOpenModal?: (entry: VocabEntry) => void
+  /** Empty state only: install the welcome words and refresh the list. */
+  onWelcome?: () => void
 }
 
-export default function FlashcardPage({ cards, onOpenModal }: Props) {
+export default function FlashcardPage({ cards, onOpenModal, onWelcome }: Props) {
   // Overview-first: the game opens on the group selector, then plays a chosen
   // scope (a group, or all cards).
   const [screen, setScreen] = useState<'selector' | 'playing'>('selector')
@@ -665,6 +667,7 @@ export default function FlashcardPage({ cards, onOpenModal }: Props) {
         onResetMastery={handleResetMastery}
         onPlayAll={() => startRunFor(cards, 'All cards')}
         onPlayGroup={(g: GroupStat) => startRunFor(g.cards, `Words ${g.start}–${g.end}`)}
+        onWelcome={onWelcome}
       />
     )
   }

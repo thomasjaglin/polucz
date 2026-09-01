@@ -20,6 +20,7 @@ import { pushToast } from './lib/toastStore'
 import { pages, pageOrder } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
+import { installStarterDeck } from './lib/starterDeck'
 import { haptics } from './lib/haptics'
 import { getAllReviews } from './lib/reviewStorage'
 import { isConquered } from './lib/scheduler'
@@ -241,6 +242,11 @@ export default function App() {
     if (next >= 0 && next < pageOrder.length) { haptics.select(); changePage(pageOrder[next]) }
   }
 
+  // Every empty state that offers the welcome words routes through here, so the
+  // vocabulary list, the flashcard deck and the quiz all agree immediately
+  // afterwards no matter which page the user was standing on.
+  const handleWelcome = () => { installStarterDeck(); setCards(getCards()) }
+
   const showNav = activeId !== 'add_page' && activeId !== 'api_config'
   const page = pages[activeId]
   // Top padding is sized to whatever TopHeader actually draws on this page, so
@@ -256,9 +262,9 @@ export default function App() {
   function renderContent() {
     if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} onChangePage={changePage} onListEmptyChange={setListEmpty} onCardsChanged={() => setCards(getCards())} />
     if (activeId === 'translate')    return <TranslatePage onAddCard={handleAddCard} onChangePage={changePage} />
-    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
-    if (activeId === 'question_mark') return <QuizPage />
-    if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} />
+    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} />
+    if (activeId === 'question_mark') return <QuizPage onWelcome={handleWelcome} />
+    if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'api_config') return <ApiConfigPage onSave={() => { setCards(getCards()); changePage('folder') }} />
     return (

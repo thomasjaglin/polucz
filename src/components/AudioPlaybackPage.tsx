@@ -10,6 +10,7 @@ import { usePlaybackRate, setPlaybackRate, RATE_OPTIONS } from '../lib/playbackR
 import { useBackClose } from '../hooks/useBackClose'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
+import EmptyState from './EmptyState'
 import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
 
@@ -20,6 +21,8 @@ type Phase = 'idle' | 'playing' | 'waiting' | 'done'
 interface Props {
   cards: VocabEntry[]
   onOpenModal?: (entry: VocabEntry) => void
+  /** Empty state only: install the welcome words. */
+  onWelcome?: () => void
 }
 
 // ─── Animated waveform ────────────────────────────────────────────────────────
@@ -75,7 +78,7 @@ function arcSlot(d: number) {
   }
 }
 
-export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
+export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
   const [queue, setQueue]       = useState<VocabEntry[]>([])
@@ -313,11 +316,23 @@ export default function AudioPlaybackPage({ cards, onOpenModal }: Props) {
             animate={{ opacity: 1 }}
             className="flex flex-1 flex-col items-center justify-center gap-4 text-center"
           >
-            <span className="material-symbols-rounded text-[56px] ink-glyph">headphones</span>
-            <h2 className="font-instrument text-[22px] font-semibold text-ink/60">No audio ready yet</h2>
-            <p className="font-instrument text-[15px] ink-tertiary px-4">
-              Open a word to prepare its audio, or use “Prepare all” on the vocabulary page — prepared words play here.
-            </p>
+            {/* On Android there is nothing to "prepare": the device speech
+                engine reads any word on demand. The old copy here described the
+                browser build's cached-clip model and sent people off to press a
+                button that does nothing for them. What this page actually
+                lacks, on a fresh install, is words. */}
+            <EmptyState
+              icon="headphones"
+              title="Nothing to play yet"
+              action={cards.length === 0 && onWelcome ? { label: 'Start with dzień dobry', onClick: onWelcome } : undefined}
+              footnote={cards.length === 0
+                ? 'Your phone reads Polish aloud — no key, no downloads.'
+                : 'Open a word and tap the speaker to hear it.'}
+            >
+              {cards.length === 0
+                ? <>This is a hands-free listening run through your words. Start with <em>dzień dobry</em> and it has something to read.</>
+                : <>None of your words are ready to play here yet.</>}
+            </EmptyState>
           </motion.div>
         ) : !started ? (
           <motion.div

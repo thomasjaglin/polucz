@@ -13,12 +13,18 @@ import type { SentenceEntry, VocabEntry } from '../data/types'
 
 type Screen = 'selector' | 'session' | 'end'
 
-export default function QuizPage() {
+interface Props {
+  /** Empty state only: install the welcome words, then tell App so the
+      vocabulary list agrees with what the quiz just gained. */
+  onWelcome?: () => void
+}
+
+export default function QuizPage({ onWelcome }: Props) {
   // Sentences now live in IndexedDB, so they arrive after first paint. Cards and
   // reviews are still synchronous, and tier-3 paradigm questions come from the
   // cards — so the quiz is playable before the sentences land.
   const [sentences, setSentences] = useState<SentenceEntry[]>([])
-  const [cards] = useState<VocabEntry[]>(getCards)
+  const [cards, setCards] = useState<VocabEntry[]>(getCards)
   const [reviews] = useState(getAllReviews)
 
   useEffect(() => {
@@ -83,6 +89,7 @@ export default function QuizPage() {
     return (
       <QuizTypeSelector
         questionCount={questionCount}
+        onWelcome={onWelcome && (() => { onWelcome(); setCards(getCards()) })}
         onStart={handleStart}
         coverage={
           <CoverageSection

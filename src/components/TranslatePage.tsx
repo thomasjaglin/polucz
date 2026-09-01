@@ -6,7 +6,7 @@ import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import { tagGradients } from '../data/gradients'
 import { findByLemma, getCards, saveCard } from '../lib/storage'
-import { llmHeaders } from '../lib/llmConfig'
+import { llmHeaders, getDeepLKey } from '../lib/llmConfig'
 import { type VocabEntry, type WordType, type PageId, typeLabel } from '../data/types'
 import { generateMaskGlassCanvas, GLASS_OVERSCAN } from '../lib/generateGlassMap'
 import { pokeRenderer, setBgBlobTop, registerMaskPane } from '../webgl/glassStore'
@@ -442,8 +442,30 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
     </div>
   ) : null
 
+  // Translation is the only thing this page does, and it is the one feature that
+  // needs its own key. Saying so up front beats letting someone type a sentence,
+  // press the button and meet a failure — which is what happened before.
+  const needsKey = !getDeepLKey()
+
   const inputBlock = (
     <>
+      {needsKey && (
+        <div className="mb-3 rounded-[20px] border border-accent/25 bg-accent/[0.06] px-4 py-3.5">
+          <p className="font-instrument text-[14px] font-medium text-ink/85">
+            Translation needs a DeepL key
+          </p>
+          <p className="mt-1 font-instrument text-[13px] leading-relaxed text-ink/70">
+            It is separate from the LLM key, and free-tier keys end in <code>:fx</code>.
+            Everything else in Polucz works without it.
+          </p>
+          <button
+            onClick={() => onChangePage('api_config')}
+            className="mt-2 font-instrument text-[13px] font-medium text-accent underline underline-offset-4"
+          >
+            Add a DeepL key
+          </button>
+        </div>
+      )}
       <div className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
         <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] pane-field-soft" />
         <textarea
