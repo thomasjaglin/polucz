@@ -47,7 +47,8 @@ export default function SolidButton({
         // overflow, so the blur is never cut by the edge of its own layer.
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-[-236%_-22.61%_-190%_-29.79%] z-[1] opacity-70"
+          className="pointer-events-none absolute inset-[-236%_-22.61%_-190%_-29.79%] z-[1]"
+          style={{ opacity: 'var(--btn-wash-opacity)' }}
           dangerouslySetInnerHTML={{ __html: buttonGradient }}
         />
       )}
