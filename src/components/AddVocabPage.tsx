@@ -145,13 +145,13 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
 
         {/* Feedback messages */}
         {phase === 'error' && (
-          <p className="mb-3 font-instrument text-[13px] text-red-400/80">{errorMsg}</p>
+          <p className="mb-3 font-instrument text-[13px] text-err/80">{errorMsg}</p>
         )}
         {phase === 'duplicate' && (
           <p className="mb-3 font-instrument text-[13px] text-amber-400/80">Already in your vocabulary</p>
         )}
         {phase === 'success' && (
-          <p className="mb-3 font-instrument text-[13px] text-emerald-400/80">Added! Taking you to your vocab…</p>
+          <p className="mb-3 font-instrument text-[13px] text-ok/80">Added! Taking you to your vocab…</p>
         )}
 
         <GlassButton

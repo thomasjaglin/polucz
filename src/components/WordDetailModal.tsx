@@ -454,7 +454,7 @@ function ExamplesSection({ word, mastered, tourActive = false, onTourEvent }: {
         <span className="material-symbols-rounded animate-spin ink-tertiary">progress_activity</span>
       ) : error ? (
         <>
-          <span className="material-symbols-rounded text-[16px] text-red-400/70">error</span>
+          <span className="material-symbols-rounded text-[16px] text-err/70">error</span>
           <span className="ink-tertiary">
             {errorCode === 'not_configured' ? llmErrorMessage(errorCode) : 'Unavailable — tap to retry'}
           </span>
@@ -692,9 +692,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                   <GlassButton
                     onClick={onDelete}
                     radius={20}
-                    pane="bg-red-400/10"
+                    pane="bg-err/10"
                     contentClassName="flex w-full items-center justify-center gap-1.5"
-                    className="h-[38px] border border-red-400/30 px-4 font-instrument text-[13px] text-red-400"
+                    className="h-[38px] border border-err/30 px-4 font-instrument text-[13px] text-err"
                   >
                     <span className="material-symbols-rounded text-[16px]">delete_forever</span>
                     Delete
@@ -705,7 +705,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                   <button
                     onClick={doEnrich}
                     disabled={enriching}
-                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-ink/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-red-400/70' : 'ink-tertiary hover:text-ink'}`}
+                    className={`relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-ink/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] transition-all hover:scale-105 active:scale-95 disabled:pointer-events-none ${enrichError ? 'text-err/70' : 'ink-tertiary hover:text-ink'}`}
                   >
                     <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
                     <span className={`material-symbols-rounded relative z-10 text-[20px]${enriching ? ' animate-spin' : ''}`}>
@@ -714,9 +714,9 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                   </button>
                   <button
                     onClick={() => { haptics.destructive(); setConfirmDelete(true) }}
-                    className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-red-400/20 text-red-400/50 transition-all hover:scale-105 hover:text-red-400 active:scale-95"
+                    className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-err/20 text-err/50 transition-all hover:scale-105 hover:text-err active:scale-95"
                   >
-                    <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-red-400/5" />
+                    <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-err/5" />
                     <span className="material-symbols-rounded relative z-10 text-[20px]">delete</span>
                   </button>
                 </div>
@@ -738,7 +738,7 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
                 <button
                   onClick={handleSpeaker}
                   disabled={false}
-                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-red-400/70' : 'ink-tertiary hover:text-ink'}`}
+                  className={`relative mt-[3px] flex h-[36px] w-[36px] flex-shrink-0 items-center justify-center rounded-full border border-ink/10 transition-all hover:scale-105 active:scale-95 ${tts.state === 'error' ? 'text-err/70' : 'ink-tertiary hover:text-ink'}`}
                 >
                   <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5" />
                   <span className={`material-symbols-rounded relative z-10 text-[20px]${tts.state === 'playing' ? ' animate-pulse' : ''}`}>

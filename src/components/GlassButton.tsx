@@ -10,7 +10,7 @@ type Variant = 'primary' | 'secondary' | 'danger'
 const VARIANTS: Record<Variant, { radius: number; pane: string; classes: string }> = {
   primary:   { radius: 24, pane: 'bg-accent/15', classes: 'border border-accent/25 font-medium text-accent' },
   secondary: { radius: 24, pane: 'bg-ink/5',  classes: 'border border-ink/10 text-ink/60' },
-  danger:    { radius: 24, pane: 'bg-red-400/10',   classes: 'border border-red-400/25 font-medium text-red-400' },
+  danger:    { radius: 24, pane: 'bg-err/10',   classes: 'border border-err/25 font-medium text-err' },
 }
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {

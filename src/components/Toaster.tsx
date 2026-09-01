@@ -5,9 +5,9 @@ import { useToasts, type ToastTone } from '../lib/toastStore'
 import type { PageId } from '../data/types'
 
 const TONE: Record<ToastTone, { pane: string; border: string; icon: string; iconColor: string }> = {
-  success: { pane: 'bg-emerald-400/20', border: 'border-emerald-400/35', icon: 'check_circle', iconColor: 'text-emerald-300' },
-  error:   { pane: 'bg-red-400/20',     border: 'border-red-400/40',     icon: 'error',        iconColor: 'text-red-300' },
-  delete:  { pane: 'bg-red-400/20',     border: 'border-red-400/35',     icon: 'delete',       iconColor: 'text-red-300' },
+  success: { pane: 'bg-ok/20', border: 'border-ok/35', icon: 'check_circle', iconColor: 'text-ok' },
+  error:   { pane: 'bg-err/20',     border: 'border-err/40',     icon: 'error',        iconColor: 'text-err' },
+  delete:  { pane: 'bg-err/20',     border: 'border-err/35',     icon: 'delete',       iconColor: 'text-err' },
   info:    { pane: 'bg-ink/10',   border: 'border-ink/12',   icon: 'info',         iconColor: 'ink-tertiary' },
 }
 

@@ -351,7 +351,7 @@ export default function TopHeader({ activeId, onChangePage, onImport, cards, onA
                   <GlassButton onClick={() => setPrepConfirm(false)} radius={999} pane="bg-ink/5" className={`${MODAL_BTN} flex-1 border-ink/20 text-ink/80`}>
                     Run in background
                   </GlassButton>
-                  <GlassButton onClick={() => { prepCancel.current = true; setPrepProgress(null); setPrepConfirm(false) }} radius={999} pane="bg-red-400/12" className={`${MODAL_BTN} flex-1 border-red-400/40 text-red-400`}>
+                  <GlassButton onClick={() => { prepCancel.current = true; setPrepProgress(null); setPrepConfirm(false) }} radius={999} pane="bg-err/12" className={`${MODAL_BTN} flex-1 border-err/40 text-err`}>
                     Stop
                   </GlassButton>
                 </div>

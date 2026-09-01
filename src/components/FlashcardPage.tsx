@@ -377,7 +377,7 @@ function FlashCard({ entry, x, hardMode, conquerable, onToggleHardMode, onEasy, 
                       onClick={e => { e.stopPropagation(); onReplay() }}
                       radius={16}
                       pane="bg-ink/5"
-                      className={`h-[32px] w-[32px] flex-shrink-0 border border-ink/10 ${ttsState === 'error' ? 'text-red-400/70' : 'ink-tertiary hover:text-ink/70'}`}
+                      className={`h-[32px] w-[32px] flex-shrink-0 border border-ink/10 ${ttsState === 'error' ? 'text-err/70' : 'ink-tertiary hover:text-ink/70'}`}
                     >
                       <span className={`material-symbols-rounded text-[16px]${ttsState === 'playing' ? ' animate-pulse' : ''}`}>
                         {ttsState === 'loading' ? 'progress_activity' : ttsState === 'error' ? 'error' : 'volume_up'}

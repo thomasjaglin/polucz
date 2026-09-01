@@ -54,12 +54,12 @@ export default function SessionEndScreen({ type, answers, durationMs, onRetry, o
         <div className="flex flex-col gap-2">
           <p className="font-instrument text-[12px] uppercase tracking-wider ink-tertiary">Review</p>
           {wrong.map((a, i) => (
-            <div key={i} className="rounded-[16px] border border-red-400/15 bg-red-400/[0.04] px-4 py-3">
+            <div key={i} className="rounded-[16px] border border-err/15 bg-err/[0.04] px-4 py-3">
               <p className="line-clamp-1 font-instrument text-[12px] ink-tertiary">{a.polish}</p>
               <div className="mt-1.5 flex items-center gap-2">
-                <span className="font-instrument text-[15px] text-red-400/65 line-through">{a.given || '—'}</span>
+                <span className="font-instrument text-[15px] text-err/65 line-through">{a.given || '—'}</span>
                 <span className="material-symbols-rounded text-[14px] ink-glyph">arrow_forward</span>
-                <span className="font-instrument text-[15px] text-green-400">{a.correct}</span>
+                <span className="font-instrument text-[15px] text-ok">{a.correct}</span>
               </div>
             </div>
           ))}

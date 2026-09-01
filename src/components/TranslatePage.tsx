@@ -532,7 +532,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
       </GlassButton>
 
       {phase === 'error' && (
-        <p className="mt-2 text-center font-instrument text-[12px] text-red-400/80">
+        <p className="mt-2 text-center font-instrument text-[12px] text-err/80">
           {llmErrorMessage(errorCode)}
           {errorCode === 'not_configured' && (
             <>
@@ -601,7 +601,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
         {canSwipe && (
           <motion.div style={{ opacity: addOpacity }}
             className="pointer-events-none absolute inset-0 z-10 flex items-center justify-end rounded-[24px] pr-6">
-            <span className="font-instrument text-[18px] font-semibold text-emerald-400/90">Add →</span>
+            <span className="font-instrument text-[18px] font-semibold text-ok/90">Add →</span>
           </motion.div>
         )}
         <motion.div style={{ opacity: clearOpacity }}
@@ -643,7 +643,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
               </div>
 
               {added && (
-                <p className="font-instrument text-[13px] text-emerald-400/80">Added to vocabulary</p>
+                <p className="font-instrument text-[13px] text-ok/80">Added to vocabulary</p>
               )}
               {!added && alreadySaved && (
                 <p className="font-instrument text-[13px] ink-tertiary">Already in your vocabulary</p>
