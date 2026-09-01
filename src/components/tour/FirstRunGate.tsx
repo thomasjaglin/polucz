@@ -32,15 +32,14 @@ export default function FirstRunGate({ onSetUpKeys, onTakeTour, onSkip }: Props)
         <div className="relative z-10 flex flex-col gap-5 p-7">
           <div className="flex flex-col gap-2">
             <p className="font-instrument text-[13px] font-medium uppercase tracking-wider text-accent">
-              Dzień dobry
+              Witam!
             </p>
             <h1 className="font-instrument text-[24px] font-semibold leading-tight text-ink">
               Welcome to Polucz
             </h1>
-            <p className="font-instrument text-[14px] leading-relaxed text-ink/70">
-              Polucz writes your Polish cards for you — translations, every form, real examples.
-              That part runs on a key of your own. Everything else, including the quiz and
-              pronunciation, needs nothing at all.
+            <p className="font-instrument text-[15px] leading-relaxed text-ink/75">
+              Translate what you come across, understand what words are being used, build your deck
+              of vocabulary and learn those words in context gradually until you know them fully!
             </p>
           </div>
 
@@ -68,8 +67,7 @@ export default function FirstRunGate({ onSetUpKeys, onTakeTour, onSkip }: Props)
           </div>
 
           <p className="font-instrument text-[12px] leading-relaxed ink-tertiary">
-            The tour uses two words and makes no calls — it costs nothing, works offline, and you
-            can replay it any time from Help.
+            The tour can be replayed at any time from the Help page.
           </p>
         </div>
       </motion.div>

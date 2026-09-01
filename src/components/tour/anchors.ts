@@ -6,8 +6,9 @@
 // when an anchor mounts.
 
 export type AnchorName =
-  | 'translate-input' | 'translate-button' | 'lemma-rows'
-  | 'vocab-cards' | 'card-declensions' | 'card-comparative' | 'examples-button' | 'modal-close'
+  | 'translate-input' | 'translate-button' | 'translate-result'
+  | 'vocab-filter' | 'vocab-cards'
+  | 'card-declensions' | 'card-comparative' | 'examples-button' | 'modal-close'
   | 'nav-flashcards'
   | 'fc-play-all' | 'fc-card' | 'fc-hard-mode'
   | 'quiz-count' | 'quiz-modes' | 'quiz-coverage'

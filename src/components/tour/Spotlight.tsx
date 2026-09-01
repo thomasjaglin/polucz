@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
+import GlassPane from '../GlassPane'
 import { getAnchor, type AnchorName } from './anchors'
 
 // The dim-everything-but-this overlay.
@@ -35,6 +36,22 @@ export default function Spotlight({ anchor, text, progress, onNext, onSkip, next
   // The anchor can arrive late (page transition, modal open) and can move
   // (scroll, keyboard, layout settling), so this re-measures on a frame loop
   // rather than once on mount.
+  // A new step may be pointing below the fold; scroll it into view once, then
+  // leave the user alone so the page does not fight their own scrolling.
+  useEffect(() => {
+    let tries = 0
+    const id = setInterval(() => {
+      const el = getAnchor(anchor)
+      if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        clearInterval(id)
+      } else if (++tries > 40) {
+        clearInterval(id)
+      }
+    }, 50)
+    return () => clearInterval(id)
+  }, [anchor])
+
   useEffect(() => {
     let raf = 0
     const measure = () => {
@@ -83,14 +100,16 @@ export default function Spotlight({ anchor, text, progress, onNext, onSkip, next
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: [0.33, 1, 0.68, 1] }}
-        className="pointer-events-auto absolute inset-x-4 rounded-[24px] border border-ink/15 bg-surface p-4 shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+        className="pointer-events-auto absolute inset-x-4 overflow-hidden rounded-[28px] border border-ink/10 glass-raise"
         style={promptBelow
-          ? { top: r ? below + 16 : undefined, bottom: r ? undefined : 96 }
-          : { bottom: window.innerHeight - (r?.top ?? 0) + 16 }}
+          ? { top: r ? below + 20 : undefined, bottom: r ? undefined : 104 }
+          : { bottom: window.innerHeight - (r?.top ?? 0) + 20 }}
       >
+        <GlassPane borderRadius={28} className="absolute inset-0 z-0 rounded-[28px] bg-surface/80" />
+        <div className="relative z-10 p-5">
         <p className="font-instrument text-[15px] leading-relaxed text-ink/90">{text}</p>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <span className="font-instrument text-[12px] tabular-nums ink-tertiary">
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="font-instrument text-[12px] font-medium tabular-nums ink-tertiary">
             {progress.step} of {progress.total}
           </span>
           <div className="flex items-center gap-3">
@@ -102,12 +121,13 @@ export default function Spotlight({ anchor, text, progress, onNext, onSkip, next
             {onNext && nextLabel && (
               <button
                 onClick={onNext}
-                className="rounded-full border border-accent/30 bg-accent/[0.12] px-4 py-1.5 font-instrument text-[14px] font-medium text-accent"
+                className="rounded-full border border-accent/30 bg-accent/[0.14] px-5 py-2 font-instrument text-[14px] font-medium text-accent shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]"
               >
                 {nextLabel}
               </button>
             )}
           </div>
+        </div>
         </div>
       </motion.div>
     </div>

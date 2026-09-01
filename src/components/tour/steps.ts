@@ -26,7 +26,7 @@ export interface TourStep {
 export const ARRIVAL_STEPS: TourStep[] = [
   {
     anchor: 'translate-input',
-    text: 'Words come from here. We have started you off with dzień dobry — the everyday Polish greeting.',
+    text: 'In the translate page you can translate from Polish or from English. Let’s start by translating “Dzień dobry”, the everyday Polish greeting.',
     nextLabel: 'Next',
   },
   {
@@ -35,13 +35,25 @@ export const ARRIVAL_STEPS: TourStep[] = [
     advanceOn: 'translate-done',
   },
   {
-    anchor: 'lemma-rows',
-    text: 'Two words, each one ready to keep: dzień, a noun, and dobry, an adjective.',
+    // One highlight over the translation and the words it found, so the
+    // connection between them is the thing being pointed at.
+    anchor: 'translate-result',
+    text: 'Add both words to your vocabulary to start your learning journey!',
+    advanceOn: 'words-added',
+  },
+  {
+    anchor: 'vocab-cards',
+    text: 'Now your cards are in your vocabulary list.',
     nextLabel: 'Next',
   },
   {
-    anchor: 'lemma-rows',
-    text: 'Swipe a word right, or tap the plus, to add it. Add both.',
-    advanceOn: 'words-added',
+    anchor: 'vocab-filter',
+    text: 'In this section you can see how many cards your deck has, filter by word type, as well as search words specifically.',
+    nextLabel: 'Next',
+  },
+  {
+    anchor: 'vocab-cards',
+    text: 'Tap a card to open it and see everything Polucz knows about the word.',
+    advanceOn: 'card-opened',
   },
 ]

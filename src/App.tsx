@@ -272,13 +272,27 @@ export default function App() {
   const topPad = compactTop ? '1.25rem' : secondaryTop ? '58px' : '94px'
 
   function renderContent() {
-    if (activeId === 'folder')       return <VocabListPage cards={cards} onOpenModal={handleOpenModal} onChangePage={changePage} onListEmptyChange={setListEmpty} onCardsChanged={() => setCards(getCards())} />
+    if (activeId === 'folder')       return (
+      <VocabListPage
+        cards={cards}
+        onOpenModal={handleOpenModal}
+        onChangePage={changePage}
+        onListEmptyChange={setListEmpty}
+        onCardsChanged={() => setCards(getCards())}
+        onTourEvent={tour.notify}
+      />
+    )
     if (activeId === 'translate')    return (
       <TranslatePage
         onAddCard={handleAddCard}
         onChangePage={changePage}
         tourActive={tour.id === 'arrival'}
-        onTourEvent={tour.notify}
+        onTourEvent={e => {
+          tour.notify(e)
+          // The next step is about the library, so take them there rather than
+          // leaving a prompt about cards on top of the translate page.
+          if (e === 'words-added') { setCards(getCards()); changePage('folder') }
+        }}
       />
     )
     if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} />

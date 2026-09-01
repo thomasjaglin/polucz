@@ -9,6 +9,7 @@ import { getAllReviews } from '../lib/reviewStorage'
 import { isConquered } from '../lib/scheduler'
 import { getLlmConfig } from '../lib/llmConfig'
 import { installStarterDeck } from '../lib/starterDeck'
+import { setAnchor } from './tour/anchors'
 import GlassButton from './GlassButton'
 import type { PageId } from '../data/types'
 
@@ -30,9 +31,11 @@ interface Props {
   onListEmptyChange?: (empty: boolean) => void
   /** Empty state only: the starter deck writes to storage behind App's state. */
   onCardsChanged?: () => void
+  /** Tells the tour the user opened a card. */
+  onTourEvent?: (e: 'card-opened') => void
 }
 
-export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange, onCardsChanged }: Props) {
+export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange, onCardsChanged, onTourEvent }: Props) {
   const reduce = useReducedMotion()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -142,7 +145,7 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6">
       {/* Search + filter glass card */}
-      <div className="w-full rounded-[36px] glass-raise">
+      <div ref={setAnchor('vocab-filter')} className="w-full rounded-[36px] glass-raise">
         <div className="relative flex w-full flex-col gap-4 rounded-[36px] p-4">
           <GlassPane forceCss borderRadius={36} className="absolute inset-0 z-0 rounded-[36px] bg-ink/[0.02]" />
           <div className="relative z-10 flex flex-col gap-3.5">
@@ -208,7 +211,9 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
       </div>
 
       {/* Vocab list */}
-      <motion.div className="flex flex-col gap-4" variants={listContainer} initial="hidden" animate="visible">
+      {/* The anchor sits on the list itself: the tour points at "your cards",
+          not at a particular one, and this element has a real box to measure. */}
+      <motion.div ref={setAnchor('vocab-cards')} className="flex flex-col gap-4" variants={listContainer} initial="hidden" animate="visible">
         <AnimatePresence mode="popLayout">
           {filtered.map(entry => (
             <motion.div
@@ -222,7 +227,7 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
                 ref={el => { cardRefs.current.set(entry.id, el) }}
                 entry={entry}
                 mastered={masteredIds.has(entry.id)}
-                onClick={() => onOpenModal(entry, cardRefs.current.get(entry.id) ?? null)}
+                onClick={() => { onTourEvent?.('card-opened'); onOpenModal(entry, cardRefs.current.get(entry.id) ?? null) }}
               />
             </motion.div>
           ))}

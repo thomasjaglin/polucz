@@ -483,7 +483,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
       <span className="font-instrument text-[13px]">Analysing words…</span>
     </div>
   ) : wordPhase === 'done' && words.length > 1 ? (
-    <div ref={setAnchor('lemma-rows')} className="pt-4">
+    <div className="pt-4">
       <p className="mb-2 font-instrument text-[11px] uppercase tracking-wider ink-tertiary">
         {srcTop ? 'Words in this sentence' : 'Words in the Polish translation'}
       </p>
@@ -714,7 +714,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
       <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end overflow-hidden px-8 pb-[14vh] pt-[calc(0.5rem+env(safe-area-inset-top))]">
         <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">Polish</p>
         {srcTop ? inputBlock : (
-          <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
+          <div ref={setAnchor('translate-result')} className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
         )}
       </div>
 
@@ -752,7 +752,7 @@ export default function TranslatePage({ onAddCard, onChangePage, tourActive = fa
         }}
       >
         <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">English</p>
-        {srcTop ? <>{resultBlock}{wordListBlock}</> : inputBlock}
+        {srcTop ? <div ref={setAnchor('translate-result')}>{resultBlock}{wordListBlock}</div> : inputBlock}
       </div>
     </div>
   )
