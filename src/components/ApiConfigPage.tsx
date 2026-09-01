@@ -204,7 +204,7 @@ export default function ApiConfigPage({ onSave }: Props) {
         <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">API key</h3>
         <GlassInput
           type="password"
-          placeholder="Paste API key..."
+          placeholder="Paste API key…"
           value={editing ? apiKey : MASK}
           onChange={setApiKey}
           disabled={!editing}
@@ -296,7 +296,7 @@ export default function ApiConfigPage({ onSave }: Props) {
         <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">DeepL API key</h3>
         <GlassInput
           type="password"
-          placeholder="Paste DeepL API key..."
+          placeholder="Paste DeepL API key…"
           value={deeplEditing ? deeplKey : MASK}
           onChange={setDeeplKey}
           disabled={!deeplEditing}

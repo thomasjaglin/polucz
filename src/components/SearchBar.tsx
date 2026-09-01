@@ -13,7 +13,7 @@ export default function SearchBar({ value, onChange, autoFocus = false }: Props)
       <div className="relative z-10 flex items-center gap-3 px-[18px] py-3">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Search…"
           value={value}
           onChange={e => onChange(e.target.value)}
           autoFocus={autoFocus}

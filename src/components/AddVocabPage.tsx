@@ -126,7 +126,7 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
       <GlassCard contentClassName="flex flex-col p-5">
         <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Google Sheets import</h2>
         <GlassInput
-          placeholder="Paste link..."
+          placeholder="Paste link…"
           icon="link"
           value={sheetUrl}
           onChange={setSheetUrl}
@@ -148,7 +148,7 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
           <p className="mb-3 font-instrument text-[13px] text-red-400/80">{errorMsg}</p>
         )}
         {phase === 'duplicate' && (
-          <p className="mb-3 font-instrument text-[13px] text-amber-400/80">Already in your vocabulary.</p>
+          <p className="mb-3 font-instrument text-[13px] text-amber-400/80">Already in your vocabulary</p>
         )}
         {phase === 'success' && (
           <p className="mb-3 font-instrument text-[13px] text-emerald-400/80">Added! Taking you to your vocab…</p>
