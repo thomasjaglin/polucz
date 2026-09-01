@@ -21,11 +21,15 @@ export interface Tour {
   next: () => void
   /** Screens report what the user did; the tour advances if it was waiting for it. */
   notify: (e: TourEvent) => void
+  /** Set for the tour that just reached its end — not one that was skipped. */
+  justFinished: TourId | null
+  clearFinished: () => void
 }
 
 export function useTour(): Tour {
   const [id, setId] = useState<TourId | null>(null)
   const [index, setIndex] = useState(0)
+  const [justFinished, setJustFinished] = useState<TourId | null>(null)
 
   // notify() must keep the same identity for the life of the app. Screens hand
   // it to callbacks memoised with empty dependency arrays — startRunFor is one —
@@ -49,7 +53,15 @@ export function useTour(): Tour {
   }, [])
 
   const end = useCallback((how: 'done' | 'skipped') => {
-    setId(prev => { if (prev) finishTour(prev, how); return null })
+    setId(prev => {
+      if (prev) {
+        finishTour(prev, how)
+        // Only a completed tour signs off; skipping means the user asked to be
+        // left alone, and a card in their face would be the opposite of that.
+        if (how === 'done') setJustFinished(prev)
+      }
+      return null
+    })
     setIndex(0)
   }, [])
 
@@ -122,5 +134,7 @@ export function useTour(): Tour {
     skip: () => end('skipped'),
     next: advance,
     notify,
+    justFinished,
+    clearFinished: () => setJustFinished(null),
   }
 }

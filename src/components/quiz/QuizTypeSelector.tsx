@@ -1,6 +1,7 @@
 import GlassButton from '../GlassButton'
-import EmptyState from '../EmptyState'
+import EmptyLibraryState from '../EmptyLibraryState'
 import { setAnchor } from '../tour/anchors'
+import type { PageId } from '../../data/types'
 
 interface Props {
   /** Questions ready to ask — stored sentences plus computed paradigm slots. */
@@ -8,26 +9,25 @@ interface Props {
   onStart: (type: 'declension' | 'conjugation') => void
   /** Coverage tools, rendered below the two quiz types. */
   coverage?: React.ReactNode
-  /** Empty state only: install the welcome words. */
-  onWelcome?: () => void
+  /** Empty state only: where to send someone with no words yet. */
+  onChangePage: (id: PageId) => void
 }
 
-export default function QuizTypeSelector({ questionCount, onStart, coverage, onWelcome }: Props) {
+export default function QuizTypeSelector({ questionCount, onStart, coverage, onChangePage }: Props) {
   const hasEnough = questionCount >= 4
 
   // Nothing to ask about: show the way out rather than two greyed-out modes and
   // an instruction to go elsewhere.
   if (questionCount === 0) {
     return (
-      <EmptyState
+      <EmptyLibraryState
         icon="quiz"
         title="No questions yet"
-        action={onWelcome && { label: 'Start with dzień dobry', onClick: onWelcome }}
-        footnote="Questions are built from the forms of your own words — no key needed."
+        onChangePage={onChangePage}
       >
-        The quiz asks for the declensions and conjugations of words you have.
-        Start with <em>dzień dobry</em> and there are eleven waiting.
-      </EmptyState>
+        Questions are built from the declensions and conjugations of your own words — no key, no
+        connection. A couple of words is enough for a first round.
+      </EmptyLibraryState>
     )
   }
 

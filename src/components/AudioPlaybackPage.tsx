@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { type VocabEntry, typeLabel } from '../data/types'
+import { type VocabEntry, type PageId, typeLabel } from '../data/types'
 import { getAllReviews, resetAllReviews } from '../lib/reviewStorage'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { tagGradients } from '../data/gradients'
@@ -11,6 +11,7 @@ import { useBackClose } from '../hooks/useBackClose'
 import GlassPane from './GlassPane'
 import GlassButton from './GlassButton'
 import EmptyState from './EmptyState'
+import EmptyLibraryState from './EmptyLibraryState'
 import { setAnchor } from './tour/anchors'
 import ProgressBar from './ProgressBar'
 import { useDoubleTap } from '../hooks/useDoubleTap'
@@ -22,8 +23,8 @@ type Phase = 'idle' | 'playing' | 'waiting' | 'done'
 interface Props {
   cards: VocabEntry[]
   onOpenModal?: (entry: VocabEntry) => void
-  /** Empty state only: install the welcome words. */
-  onWelcome?: () => void
+  /** Empty state only: where to send someone with no words yet. */
+  onChangePage: (id: PageId) => void
   /** Tells the pronunciation tour that playback began. */
   onTourEvent?: (e: 'audio-started') => void
 }
@@ -81,7 +82,7 @@ function arcSlot(d: number) {
   }
 }
 
-export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome, onTourEvent }: Props) {
+export default function AudioPlaybackPage({ cards, onOpenModal, onChangePage, onTourEvent }: Props) {
   // Index-based queue (rather than popping) so swiping can go back to
   // previous cards
   const [queue, setQueue]       = useState<VocabEntry[]>([])
@@ -324,18 +325,21 @@ export default function AudioPlaybackPage({ cards, onOpenModal, onWelcome, onTou
                 browser build's cached-clip model and sent people off to press a
                 button that does nothing for them. What this page actually
                 lacks, on a fresh install, is words. */}
-            <EmptyState
-              icon="headphones"
-              title="Nothing to play yet"
-              action={cards.length === 0 && onWelcome ? { label: 'Start with dzień dobry', onClick: onWelcome } : undefined}
-              footnote={cards.length === 0
-                ? 'Your phone reads Polish aloud — no key, no downloads.'
-                : 'Open a word and tap the speaker to hear it.'}
-            >
-              {cards.length === 0
-                ? <>This is a hands-free listening run through your words. Start with <em>dzień dobry</em> and it has something to read.</>
-                : <>None of your words are ready to play here yet.</>}
-            </EmptyState>
+            {cards.length === 0 ? (
+              <EmptyLibraryState
+                icon="headphones"
+                title="Nothing to play yet"
+                onChangePage={onChangePage}
+              >
+                A hands-free listening run through your words, read aloud by your phone — no key,
+                no downloads.
+              </EmptyLibraryState>
+            ) : (
+              <EmptyState icon="headphones" title="Nothing to play yet">
+                None of your words are ready to play here yet. Open a word and tap the speaker to
+                hear it.
+              </EmptyState>
+            )}
           </motion.div>
         ) : !started ? (
           <motion.div

@@ -5,6 +5,7 @@ import { type VocabEntry, typeLabel } from '../data/types'
 import { getAllReviews, getReview, saveReview, initReview, replaceAllReviews } from '../lib/reviewStorage'
 import { applyEasy, applyHard, applyConquered, applyLapse, isConquered } from '../lib/scheduler'
 import { setAnchor } from './tour/anchors'
+import type { PageId } from '../data/types'
 import { useTTS, type AudioState } from '../lib/useTTS'
 import { pokeRenderer, setBgHardMode } from '../webgl/glassStore'
 import GlassPane from './GlassPane'
@@ -472,13 +473,13 @@ function ActionButtons({ conquerable, onConquered, onLapse }: { conquerable: boo
 interface Props {
   cards: VocabEntry[]
   onOpenModal?: (entry: VocabEntry) => void
-  /** Empty state only: install the welcome words and refresh the list. */
-  onWelcome?: () => void
+  /** Empty state only: where to send someone with no words yet. */
+  onChangePage: (id: PageId) => void
   /** Tells the flashcards tour what the user just did. */
   onTourEvent?: (e: 'fc-started' | 'fc-revealed' | 'fc-swiped') => void
 }
 
-export default function FlashcardPage({ cards, onOpenModal, onWelcome, onTourEvent }: Props) {
+export default function FlashcardPage({ cards, onOpenModal, onChangePage, onTourEvent }: Props) {
   // Overview-first: the game opens on the group selector, then plays a chosen
   // scope (a group, or all cards).
   const [screen, setScreen] = useState<'selector' | 'playing'>('selector')
@@ -674,7 +675,7 @@ export default function FlashcardPage({ cards, onOpenModal, onWelcome, onTourEve
         onResetMastery={handleResetMastery}
         onPlayAll={() => startRunFor(cards, 'All cards')}
         onPlayGroup={(g: GroupStat) => startRunFor(g.cards, `Words ${g.start}–${g.end}`)}
-        onWelcome={onWelcome}
+        onChangePage={onChangePage}
       />
     )
   }

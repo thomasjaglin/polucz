@@ -7,10 +7,9 @@ import GlassPane from './GlassPane'
 import type { WordType, VocabEntry } from '../data/types'
 import { getAllReviews } from '../lib/reviewStorage'
 import { isConquered } from '../lib/scheduler'
-import { getLlmConfig } from '../lib/llmConfig'
-import { installStarterDeck } from '../lib/starterDeck'
 import { setAnchor } from './tour/anchors'
 import GlassButton from './GlassButton'
+import EmptyLibraryState from './EmptyLibraryState'
 import type { PageId } from '../data/types'
 
 type FilterKey = 'noun' | 'verb' | 'adjective' | 'mastered'
@@ -29,13 +28,11 @@ interface Props {
   onChangePage: (id: PageId) => void
   /** Lets App drop the bottom scrim when there are no cards for it to fade. */
   onListEmptyChange?: (empty: boolean) => void
-  /** Empty state only: the starter deck writes to storage behind App's state. */
-  onCardsChanged?: () => void
   /** Tells the tour the user opened a card. */
   onTourEvent?: (e: 'card-opened') => void
 }
 
-export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange, onCardsChanged, onTourEvent }: Props) {
+export default function VocabListPage({ cards, onOpenModal, onChangePage, onListEmptyChange, onTourEvent }: Props) {
   const reduce = useReducedMotion()
   const [searchQuery, setSearchQuery] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
@@ -95,9 +92,6 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
       return !open
     })
   }
-
-  // Read once per render: which of the two first-run steps is actually next.
-  const hasLlmKey = !!getLlmConfig()
 
   const reviews = getAllReviews()
   const masteredIds = new Set(
@@ -255,47 +249,17 @@ export default function VocabListPage({ cards, onOpenModal, onChangePage, onList
               key="first-run"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-10 flex flex-col items-center gap-4 px-4 text-center"
+              className="mt-6"
             >
-              <span className="material-symbols-rounded text-[44px] ink-glyph">book_2</span>
-              <h2 className="font-instrument text-[20px] font-semibold text-ink/85">
-                Your vocabulary starts here
-              </h2>
-              <p className="max-w-[300px] font-instrument text-[14px] leading-relaxed ink-tertiary">
-                {hasLlmKey
-                  ? 'Add a Polish word and Polucz fills in the rest — translation, forms and examples — then schedules it for review.'
-                  : 'Begin with two words: dzień dobry, “good day”. Both come fully declined, ready to review, and Polucz will say them out loud — no setup, no key.'}
-              </p>
-              <GlassButton
-                variant="primary"
-                onClick={() => {
-                  if (hasLlmKey) { onChangePage('add_page'); return }
-                  installStarterDeck()
-                  onCardsChanged?.()
-                }}
-                className="mt-1 px-6 py-3 font-instrument text-[15px]"
+              <EmptyLibraryState
+                icon="book_2"
+                title="Your vocabulary starts here"
+                onChangePage={onChangePage}
               >
-                {hasLlmKey ? 'Add your first word' : 'Start with dzień dobry'}
-              </GlassButton>
-              {hasLlmKey ? (
-                <button
-                  onClick={() => { installStarterDeck(); onCardsChanged?.() }}
-                  className="max-w-[300px] font-instrument text-[13px] ink-tertiary underline underline-offset-4"
-                >
-                  Or start with dzień dobry
-                </button>
-              ) : (
-                <p className="max-w-[300px] font-instrument text-[13px] leading-relaxed ink-tertiary">
-                  Adding your own words needs an API key —{' '}
-                  <button
-                    onClick={() => onChangePage('api_config')}
-                    className="underline underline-offset-4"
-                  >
-                    set one up in App settings
-                  </button>.
-                </p>
-              )}
-              <p className="max-w-[300px] font-instrument text-[13px] ink-tertiary">
+                Polucz keeps the words you meet, with every form and real examples, and brings them
+                back until you know them.
+              </EmptyLibraryState>
+              <p className="mt-4 text-center font-instrument text-[13px] ink-tertiary">
                 Already have a backup? Use Import JSON in the settings menu.
               </p>
             </motion.div>

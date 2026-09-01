@@ -9,19 +9,18 @@ import QuizTypeSelector from './quiz/QuizTypeSelector'
 import CoverageSection from './quiz/CoverageSection'
 import QuizSession, { type AnswerRecord } from './quiz/QuizSession'
 import SessionEndScreen from './quiz/SessionEndScreen'
-import type { SentenceEntry, VocabEntry } from '../data/types'
+import type { PageId, SentenceEntry, VocabEntry } from '../data/types'
 
 type Screen = 'selector' | 'session' | 'end'
 
 interface Props {
-  /** Empty state only: install the welcome words, then tell App so the
-      vocabulary list agrees with what the quiz just gained. */
-  onWelcome?: () => void
+  /** Empty state only: where to send someone with no words yet. */
+  onChangePage: (id: PageId) => void
   /** Tells the quiz tour what the user just did. */
   onTourEvent?: (e: 'quiz-mode-picked' | 'quiz-answered') => void
 }
 
-export default function QuizPage({ onWelcome, onTourEvent }: Props) {
+export default function QuizPage({ onChangePage, onTourEvent }: Props) {
   // Sentences now live in IndexedDB, so they arrive after first paint. Cards and
   // reviews are still synchronous, and tier-3 paradigm questions come from the
   // cards — so the quiz is playable before the sentences land.
@@ -92,7 +91,7 @@ export default function QuizPage({ onWelcome, onTourEvent }: Props) {
     return (
       <QuizTypeSelector
         questionCount={questionCount}
-        onWelcome={onWelcome && (() => { onWelcome(); setCards(getCards()) })}
+        onChangePage={onChangePage}
         onStart={handleStart}
         coverage={
           <CoverageSection

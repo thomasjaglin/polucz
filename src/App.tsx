@@ -20,11 +20,11 @@ import { pushToast } from './lib/toastStore'
 import { pages, pageOrder } from './data/pages'
 import type { PageId, VocabEntry } from './data/types'
 import { getCards, saveCard, updateCard, deleteCard } from './lib/storage'
-import { installStarterDeck } from './lib/starterDeck'
 import { useTour } from './components/tour/useTour'
 import Spotlight from './components/tour/Spotlight'
 import HelpPage from './components/HelpPage'
 import FirstRunGate from './components/tour/FirstRunGate'
+import TourComplete from './components/tour/TourComplete'
 import { tourStatus, finishTour, shouldOfferTour, TOURS, type TourId } from './lib/tourState'
 import TourOffer from './components/tour/TourOffer'
 import { polishVoiceStatus } from './lib/ttsVoice'
@@ -250,9 +250,6 @@ export default function App() {
     if (next >= 0 && next < pageOrder.length) { haptics.select(); changePage(pageOrder[next]) }
   }
 
-  // Every empty state that offers the welcome words routes through here, so the
-  // vocabulary list, the flashcard deck and the quiz all agree immediately
-  // afterwards no matter which page the user was standing on.
   const tour = useTour()
 
   // The gate is the first thing a genuinely new install sees: no cards, and the
@@ -288,7 +285,6 @@ export default function App() {
     setOffer(null)
   }, [activeId, cards.length, tour.active, gateOpen, voiceOk])
 
-  const handleWelcome = () => { installStarterDeck(); setCards(getCards()) }
 
   // The nav is inert during a tour anyway — the spotlight swallows taps on it —
   // so leaving it up only crowds the bottom of the screen, where several steps
@@ -313,7 +309,6 @@ export default function App() {
         onOpenModal={handleOpenModal}
         onChangePage={changePage}
         onListEmptyChange={setListEmpty}
-        onCardsChanged={() => setCards(getCards())}
         onTourEvent={tour.notify}
       />
     )
@@ -330,9 +325,9 @@ export default function App() {
         }}
       />
     )
-    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} onTourEvent={tour.notify} />
-    if (activeId === 'question_mark') return <QuizPage onWelcome={handleWelcome} onTourEvent={tour.notify} />
-    if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onWelcome={handleWelcome} onTourEvent={tour.notify} />
+    if (activeId === 'dynamic_feed') return <FlashcardPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onChangePage={changePage} onTourEvent={tour.notify} />
+    if (activeId === 'question_mark') return <QuizPage onChangePage={changePage} onTourEvent={tour.notify} />
+    if (activeId === 'spatial_audio') return <AudioPlaybackPage cards={cards} onOpenModal={(entry) => handleOpenModal(entry, null)} onChangePage={changePage} onTourEvent={tour.notify} />
     if (activeId === 'add_page')   return <AddVocabPage onAddCard={handleAddCard} onSuccess={() => changePage('folder')} />
     if (activeId === 'help') return (
       <HelpPage
@@ -420,7 +415,7 @@ export default function App() {
           />
         )}
 
-        {showNav && <BottomNav activeId={activeId} onChangePage={changePage} />}
+        {showNav && <BottomNav activeId={activeId} onChangePage={changePage} onTourEvent={tour.notify} />}
       </div>
 
       {/* Modal — mounted only during open/close animation cycle */}
@@ -447,6 +442,13 @@ export default function App() {
           onSetUpKeys={() => { setGateOpen(false); changePage('api_config') }}
           onTakeTour={() => { setGateOpen(false); changePage('translate'); tour.start('arrival') }}
           onSkip={() => { setGateOpen(false); finishTour('arrival', 'skipped') }}
+        />
+      )}
+
+      {tour.justFinished === 'arrival' && (
+        <TourComplete
+          onTranslate={() => { tour.clearFinished(); changePage('translate') }}
+          onDismiss={tour.clearFinished}
         />
       )}
 

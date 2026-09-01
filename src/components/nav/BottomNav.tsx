@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { pages, pageOrder } from '../../data/pages'
+import { setAnchor } from '../tour/anchors'
 import GlassPane from '../GlassPane'
 import { haptics } from '../../lib/haptics'
 import type { PageId } from '../../data/types'
@@ -8,6 +9,8 @@ import type { PageId } from '../../data/types'
 interface Props {
   activeId: PageId
   onChangePage: (id: PageId) => void
+  /** Lets the arrival tour point at, and wait for, the flashcards tab. */
+  onTourEvent?: (e: 'nav-flashcards') => void
 }
 
 const SPRING = { type: 'spring', stiffness: 420, damping: 34 } as const
@@ -15,7 +18,7 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 34 } as const
 // Simple glass nav: a rounded pill frame (same liquid-glass styling as the rest
 // of the app) holding the page icons, with a soft highlight that slides to the
 // active item.
-export default function BottomNav({ activeId, onChangePage }: Props) {
+export default function BottomNav({ activeId, onChangePage, onTourEvent }: Props) {
   const outerRef = useRef<HTMLDivElement | null>(null)
 
   // Hide the nav while the on-screen keyboard is open so it doesn't float over
@@ -65,7 +68,12 @@ export default function BottomNav({ activeId, onChangePage }: Props) {
           return (
             <button
               key={id}
-              onClick={() => { if (id !== activeId) haptics.select(); onChangePage(id) }}
+              ref={id === 'dynamic_feed' ? setAnchor('nav-flashcards') : undefined}
+              onClick={() => {
+                if (id !== activeId) haptics.select()
+                if (id === 'dynamic_feed') onTourEvent?.('nav-flashcards')
+                onChangePage(id)
+              }}
               aria-label={pages[id].title}
               className="relative z-10 flex h-[46px] w-[46px] items-center justify-center rounded-full"
             >
