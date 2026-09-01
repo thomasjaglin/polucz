@@ -16,7 +16,8 @@
     "check:deck": "node scripts/check-starter-deck.mjs",
     "postinstall": "patch-package",
     "copy:extract": "node scripts/extract-copy.mjs",
-    "assets": "python3 scripts/build-app-assets.py && capacitor-assets generate --android"
+    "assets": "python3 scripts/build-app-assets.py && capacitor-assets generate --android",
+    "fonts": "python3 scripts/build-fonts.py"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -34,12 +35,14 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
+    "@fontsource-variable/instrument-sans": "^5.3.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
     "dictionary-pl": "^2.0.0",
     "jsdom": "^25.0.1",
+    "material-symbols": "^0.47.0",
     "nspell": "^2.1.5",
     "patch-package": "^8.0.1",
     "postcss": "^8.4.47",
