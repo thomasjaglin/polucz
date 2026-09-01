@@ -3,7 +3,6 @@ package com.polucz.app;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
-import android.os.SystemClock;
 import android.view.View;
 import android.view.animation.PathInterpolator;
 
@@ -25,25 +24,12 @@ final class SplashExit {
     // delaying the app by exactly its own duration.
     private static final long DURATION_MS = 260L;
 
-    /**
-     * Matches windowSplashScreenAnimationDuration in styles.xml, which is the
-     * length of the icon's assemble.
-     *
-     * Without this the splash leaves as soon as the WebView is ready, which here
-     * is sooner than the animation finishes -- the mark was being cut off
-     * mid-assemble. This is a deliberate delay to the launch and the only one in
-     * the app; drop this method call and the splash goes back to leaving as
-     * early as it can.
-     */
-    private static final long ICON_ANIMATION_MS = 510L;
-
     private SplashExit() {}
 
     static void install(Activity activity, SplashScreen splashScreen) {
-        final long shown = SystemClock.uptimeMillis();
-        splashScreen.setKeepOnScreenCondition(
-                () -> SystemClock.uptimeMillis() - shown < ICON_ANIMATION_MS);
-
+        // Nothing is held back. The system splash is a still badge now and the
+        // launch animation lives in LaunchSplash, which picks up from this exact
+        // frame, so delaying here would only postpone the app for a still image.
         splashScreen.setOnExitAnimationListener(provider -> {
             View view = provider.getView();
             // Ease-out: quick to leave, settling at the end, so the app appears

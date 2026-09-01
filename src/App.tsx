@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { MotionConfig } from 'framer-motion'
 import AppBackground from './components/AppBackground'
+import LaunchSplash from './components/LaunchSplash'
 import PageGradient from './components/PageGradient'
 import GlassCanvas from './webgl/GlassCanvas'
 import { getGlassMode, setGlassMode, isChromium } from './lib/glassMode'
@@ -302,6 +303,11 @@ export default function App() {
   const secondaryTop = activeId === 'add_page' || activeId === 'api_config' || activeId === 'help'
   const topPad = compactTop ? '1.25rem' : secondaryTop ? '58px' : '94px'
 
+  // Shown once per process start, over everything, until it dissolves itself.
+  // Not gated on data loading: the app is already usable behind it, so this is
+  // a handoff from the system splash rather than a loading screen.
+  const [launching, setLaunching] = useState(true)
+
   function renderContent() {
     if (activeId === 'folder')       return (
       <VocabListPage
@@ -365,6 +371,7 @@ export default function App() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {launching && <LaunchSplash onDone={() => setLaunching(false)} />}
       {glassMode === 'webgl' && <GlassCanvas activeId={activeId} onFallback={handleGlassFallback} />}
       <AppBackground />
       <PageGradient activeId={activeId} />

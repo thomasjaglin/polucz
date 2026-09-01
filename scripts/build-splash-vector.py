@@ -75,12 +75,12 @@ for slot, idx in enumerate(order):
             android:name="g{slot}"
             android:pivotX="{px:.2f}"
             android:pivotY="{py:.2f}"
-            android:scaleX="{START_SCALE}"
-            android:scaleY="{START_SCALE}">
+            android:scaleX="1"
+            android:scaleY="1">
             <path
                 android:name="p{slot}"
                 android:fillColor="#FFFFFFFF"
-                android:fillAlpha="0"
+                android:fillAlpha="1"
                 android:pathData="{paths[idx]}" />
         </group>''')
 
