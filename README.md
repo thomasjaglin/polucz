@@ -12,10 +12,10 @@ Polucz server, and nothing to sign up for.
 
 - **Vocabulary** — add a Polish word and the app fills in its translation, part
   of speech and inflected forms. Browse, search, and filter by tag or type.
-- **A welcome, not an empty list** — the app opens with *dzień dobry*: two
-  words, fully declined, ready to review and to hear. Flashcards and the quiz
-  work immediately, before any key is entered; both are marked as starter cards,
-  and App settings removes them in one tap without touching words you added.
+- **A guided first run** — the app opens by offering a short tour that walks
+  the whole loop with *dzień dobry*: translate it, keep both words, look inside
+  the cards, start reviewing. It makes no network calls at all, for anyone, so
+  it costs nothing and works offline; every tour can be replayed from Help.
 - **Flashcards** — spaced repetition with an SRS schedule, plus a hard mode for
   the cards you keep missing.
 - **Quiz** — fill-in-the-blank questions over the forms of your own words. See
@@ -34,7 +34,7 @@ the features that call a provider.
 
 | Feature | Needs | Notes |
 |---|---|---|
-| Pronunciation, flashcards, quiz, browsing | nothing | Works on a fresh install, on the starter deck |
+| Pronunciation, flashcards, quiz, browsing | nothing | Work on the words you have, with no key |
 | Adding and enriching words, sentence analysis | an LLM key | Google Gemini, Anthropic Claude, or any OpenAI-compatible endpoint |
 | Translation | a DeepL key | Free tier is enough |
 
@@ -132,10 +132,11 @@ npm run check:deck     # spell-check every form in the starter deck
 ```
 
 `check:deck` runs `src/data/starterDeck.json` through the Hunspell Polish
-dictionary. The deck ships as fact — a new user meets it before they can judge
-whether the Polish is right — so all 54 of its forms are machine-checked rather
-than trusted, `dzień`'s irregular stem included. The check catches malformed
-forms; it cannot catch a real word in the wrong grammatical slot.
+dictionary. That file holds the two words the tour teaches, and the grammar it
+reveals for them once the user has added them — a new user meets it before they
+can judge whether the Polish is right, so all 54 forms are machine-checked
+rather than trusted, `dzień`'s irregular stem included. The check catches
+malformed forms; it cannot catch a real word in the wrong grammatical slot.
 
 ## About `api/`
 

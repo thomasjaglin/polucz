@@ -43,7 +43,7 @@ Four numbers, quiet, one line:
 
 | dzień dobry | 124,433 | 3 | 0 |
 |---|---|---|---|
-| the two words waiting on first launch | real Polish sentences in the app | question sources, no key needed | accounts, servers, subscriptions |
+| the words the guided first run teaches | real Polish sentences in the app | question sources, no key needed | accounts, servers, subscriptions |
 
 ### 3. Features — five blocks, alternating sides
 
@@ -79,7 +79,7 @@ Import it back on a new phone. Nothing is locked in a service that can disappear
 
 ### 4. How it works — three steps
 1. **Install the APK.** Nothing to sign up for.
-2. **Say hello.** The app opens with *dzień dobry* already on the shelf — flashcards, quiz and pronunciation all work immediately.
+2. **Take the two-minute tour.** It walks the whole loop with *dzień dobry* — translate, keep the words, look inside a card — and makes no calls at all.
 3. **Add your own key** when you want the app to write cards for you — Gemini,
    Anthropic, or any OpenAI-compatible endpoint. Link to Setup.
 
@@ -123,8 +123,8 @@ Keep it to one screen.
   1. Tap the file once it downloads.
   2. Android will ask whether to allow installs from your browser — allow it.
   3. Open Polucz. There is nothing to sign in to.
-- **What you get with no key at all:** the *dzień dobry* welcome cards, flashcards, the
-  quiz, pronunciation, import/export.
+- **What you get with no key at all:** the guided tour, flashcards, the quiz,
+  pronunciation, import/export.
 - **Checksum** (SHA-256) for anyone who wants it.
 - **Then:** "Next: set up your keys →" linking to Setup.
 
@@ -141,8 +141,8 @@ people stop early — most of it is optional.
 - **Opening line:** Everything below is optional. Flashcards, the quiz and pronunciation
   work the moment you install. Keys are for having the app write new cards for you.
 
-**Step 1 — Try it first.** Open the app and tap *Start with dzień dobry*. Do a flashcard
-round and a quiz on the two welcome words. No configuration.
+**Step 1 — Take the tour.** Open the app and tap *Show me around*. It walks the whole loop
+with two words and makes no calls, so there is nothing to configure first.
 
 **Step 2 — Choose a provider.** A comparison block, not a wall of prose:
 

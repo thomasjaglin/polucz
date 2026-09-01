@@ -67,7 +67,7 @@ you paste and what you upload — so everything it needs is written out below.
   `card-light.png` and `filter-pane-light.png` floating outside the frame edges.
 
 **Proof strip** — four figures on one line:
-`dzień dobry` waiting for you on first launch · `124,433` real Polish sentences in the app ·
+`dzień dobry` taught by the guided first run · `124,433` real Polish sentences in the app ·
 `3` question sources, no key needed · `0` accounts, servers, subscriptions
 
 **Five features, alternating left/right**
@@ -87,9 +87,9 @@ you paste and what you upload — so everything it needs is written out below.
 5. **It is yours to keep** — Export the whole collection as one JSON file to your
    Downloads folder, any time. Import it back on a new phone.
 
-**How it works** — three steps: install the APK, nothing to sign up for · say *dzień
-dobry*, the two words already waiting, everything works immediately · add your own key
-when you want the app to write cards for you.
+**How it works** — three steps: install the APK, nothing to sign up for · take the guided
+tour, which walks the whole loop with two words and makes no calls · add your own key when
+you want the app to write cards for you.
 
 **Privacy** — short, plain: vocabulary, review history and keys are stored on the device
 only; there is no Polucz server; translation goes to DeepL with your key only when you
@@ -117,8 +117,8 @@ One screen. H1 `Get Polucz`. A download button with the version and file size be
 `.apk`, Android 7.0+. A short "installing an APK" note in three steps, because most
 people need it: tap the file once it downloads; allow installs from your browser when
 Android asks; open it, there is nothing to sign in to. Then what works with no key at
-all — the *dzień dobry* welcome cards, flashcards, quiz, pronunciation, import/export —
-a SHA-256 checksum, and
+all — the guided tour, flashcards, quiz, pronunciation, import/export — a SHA-256
+checksum, and
 a link on to the setup guide.
 
 ---
@@ -129,7 +129,7 @@ H1 `Setting up Polucz`. Open by saying everything below is optional: flashcards,
 and pronunciation work the moment you install; keys are for having the app write new
 cards for you.
 
-1. **Try it first** — tap *Start with dzień dobry*, do a round, no configuration.
+1. **Take the tour** — tap *Show me around*; it needs no configuration and makes no calls.
 2. **Choose a provider** — a three-column comparison: Google Gemini (cheapest way in,
    generous free tier, aistudio.google.com) · Anthropic Claude (best grammar tables in
    testing, console.anthropic.com) · OpenAI-compatible (Groq, OpenRouter, Together, or a
