@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import GlassPane from '../GlassPane'
 import { getAnchor, type AnchorName } from './anchors'
@@ -77,7 +77,40 @@ export default function Spotlight({ anchor, text, progress, onNext, onSkip, next
   // un-dimmed page: the step is still running, it just cannot point yet.
   const r = rect
   const below = r ? r.top + r.height : 0
-  const promptBelow = !r || below < window.innerHeight * 0.6
+
+  // The prompt follows the highlight, and the highlight moves when the user
+  // scrolls — so without clamping, scrolling a long card carries the prompt off
+  // the screen and the step becomes unreadable. Preference order: under the
+  // highlight, then above it, then wherever it still fits; always on screen.
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [cardH, setCardH] = useState(0)
+  useEffect(() => {
+    let raf = 0
+    const measure = () => {
+      const h = cardRef.current?.offsetHeight ?? 0
+      setCardH(prev => (Math.abs(prev - h) < 0.5 ? prev : h))
+      raf = requestAnimationFrame(measure)
+    }
+    raf = requestAnimationFrame(measure)
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  const MARGIN = 16
+  const GAP = 20
+  const vh = typeof window === 'undefined' ? 0 : window.innerHeight
+  let top: number
+  if (!r) {
+    top = vh - cardH - 104
+  } else if (below + GAP + cardH + MARGIN <= vh) {
+    top = below + GAP
+  } else if (r.top - GAP - cardH >= MARGIN) {
+    top = r.top - GAP - cardH
+  } else {
+    // Neither side fits — sit against the bottom edge of the highlight and let
+    // the clamp below keep it in view.
+    top = below + GAP
+  }
+  top = Math.max(MARGIN, Math.min(top, vh - cardH - MARGIN))
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[200]">
@@ -100,10 +133,9 @@ export default function Spotlight({ anchor, text, progress, onNext, onSkip, next
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: [0.33, 1, 0.68, 1] }}
+        ref={cardRef}
         className="pointer-events-auto absolute inset-x-4 overflow-hidden rounded-[28px] border border-ink/10 glass-raise"
-        style={promptBelow
-          ? { top: r ? below + 20 : undefined, bottom: r ? undefined : 104 }
-          : { bottom: window.innerHeight - (r?.top ?? 0) + 20 }}
+        style={{ top }}
       >
         <GlassPane borderRadius={28} className="absolute inset-0 z-0 rounded-[28px] bg-surface/80" />
         <div className="relative z-10 p-5">
