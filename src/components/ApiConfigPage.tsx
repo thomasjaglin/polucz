@@ -201,10 +201,10 @@ export default function ApiConfigPage({ onSave }: Props) {
           />
         )}
 
-        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">API Key</h3>
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">API key</h3>
         <GlassInput
           type="password"
-          placeholder="Paste API Key..."
+          placeholder="Paste API key..."
           value={editing ? apiKey : MASK}
           onChange={setApiKey}
           disabled={!editing}
@@ -249,7 +249,7 @@ export default function ApiConfigPage({ onSave }: Props) {
               className="relative flex h-[50px] flex-1 items-center justify-center overflow-hidden rounded-full border border-ink/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.2)] transition-all hover:scale-[1.02] active:scale-[0.98] group"
             >
               <GlassPane borderRadius={24} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Save Configuration</span>
+              <span className="relative z-10 font-instrument text-[16px] font-semibold text-ink">Save configuration</span>
             </button>
           </div>
         ) : (
@@ -293,10 +293,10 @@ export default function ApiConfigPage({ onSave }: Props) {
           and needs its own key. Free-tier keys end in <span className="font-mono">:fx</span>.
         </p>
 
-        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">DeepL API Key</h3>
+        <h3 className="mb-3 font-instrument text-[15px] font-semibold text-ink">DeepL API key</h3>
         <GlassInput
           type="password"
-          placeholder="Paste DeepL API Key..."
+          placeholder="Paste DeepL API key..."
           value={deeplEditing ? deeplKey : MASK}
           onChange={setDeeplKey}
           disabled={!deeplEditing}

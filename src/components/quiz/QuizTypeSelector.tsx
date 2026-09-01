@@ -34,7 +34,7 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage, onC
   return (
     <div className="flex flex-col gap-4">
       <div ref={setAnchor('quiz-count')}>
-        <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Quiz Game</h2>
+        <h2 className="font-instrument text-[22px] font-semibold text-ink/90">Quiz game</h2>
         <p className="mt-1 font-instrument text-[14px] ink-tertiary">
           {`${questionCount} question${questionCount === 1 ? '' : 's'} ready`}
         </p>
@@ -52,7 +52,7 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage, onC
         <div className="flex items-center gap-4">
           <span className="material-symbols-rounded shrink-0 text-[24px] text-ink/70">table_chart</span>
           <div className="min-w-0">
-            <div className="font-instrument text-[17px] font-semibold text-ink/90">Declension Quiz</div>
+            <div className="font-instrument text-[17px] font-semibold text-ink/90">Declension quiz</div>
             <div className="font-instrument text-[13px] ink-tertiary">Multiple choice · nouns &amp; adjectives</div>
           </div>
           <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] ink-glyph">chevron_right</span>
@@ -70,7 +70,7 @@ export default function QuizTypeSelector({ questionCount, onStart, coverage, onC
         <div className="flex items-center gap-4">
           <span className="material-symbols-rounded shrink-0 text-[24px] text-ink/70">edit</span>
           <div className="min-w-0">
-            <div className="font-instrument text-[17px] font-semibold text-ink/90">Conjugation Quiz</div>
+            <div className="font-instrument text-[17px] font-semibold text-ink/90">Conjugation quiz</div>
             <div className="font-instrument text-[13px] ink-tertiary">Fill in the blank · verbs</div>
           </div>
           <span className="material-symbols-rounded ml-auto shrink-0 text-[20px] ink-glyph">chevron_right</span>

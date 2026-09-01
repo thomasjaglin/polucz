@@ -122,9 +122,9 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
 
   return (
     <div className="animate-fade-in flex w-full flex-col gap-6 pt-6">
-      {/* Google Sheets Import */}
+      {/* Google Sheets import */}
       <GlassCard contentClassName="flex flex-col p-5">
-        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Google Sheets Import</h2>
+        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Google Sheets import</h2>
         <GlassInput
           placeholder="Paste link..."
           icon="link"
@@ -132,12 +132,12 @@ export default function AddVocabPage({ onAddCard, onSuccess }: Props) {
           onChange={setSheetUrl}
           className="mb-4"
         />
-        <GlassButton label="Fetch Data" gradient={purpleGradient} onClick={() => alert('Fetch: ' + sheetUrl)} />
+        <GlassButton label="Fetch data" gradient={purpleGradient} onClick={() => alert('Fetch: ' + sheetUrl)} />
       </GlassCard>
 
       {/* Manual Add */}
       <GlassCard contentClassName="flex flex-col p-5">
-        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Add Manually</h2>
+        <h2 className="mb-4 font-instrument text-[18px] font-semibold text-ink">Add manually</h2>
         <div className="mb-4 grid grid-cols-2 gap-3">
           <GlassInput placeholder="PL" value={pl} onChange={v => { setPl(v); if (phase !== 'idle') resetError() }} />
           <GlassInput placeholder="EN (optional)" value={en} onChange={setEn} />

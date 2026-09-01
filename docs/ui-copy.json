@@ -24,12 +24,6 @@
           "Already in your vocabulary.",
           "Already in your vocabulary"
         ]
-      },
-      {
-        "variants": [
-          "App settings",
-          "App Settings"
-        ]
       }
     ],
     "ellipsis": {
@@ -40,12 +34,12 @@
           "line": 129
         },
         {
-          "text": "Paste API Key...",
+          "text": "Paste API key...",
           "file": "src/components/ApiConfigPage.tsx",
           "line": 207
         },
         {
-          "text": "Paste DeepL API Key...",
+          "text": "Paste DeepL API key...",
           "file": "src/components/ApiConfigPage.tsx",
           "line": 299
         },
@@ -90,54 +84,9 @@
     },
     "titleCaseLabels": [
       {
-        "text": "Google Sheets Import",
-        "file": "src/components/AddVocabPage.tsx",
-        "line": 127
-      },
-      {
-        "text": "Fetch Data",
-        "file": "src/components/AddVocabPage.tsx",
-        "line": 135
-      },
-      {
-        "text": "Add Manually",
-        "file": "src/components/AddVocabPage.tsx",
-        "line": 140
-      },
-      {
         "text": "Base URL",
         "file": "src/components/ApiConfigPage.tsx",
         "line": 161
-      },
-      {
-        "text": "API Key",
-        "file": "src/components/ApiConfigPage.tsx",
-        "line": 204
-      },
-      {
-        "text": "Save Configuration",
-        "file": "src/components/ApiConfigPage.tsx",
-        "line": 252
-      },
-      {
-        "text": "DeepL API Key",
-        "file": "src/components/ApiConfigPage.tsx",
-        "line": 296
-      },
-      {
-        "text": "Quiz Game",
-        "file": "src/components/quiz/QuizTypeSelector.tsx",
-        "line": 37
-      },
-      {
-        "text": "Declension Quiz",
-        "file": "src/components/quiz/QuizTypeSelector.tsx",
-        "line": 55
-      },
-      {
-        "text": "Conjugation Quiz",
-        "file": "src/components/quiz/QuizTypeSelector.tsx",
-        "line": 73
       },
       {
         "text": "Tap Translate.",
@@ -179,7 +128,7 @@
       "file": "src/components/AddVocabPage.tsx",
       "line": 127,
       "kind": "text",
-      "text": "Google Sheets Import"
+      "text": "Google Sheets import"
     },
     {
       "screen": "Add a word",
@@ -193,14 +142,14 @@
       "file": "src/components/AddVocabPage.tsx",
       "line": 135,
       "kind": "label",
-      "text": "Fetch Data"
+      "text": "Fetch data"
     },
     {
       "screen": "Add a word",
       "file": "src/components/AddVocabPage.tsx",
       "line": 140,
       "kind": "text",
-      "text": "Add Manually"
+      "text": "Add manually"
     },
     {
       "screen": "Add a word",
@@ -760,14 +709,14 @@
       "file": "src/components/quiz/QuizTypeSelector.tsx",
       "line": 37,
       "kind": "text",
-      "text": "Quiz Game"
+      "text": "Quiz game"
     },
     {
       "screen": "Quiz",
       "file": "src/components/quiz/QuizTypeSelector.tsx",
       "line": 55,
       "kind": "text",
-      "text": "Declension Quiz"
+      "text": "Declension quiz"
     },
     {
       "screen": "Quiz",
@@ -781,7 +730,7 @@
       "file": "src/components/quiz/QuizTypeSelector.tsx",
       "line": 73,
       "kind": "text",
-      "text": "Conjugation Quiz"
+      "text": "Conjugation quiz"
     },
     {
       "screen": "Quiz",
@@ -914,14 +863,14 @@
       "file": "src/components/ApiConfigPage.tsx",
       "line": 204,
       "kind": "text",
-      "text": "API Key"
+      "text": "API key"
     },
     {
       "screen": "Settings",
       "file": "src/components/ApiConfigPage.tsx",
       "line": 207,
       "kind": "placeholder",
-      "text": "Paste API Key..."
+      "text": "Paste API key..."
     },
     {
       "screen": "Settings",
@@ -935,7 +884,7 @@
       "file": "src/components/ApiConfigPage.tsx",
       "line": 252,
       "kind": "text",
-      "text": "Save Configuration"
+      "text": "Save configuration"
     },
     {
       "screen": "Settings",
@@ -977,14 +926,14 @@
       "file": "src/components/ApiConfigPage.tsx",
       "line": 296,
       "kind": "text",
-      "text": "DeepL API Key"
+      "text": "DeepL API key"
     },
     {
       "screen": "Settings",
       "file": "src/components/ApiConfigPage.tsx",
       "line": 299,
       "kind": "placeholder",
-      "text": "Paste DeepL API Key..."
+      "text": "Paste DeepL API key..."
     },
     {
       "screen": "Settings",
@@ -1096,7 +1045,7 @@
       "file": "src/data/pages.ts",
       "line": 8,
       "kind": "title",
-      "text": "Vocabulary List"
+      "text": "Vocabulary list"
     },
     {
       "screen": "Shared",
@@ -1124,7 +1073,7 @@
       "file": "src/data/pages.ts",
       "line": 31,
       "kind": "title",
-      "text": "Flashcard Game"
+      "text": "Flashcard game"
     },
     {
       "screen": "Shared",
@@ -1138,7 +1087,7 @@
       "file": "src/data/pages.ts",
       "line": 45,
       "kind": "title",
-      "text": "Quiz Game"
+      "text": "Quiz game"
     },
     {
       "screen": "Shared",
@@ -1152,7 +1101,7 @@
       "file": "src/data/pages.ts",
       "line": 52,
       "kind": "title",
-      "text": "Audio Playback"
+      "text": "Audio playback"
     },
     {
       "screen": "Shared",
@@ -1166,7 +1115,7 @@
       "file": "src/data/pages.ts",
       "line": 59,
       "kind": "title",
-      "text": "Add Vocabulary"
+      "text": "Add vocabulary"
     },
     {
       "screen": "Shared",
@@ -1180,7 +1129,7 @@
       "file": "src/data/pages.ts",
       "line": 81,
       "kind": "title",
-      "text": "App Settings"
+      "text": "App settings"
     },
     {
       "screen": "Shared",
