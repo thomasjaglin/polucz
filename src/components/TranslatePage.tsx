@@ -449,22 +449,20 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
 
   const inputBlock = (
     <>
+      {/* Compact on purpose. This sits in a fixed-height band that is
+          bottom-aligned, so a tall notice pushes the input up and under the
+          status bar — which is exactly what a three-line version did on the
+          device. One row, and the explanation lives in settings. */}
       {needsKey && (
-        <div className="mb-3 rounded-[20px] border border-accent/25 bg-accent/[0.06] px-4 py-3.5">
-          <p className="font-instrument text-[14px] font-medium text-ink/85">
-            Translation needs a DeepL key
-          </p>
-          <p className="mt-1 font-instrument text-[13px] leading-relaxed text-ink/70">
-            It is separate from the LLM key, and free-tier keys end in <code>:fx</code>.
-            Everything else in Polucz works without it.
-          </p>
-          <button
-            onClick={() => onChangePage('api_config')}
-            className="mt-2 font-instrument text-[13px] font-medium text-accent underline underline-offset-4"
-          >
-            Add a DeepL key
-          </button>
-        </div>
+        <button
+          onClick={() => onChangePage('api_config')}
+          className="mb-3 flex items-center gap-2 self-start rounded-full border border-accent/30 bg-accent/[0.08] px-3.5 py-1.5"
+        >
+          <span className="material-symbols-rounded text-[15px] text-accent">key</span>
+          <span className="font-instrument text-[13px] text-ink/80">
+            Needs a DeepL key — <span className="text-accent underline underline-offset-2">add one</span>
+          </span>
+        </button>
       )}
       <div className="relative rounded-[20px] border border-ink/20 shadow-[0_8px_32px_rgba(0,0,0,0.25),inset_0_1px_1px_rgba(255,255,255,0.18)]">
         <GlassPane borderRadius={20} className="absolute inset-0 rounded-[20px] pane-field-soft" />
@@ -654,7 +652,7 @@ export default function TranslatePage({ onAddCard, onChangePage }: Props) {
       />
 
       {/* ── Polish — fixed top section ─────────────────────────── */}
-      <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end px-8 pb-[14vh]">
+      <div className="absolute inset-x-0 top-0 z-10 flex h-[51.4%] flex-col justify-end overflow-hidden px-8 pb-[14vh] pt-[calc(0.5rem+env(safe-area-inset-top))]">
         <p className="mb-3 font-instrument text-[15px] font-medium text-ink/70">Polish</p>
         {srcTop ? inputBlock : (
           <div className="no-scrollbar overflow-y-auto">{resultBlock}{wordListBlock}</div>
