@@ -10,7 +10,54 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
   </head>
   <body>
+    <!--
+      The launch screen lives here, not in React.
+
+      Android's own splash stops at a badge on a flat colour: the platform draws
+      it and exposes nothing else. This continues from that exact frame — same
+      colour, same 192dp badge in the same place, a CSS pixel being a dp here —
+      and then does what the system cannot, opening the badge out until its
+      gradient is the whole screen.
+
+      It has to be in the document rather than in a component because React's
+      first paint arrives a frame or two after the system splash lets go, and
+      that gap showed as a blank flash between the two badges. Inline in the
+      body, it is on screen the moment the WebView paints anything at all.
+    -->
+    <div id="launch" aria-hidden="true">
+      <div id="launch-badge"></div>
+      <img id="launch-mark" src="/logo-mark.svg" alt="" />
+    </div>
     <div id="root"></div>
+    <script>
+      // Plain DOM on purpose: this runs before the bundle is fetched, let alone
+      // parsed, so the sequence cannot be delayed by however long that takes.
+      (function () {
+        var el = document.getElementById('launch');
+        if (!el) return;
+        // A circle this wide has to cover the viewport's diagonal to fill it.
+        var cover = Math.hypot(innerWidth, innerHeight) / 192 * 1.08;
+        el.style.setProperty('--cover', cover.toFixed(2));
+        // Tell the native side the continuation is actually on screen, so the
+        // system splash can leave without a blank frame between the two. Two
+        // rAFs: the first schedules a paint, the second runs after it.
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            if (window.PoluczLaunch && window.PoluczLaunch.painted) {
+              window.PoluczLaunch.painted();
+            }
+          });
+        });
+
+        var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        // Bloom, hold, then hand over. Removed rather than hidden so the mark
+        // never sits in the accessibility tree over the real app.
+        setTimeout(function () {
+          el.classList.add('is-done');
+          setTimeout(function () { el.remove() }, 420);
+        }, reduce ? 500 : 1060);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

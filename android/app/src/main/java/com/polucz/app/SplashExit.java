@@ -3,6 +3,11 @@ package com.polucz.app;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
+import android.os.SystemClock;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebView;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 import android.view.View;
 import android.view.animation.PathInterpolator;
 
@@ -24,12 +29,43 @@ final class SplashExit {
     // delaying the app by exactly its own duration.
     private static final long DURATION_MS = 260L;
 
+    /**
+     * Ceiling on the wait below. If the page never reports in -- a load failure,
+     * a script error before the call -- the splash must still go away, so this
+     * bounds it rather than trusting the WebView.
+     */
+    private static final long READY_TIMEOUT_MS = 2500L;
+
     private SplashExit() {}
 
+    /**
+     * Holds the system splash until the WebView has actually painted.
+     *
+     * Without this the splash is dismissed as soon as the activity is ready,
+     * which is before the WebView has drawn a single frame, and a blank frame
+     * appeared between the system badge and the page's own launch screen. It
+     * was visible in a capture: badge, nothing, gradient.
+     *
+     * The page reports in over a one-method interface rather than a plugin,
+     * called from a rAF after the launch markup is in the tree, so "ready" means
+     * "the continuation is on screen" and not merely "a document exists".
+     */
+    static void awaitFirstPaint(Activity activity, SplashScreen splashScreen, WebView webView) {
+        final AtomicBoolean painted = new AtomicBoolean(false);
+        final long start = SystemClock.uptimeMillis();
+
+        webView.addJavascriptInterface(new Object() {
+            @JavascriptInterface
+            public void painted() {
+                painted.set(true);
+            }
+        }, "PoluczLaunch");
+
+        splashScreen.setKeepOnScreenCondition(() ->
+                !painted.get() && SystemClock.uptimeMillis() - start < READY_TIMEOUT_MS);
+    }
+
     static void install(Activity activity, SplashScreen splashScreen) {
-        // Nothing is held back. The system splash is a still badge now and the
-        // launch animation lives in LaunchSplash, which picks up from this exact
-        // frame, so delaying here would only postpone the app for a still image.
         splashScreen.setOnExitAnimationListener(provider -> {
             View view = provider.getView();
             // Ease-out: quick to leave, settling at the end, so the app appears

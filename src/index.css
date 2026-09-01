@@ -1006,3 +1006,53 @@ html.theme-light .pane-field-soft { background-color: rgba(255, 255, 255, 0.30);
    a 0.6-alpha black halo is a bruise on a pale background. */
 .swap-btn { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); }
 html.theme-light .swap-btn { box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16); }
+
+/* ── Launch screen ────────────────────────────────────────────────────────────
+   Continues Android's system splash, which stops at a badge on a flat colour.
+   Markup is in index.html so it paints on the WebView's first frame; React
+   mounting a frame or two later left a blank flash between the two badges.
+
+   The colour is matched to windowSplashScreenBackground, and follows the SYSTEM
+   scheme rather than the app's theme class, because at this point the app has
+   not read its own preference yet — and values-night on the Android side keys
+   off the same thing, so the two always agree. */
+#launch {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #F7F4F1;
+}
+@media (prefers-color-scheme: dark) {
+  #launch { background: #121212; }
+}
+#launch-badge {
+  position: absolute;
+  width: 192px;             /* the system splash masks its icon to this */
+  height: 192px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 45%, #621619 0%, #3A0D0F 45%, #140505 100%);
+  animation: launch-bloom 620ms cubic-bezier(.23, 1, .32, 1) 140ms both;
+}
+#launch-mark {
+  position: relative;
+  width: 129px;             /* the mark fills 129 of the badge's 192 */
+  height: 129px;
+  /* The mark grows far less than the ground behind it, so the eye stays on the
+     logo instead of being dragged outward with the expansion. */
+  animation: launch-mark 620ms cubic-bezier(.23, 1, .32, 1) 140ms both;
+}
+@keyframes launch-bloom { to { transform: scale(var(--cover, 14)); } }
+@keyframes launch-mark  { to { transform: scale(1.16); } }
+
+#launch.is-done { animation: launch-out 420ms ease-in both; }
+@keyframes launch-out { to { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the screen and the colour, drop the movement. */
+  #launch-badge { animation: none; transform: scale(var(--cover, 14)); }
+  #launch-mark  { animation: none; }
+}
