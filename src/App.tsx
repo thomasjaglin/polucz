@@ -259,7 +259,11 @@ export default function App() {
 
   const handleWelcome = () => { installStarterDeck(); setCards(getCards()) }
 
-  const showNav = activeId !== 'add_page' && activeId !== 'api_config'
+  // The nav is inert during a tour anyway — the spotlight swallows taps on it —
+  // so leaving it up only crowds the bottom of the screen, where several steps
+  // put their highlight. It stays for the step that points at it.
+  const navHiddenByTour = tour.step !== null && tour.step.anchor !== 'nav-flashcards'
+  const showNav = activeId !== 'add_page' && activeId !== 'api_config' && !navHiddenByTour
   const page = pages[activeId]
   // Top padding is sized to whatever TopHeader actually draws on this page, so
   // no page reserves space for a header it doesn't have:
