@@ -19,6 +19,7 @@ Run:  python3 scripts/build-app-assets.py && npx capacitor-assets generate --and
 """
 from PIL import Image
 import numpy as np
+import math
 
 N, S = 1024, 2732
 SAFE_R = N * 72 / 108 / 2
@@ -54,6 +55,30 @@ def splash(fg_path, bg_rgb, out, mark_px=620):
     canvas.save(out)
 
 
+def splash_icon(fg_path, out, plate=1152):
+    """The Android 12+ splash icon, which is a different job from the launcher.
+
+    That icon is drawn on a 288dp canvas and the system masks it to a CIRCLE of
+    the inner 192dp. 192/288 is therefore the circle's diameter, not the width a
+    square mark may occupy: a 192dp-wide square has corners at 136dp from centre
+    against a 96dp radius, and they get cut. Sizing the mark by its diagonal
+    instead puts the whole thing inside the circle.
+
+    Resolution is the other half. At 450dpi the canvas is 810px, so feeding it
+    the 192px launcher plate meant a 4.2x upscale. A density-independent 1152px
+    plate covers every density up to 640dpi without upscaling.
+    """
+    fg = Image.open(fg_path).convert('RGBA')
+    mark = fg.crop(fg.getbbox())
+    # 0.95 keeps the strokes off the mask edge rather than tangent to it.
+    side = int(plate * (192 / 288) / math.sqrt(2) * 0.95)
+    mark = mark.resize((side, side), Image.LANCZOS)
+    canvas = Image.new('RGBA', (plate, plate), (0, 0, 0, 0))
+    canvas.paste(mark, ((plate - side) // 2, (plate - side) // 2), mark)
+    canvas.save(out)
+    return plate, side
+
+
 def main():
     for p in (FG_DARK, FG_LIGHT):
         print(f'  {p}: mark reaches {check_fits(p):.0f}px of {SAFE_R:.0f}px safe — fits')
@@ -65,6 +90,17 @@ def main():
 
     # Android 13 themed icons: the system tints the shape, so ship white-on-clear.
     Image.open(FG_DARK).convert('RGBA').save('assets/icon-foreground-monochrome.png')
+
+    # The splash icon is drawn straight into res/ rather than through
+    # capacitor-assets, which only knows about launcher densities.
+    # One per theme, and the pairing inverts: the light splash has a light
+    # ground and therefore needs the DARK mark, and vice versa.
+    import os
+    for src, d in ((FG_LIGHT, 'drawable-nodpi'), (FG_DARK, 'drawable-night-nodpi')):
+        os.makedirs(f'android/app/src/main/res/{d}', exist_ok=True)
+        plate, side = splash_icon(src, f'android/app/src/main/res/{d}/splash_icon.png')
+        print(f'  {d}/splash_icon.png  {plate}x{plate}, mark {side}px '
+              f'({100*side/plate:.0f}% of the canvas)')
 
     # Splashes match the app's own page colours, not the icon's gradient, so the
     # launch does not flash a colour the first screen never uses.

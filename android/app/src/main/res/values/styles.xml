@@ -23,13 +23,15 @@
       device this app supports the template line did nothing and the launch fell
       back to a bare system default.
 
-      windowSplashScreenAnimatedIcon is masked to a circle and shows its inner
-      192dp of 288dp, the same 2/3 proportion as the adaptive icon, so the
-      foreground plate already fits it without a second export.
+      The splash icon is its own plate, not the launcher foreground. That canvas
+      is 288dp with content inside the inner 192dp, which at 450dpi is 810px:
+      the 192px launcher plate was being upscaled 4.2x, and the mark landed at
+      363px of the 540px allowed. drawable-nodpi/splash_icon.png is 1152px, and
+      inverts per theme: the light ground takes the dark mark.
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
