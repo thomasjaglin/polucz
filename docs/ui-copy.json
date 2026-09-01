@@ -1,0 +1,1536 @@
+{
+  "generated": "2026-09-01",
+  "counts": {
+    "strings": 194,
+    "byScreen": {
+      "Add a word": 8,
+      "Empty states": 2,
+      "Flashcards": 8,
+      "Help": 1,
+      "Menu & backup": 11,
+      "Onboarding": 42,
+      "Pronunciation": 4,
+      "Quiz": 14,
+      "Settings": 35,
+      "Shared": 38,
+      "Translate": 13,
+      "Vocabulary": 18
+    }
+  },
+  "observations": {
+    "nearDuplicates": [
+      {
+        "variants": [
+          "Already in your vocabulary.",
+          "Already in your vocabulary"
+        ]
+      },
+      {
+        "variants": [
+          "App settings",
+          "App Settings"
+        ]
+      }
+    ],
+    "ellipsis": {
+      "threeDots": [
+        {
+          "text": "Paste link...",
+          "file": "src/components/AddVocabPage.tsx",
+          "line": 129
+        },
+        {
+          "text": "Paste API Key...",
+          "file": "src/components/ApiConfigPage.tsx",
+          "line": 207
+        },
+        {
+          "text": "Paste DeepL API Key...",
+          "file": "src/components/ApiConfigPage.tsx",
+          "line": 299
+        },
+        {
+          "text": "Search...",
+          "file": "src/components/SearchBar.tsx",
+          "line": 16
+        }
+      ],
+      "character": [
+        {
+          "text": "Added! Taking you to your vocab…",
+          "file": "src/components/AddVocabPage.tsx",
+          "line": 154
+        },
+        {
+          "text": "Preparing audio…",
+          "file": "src/components/TopHeader.tsx",
+          "line": 343
+        },
+        {
+          "text": "Analysing words…",
+          "file": "src/components/TranslatePage.tsx",
+          "line": 483
+        },
+        {
+          "text": "Loading grammar…",
+          "file": "src/components/WordDetailModal.tsx",
+          "line": 186
+        },
+        {
+          "text": "Filling in the forms…",
+          "file": "src/components/WordDetailModal.tsx",
+          "line": 767
+        },
+        {
+          "text": "Type the missing form…",
+          "file": "src/components/quiz/ConjugationQuestion.tsx",
+          "line": 101
+        }
+      ]
+    },
+    "titleCaseLabels": [
+      {
+        "text": "Google Sheets Import",
+        "file": "src/components/AddVocabPage.tsx",
+        "line": 127
+      },
+      {
+        "text": "Fetch Data",
+        "file": "src/components/AddVocabPage.tsx",
+        "line": 135
+      },
+      {
+        "text": "Add Manually",
+        "file": "src/components/AddVocabPage.tsx",
+        "line": 140
+      },
+      {
+        "text": "Base URL",
+        "file": "src/components/ApiConfigPage.tsx",
+        "line": 161
+      },
+      {
+        "text": "API Key",
+        "file": "src/components/ApiConfigPage.tsx",
+        "line": 204
+      },
+      {
+        "text": "Save Configuration",
+        "file": "src/components/ApiConfigPage.tsx",
+        "line": 252
+      },
+      {
+        "text": "DeepL API Key",
+        "file": "src/components/ApiConfigPage.tsx",
+        "line": 296
+      },
+      {
+        "text": "Quiz Game",
+        "file": "src/components/quiz/QuizTypeSelector.tsx",
+        "line": 37
+      },
+      {
+        "text": "Declension Quiz",
+        "file": "src/components/quiz/QuizTypeSelector.tsx",
+        "line": 55
+      },
+      {
+        "text": "Conjugation Quiz",
+        "file": "src/components/quiz/QuizTypeSelector.tsx",
+        "line": 73
+      },
+      {
+        "text": "Tap Translate.",
+        "file": "src/components/tour/steps.ts",
+        "line": 108
+      },
+      {
+        "text": "Google Gemini",
+        "file": "src/lib/llmConfig.ts",
+        "line": 25
+      },
+      {
+        "text": "Anthropic Claude",
+        "file": "src/lib/llmConfig.ts",
+        "line": 26
+      }
+    ],
+    "labelsEndingInAFullStop": [
+      {
+        "text": "Already in your vocabulary.",
+        "file": "src/components/AddVocabPage.tsx",
+        "line": 151
+      },
+      {
+        "text": "You've mastered every card.",
+        "file": "src/components/FlashcardGroupSelector.tsx",
+        "line": 141
+      },
+      {
+        "text": "Tap Translate.",
+        "file": "src/components/tour/steps.ts",
+        "line": 108
+      }
+    ]
+  },
+  "copy": [
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 127,
+      "kind": "text",
+      "text": "Google Sheets Import"
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 129,
+      "kind": "placeholder",
+      "text": "Paste link..."
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 135,
+      "kind": "label",
+      "text": "Fetch Data"
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 140,
+      "kind": "text",
+      "text": "Add Manually"
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 142,
+      "kind": "placeholder",
+      "text": "PL"
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 143,
+      "kind": "placeholder",
+      "text": "EN (optional)"
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 151,
+      "kind": "text",
+      "text": "Already in your vocabulary."
+    },
+    {
+      "screen": "Add a word",
+      "file": "src/components/AddVocabPage.tsx",
+      "line": 154,
+      "kind": "text",
+      "text": "Added! Taking you to your vocab…"
+    },
+    {
+      "screen": "Empty states",
+      "file": "src/components/EmptyLibraryState.tsx",
+      "line": 36,
+      "kind": "label",
+      "text": "Go to Translate"
+    },
+    {
+      "screen": "Empty states",
+      "file": "src/components/EmptyLibraryState.tsx",
+      "line": 37,
+      "kind": "label",
+      "text": "Set up keys"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardGroupSelector.tsx",
+      "line": 111,
+      "kind": "text",
+      "text": "Flashcards"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardGroupSelector.tsx",
+      "line": 130,
+      "kind": "title",
+      "text": "Nothing to review yet"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardGroupSelector.tsx",
+      "line": 140,
+      "kind": "text",
+      "text": "All conquered!"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardGroupSelector.tsx",
+      "line": 141,
+      "kind": "text",
+      "text": "You've mastered every card."
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardGroupSelector.tsx",
+      "line": 180,
+      "kind": "text",
+      "text": "Go through everything"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardGroupSelector.tsx",
+      "line": 190,
+      "kind": "text",
+      "text": "Or pick a group"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardPage.tsx",
+      "line": 302,
+      "kind": "text",
+      "text": "hold up to conquer"
+    },
+    {
+      "screen": "Flashcards",
+      "file": "src/components/FlashcardPage.tsx",
+      "line": 351,
+      "kind": "text",
+      "text": "tap to reveal"
+    },
+    {
+      "screen": "Help",
+      "file": "src/components/HelpPage.tsx",
+      "line": 38,
+      "kind": "text",
+      "text": "Help"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 147,
+      "kind": "title",
+      "text": "Polucz backup"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 160,
+      "kind": "toast",
+      "text": "Could not export — try Copy backup to clipboard"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 200,
+      "kind": "toast",
+      "text": "Imported ${cards.length} cards"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 202,
+      "kind": "toast",
+      "text": "Could not read the file — not a valid Polucz backup"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 343,
+      "kind": "text",
+      "text": "Preparing audio…"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 361,
+      "kind": "text",
+      "text": "All caught up"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 362,
+      "kind": "text",
+      "text": "Every card already has its audio prepared."
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 363,
+      "kind": "text",
+      "text": "Close"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 367,
+      "kind": "text",
+      "text": "Prepare audio"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 372,
+      "kind": "text",
+      "text": "Cancel"
+    },
+    {
+      "screen": "Menu & backup",
+      "file": "src/components/TopHeader.tsx",
+      "line": 373,
+      "kind": "text",
+      "text": "Prepare"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/Spotlight.tsx",
+      "line": 91,
+      "kind": "text",
+      "text": "(Math.abs(prev - h)"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 42,
+      "kind": "text",
+      "text": "Start with the lot, shuffled. Groups are for later, when you have hundreds of words."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 49,
+      "kind": "text",
+      "text": "Polish first. Say it out loud, then tap the card to check yourself."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 54,
+      "kind": "text",
+      "text": "Knew it? Swipe right — Polucz waits longer before asking again. Struggled? Swipe left and it comes back sooner. There is no wrong answer, only honest ones."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 59,
+      "kind": "text",
+      "text": "Hard mode turns the page red and counts every win double. Use it when a word will not stick."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 60,
+      "kind": "nextLabel",
+      "text": "Done"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 67,
+      "kind": "text",
+      "text": "These questions are built from the forms of your own words — no key, no connection needed. The quiz is still in beta, so expect the odd rough edge."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 68,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 72,
+      "kind": "text",
+      "text": "Multiple choice for nouns and adjectives; type the answer for verbs. Pick one."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 77,
+      "kind": "text",
+      "text": "Answer it. Right or wrong is not the point — seeing what happens next is."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 85,
+      "kind": "text",
+      "text": "Hands-free listening: Polish, then English, then the next word. This one makes noise — turn your volume up."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 90,
+      "kind": "text",
+      "text": "Slow it down until you can hear the endings. That is where Polish hides its grammar."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 91,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 95,
+      "kind": "text",
+      "text": "Loop a single word while you copy it out loud. This is your phone speaking, not a recording — it costs nothing and works offline."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 96,
+      "kind": "nextLabel",
+      "text": "Done"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 103,
+      "kind": "text",
+      "text": "In the translate page you can translate from Polish or from English. Let’s start by translating “Dzień dobry”, the everyday Polish greeting."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 104,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 108,
+      "kind": "text",
+      "text": "Tap Translate."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 115,
+      "kind": "text",
+      "text": "Add both words to your vocabulary to start your learning journey!"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 120,
+      "kind": "text",
+      "text": "Now your cards are in your vocabulary list."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 121,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 125,
+      "kind": "text",
+      "text": "In this section you can see how many cards your deck has, filter by word type, as well as search words specifically."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 126,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 130,
+      "kind": "text",
+      "text": "Tap a card to open it and see everything Polucz knows about the word."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 135,
+      "kind": "text",
+      "text": "Every form of the word, filled in for you. This is what you will be quizzed on later."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 136,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 140,
+      "kind": "text",
+      "text": "Adjectives also compare — good, better, best."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 141,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 146,
+      "kind": "text",
+      "text": "Tap to load real sentences using this word."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 153,
+      "kind": "text",
+      "text": "Real sentences from Tatoeba, showing the word as people actually use it. Take a moment with them."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 154,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 158,
+      "kind": "text",
+      "text": "Close the card when you are done reading."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 163,
+      "kind": "text",
+      "text": "Now open the other one — the noun and the adjective behave differently."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 168,
+      "kind": "text",
+      "text": "Every form of the word, filled in for you. This is what you will be quizzed on later."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 169,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 173,
+      "kind": "text",
+      "text": "Adjectives also compare — good, better, best."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 174,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 179,
+      "kind": "text",
+      "text": "Tap to load real sentences using this word."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 186,
+      "kind": "text",
+      "text": "Real sentences from Tatoeba, showing the word as people actually use it. Take a moment with them."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 187,
+      "kind": "nextLabel",
+      "text": "Next"
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 191,
+      "kind": "text",
+      "text": "Close the card when you are done reading."
+    },
+    {
+      "screen": "Onboarding",
+      "file": "src/components/tour/steps.ts",
+      "line": 196,
+      "kind": "text",
+      "text": "That is the loop: find a word, keep it, learn it. Tap Flashcards to start reviewing."
+    },
+    {
+      "screen": "Pronunciation",
+      "file": "src/components/AudioPlaybackPage.tsx",
+      "line": 331,
+      "kind": "title",
+      "text": "Nothing to play yet"
+    },
+    {
+      "screen": "Pronunciation",
+      "file": "src/components/AudioPlaybackPage.tsx",
+      "line": 338,
+      "kind": "title",
+      "text": "Nothing to play yet"
+    },
+    {
+      "screen": "Pronunciation",
+      "file": "src/components/AudioPlaybackPage.tsx",
+      "line": 355,
+      "kind": "text",
+      "text": "Audio review"
+    },
+    {
+      "screen": "Pronunciation",
+      "file": "src/components/AudioPlaybackPage.tsx",
+      "line": 387,
+      "kind": "text",
+      "text": "All caught up"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/ConjugationQuestion.tsx",
+      "line": 101,
+      "kind": "placeholder",
+      "text": "Type the missing form…"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/ConjugationQuestion.tsx",
+      "line": 116,
+      "kind": "text",
+      "text": "Not quite — try again"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/ConjugationQuestion.tsx",
+      "line": 135,
+      "kind": "text",
+      "text": "Correct answer"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/ConjugationQuestion.tsx",
+      "line": 147,
+      "kind": "text",
+      "text": "Correct!"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/CoverageSection.tsx",
+      "line": 84,
+      "kind": "text",
+      "text": "Question quality"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizSession.tsx",
+      "line": 67,
+      "kind": "toast",
+      "text": "Question removed"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizTypeSelector.tsx",
+      "line": 25,
+      "kind": "title",
+      "text": "No questions yet"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizTypeSelector.tsx",
+      "line": 37,
+      "kind": "text",
+      "text": "Quiz Game"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizTypeSelector.tsx",
+      "line": 55,
+      "kind": "text",
+      "text": "Declension Quiz"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizTypeSelector.tsx",
+      "line": 56,
+      "kind": "text",
+      "text": "Multiple choice · nouns &amp; adjectives"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizTypeSelector.tsx",
+      "line": 73,
+      "kind": "text",
+      "text": "Conjugation Quiz"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/QuizTypeSelector.tsx",
+      "line": 74,
+      "kind": "text",
+      "text": "Fill in the blank · verbs"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/SessionEndScreen.tsx",
+      "line": 41,
+      "kind": "text",
+      "text": "Session complete"
+    },
+    {
+      "screen": "Quiz",
+      "file": "src/components/quiz/SessionEndScreen.tsx",
+      "line": 55,
+      "kind": "text",
+      "text": "Review"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 68,
+      "kind": "text",
+      "text": "App settings"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 70,
+      "kind": "title",
+      "text": "Appearance"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 76,
+      "kind": "label",
+      "text": "Theme"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 79,
+      "kind": "label",
+      "text": "Theme"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 79,
+      "kind": "aria-label",
+      "text": "Theme"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 106,
+      "kind": "title",
+      "text": "Preferences"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 107,
+      "kind": "label",
+      "text": "Haptic feedback"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 111,
+      "kind": "label",
+      "text": "Haptic feedback"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 111,
+      "kind": "aria-label",
+      "text": "Haptic feedback"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 127,
+      "kind": "title",
+      "text": "API"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 133,
+      "kind": "text",
+      "text": "Provider"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 161,
+      "kind": "text",
+      "text": "Base URL"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 163,
+      "kind": "placeholder",
+      "text": "https://api.groq.com/openai/v1"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 172,
+      "kind": "text",
+      "text": "Model"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 196,
+      "kind": "placeholder",
+      "text": "Model name, e.g. llama-3.3-70b-versatile"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 204,
+      "kind": "text",
+      "text": "API Key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 207,
+      "kind": "placeholder",
+      "text": "Paste API Key..."
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 228,
+      "kind": "text",
+      "text": "Cancel"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 252,
+      "kind": "text",
+      "text": "Save Configuration"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 267,
+      "kind": "text",
+      "text": "Change API key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 280,
+      "kind": "label",
+      "text": "Remove saved key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 280,
+      "kind": "aria-label",
+      "text": "Remove saved key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 290,
+      "kind": "title",
+      "text": "Translation"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 293,
+      "kind": "text",
+      "text": ":fx"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 296,
+      "kind": "text",
+      "text": "DeepL API Key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 299,
+      "kind": "placeholder",
+      "text": "Paste DeepL API Key..."
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 314,
+      "kind": "text",
+      "text": "Cancel"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 330,
+      "kind": "text",
+      "text": "Save DeepL key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 340,
+      "kind": "text",
+      "text": "Change DeepL key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 350,
+      "kind": "label",
+      "text": "Remove saved DeepL key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 350,
+      "kind": "aria-label",
+      "text": "Remove saved DeepL key"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 365,
+      "kind": "title",
+      "text": "Pronunciation"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 390,
+      "kind": "text",
+      "text": "Add a voice"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 399,
+      "kind": "title",
+      "text": "About"
+    },
+    {
+      "screen": "Settings",
+      "file": "src/components/ApiConfigPage.tsx",
+      "line": 400,
+      "kind": "label",
+      "text": "Polucz"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/App.tsx",
+      "line": 88,
+      "kind": "toast",
+      "text": "${entry.pl} added to vocabulary"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/App.tsx",
+      "line": 112,
+      "kind": "toast",
+      "text": "${removed} deleted"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/components/GlassInput.tsx",
+      "line": 34,
+      "kind": "label",
+      "text": "Clear input"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/components/GlassInput.tsx",
+      "line": 34,
+      "kind": "aria-label",
+      "text": "Clear input"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/components/QuizQuestionsSection.tsx",
+      "line": 92,
+      "kind": "text",
+      "text": "Quiz questions"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/components/SearchBar.tsx",
+      "line": 16,
+      "kind": "placeholder",
+      "text": "Search..."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 8,
+      "kind": "title",
+      "text": "Vocabulary List"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 10,
+      "kind": "desc",
+      "text": "Browse and manage your vocabulary."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 25,
+      "kind": "title",
+      "text": "Translate"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 27,
+      "kind": "desc",
+      "text": "Translate a Polish word or phrase."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 31,
+      "kind": "title",
+      "text": "Flashcard Game"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 33,
+      "kind": "desc",
+      "text": "Memorize terms using spaced repetition."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 45,
+      "kind": "title",
+      "text": "Quiz Game"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 47,
+      "kind": "desc",
+      "text": "Test your knowledge."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 52,
+      "kind": "title",
+      "text": "Audio Playback"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 54,
+      "kind": "desc",
+      "text": "Listen to pronunciation guides."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 59,
+      "kind": "title",
+      "text": "Add Vocabulary"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 61,
+      "kind": "desc",
+      "text": "Ingest new terms into your list."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 81,
+      "kind": "title",
+      "text": "App Settings"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 83,
+      "kind": "desc",
+      "text": "Configure the app and your LLM provider."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 96,
+      "kind": "title",
+      "text": "Help"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/data/pages.ts",
+      "line": 98,
+      "kind": "desc",
+      "text": "Guided walkthroughs of each part of the app."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/backStack.ts",
+      "line": 46,
+      "kind": "toast",
+      "text": "Press back again to exit"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/holoMotion.ts",
+      "line": 17,
+      "kind": "text",
+      "text": "(n"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/llmClient.ts",
+      "line": 36,
+      "kind": "text",
+      "text": "(p: Promise"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/llmClient.ts",
+      "line": 36,
+      "kind": "text",
+      "text": ", ms: number, label: string): Promise"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/llmConfig.ts",
+      "line": 25,
+      "kind": "label",
+      "text": "Google Gemini"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/llmConfig.ts",
+      "line": 26,
+      "kind": "label",
+      "text": "Anthropic Claude"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/llmConfig.ts",
+      "line": 27,
+      "kind": "label",
+      "text": "OpenAI-compatible"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 14,
+      "kind": "title",
+      "text": "Getting started"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 14,
+      "kind": "blurb",
+      "text": "Translate a phrase, keep the words, look inside a card."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 15,
+      "kind": "title",
+      "text": "Flashcards"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 15,
+      "kind": "blurb",
+      "text": "How reviewing works, and what the swipes mean."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 16,
+      "kind": "title",
+      "text": "Quiz"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 16,
+      "kind": "blurb",
+      "text": "Where the questions come from, and the two modes."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 17,
+      "kind": "title",
+      "text": "Pronunciation"
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/tourState.ts",
+      "line": 17,
+      "kind": "blurb",
+      "text": "Hands-free listening, in your phone’s own voice."
+    },
+    {
+      "screen": "Shared",
+      "file": "src/lib/useTTS.ts",
+      "line": 234,
+      "kind": "toast",
+      "text": "${MISSING_VOICE_MESSAGE} — see App settings"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 197,
+      "kind": "text",
+      "text": "✓ In vocabulary"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 483,
+      "kind": "text",
+      "text": "Analysing words…"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 519,
+      "kind": "text",
+      "text": "add one"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 539,
+      "kind": "label",
+      "text": "Clear input"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 539,
+      "kind": "aria-label",
+      "text": "Clear input"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 605,
+      "kind": "text",
+      "text": "Add →"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 610,
+      "kind": "text",
+      "text": "← Clear"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 647,
+      "kind": "text",
+      "text": "Added to vocabulary"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 650,
+      "kind": "text",
+      "text": "Already in your vocabulary"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 715,
+      "kind": "text",
+      "text": "Polish"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 724,
+      "kind": "label",
+      "text": "Swap languages"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 724,
+      "kind": "aria-label",
+      "text": "Swap languages"
+    },
+    {
+      "screen": "Translate",
+      "file": "src/components/TranslatePage.tsx",
+      "line": 754,
+      "kind": "text",
+      "text": "English"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/VocabListPage.tsx",
+      "line": 18,
+      "kind": "label",
+      "text": "Noun"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/VocabListPage.tsx",
+      "line": 19,
+      "kind": "label",
+      "text": "Verb"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/VocabListPage.tsx",
+      "line": 20,
+      "kind": "label",
+      "text": "Adjective"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/VocabListPage.tsx",
+      "line": 21,
+      "kind": "label",
+      "text": "Mastered"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/VocabListPage.tsx",
+      "line": 256,
+      "kind": "title",
+      "text": "Your vocabulary starts here"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 186,
+      "kind": "text",
+      "text": "Loading grammar…"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 264,
+      "kind": "label",
+      "text": "równy"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 265,
+      "kind": "label",
+      "text": "wyższy"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 266,
+      "kind": "label",
+      "text": "najwyższy"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 275,
+      "kind": "text",
+      "text": "l. pojedyncza"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 291,
+      "kind": "text",
+      "text": "l. mnoga"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 395,
+      "kind": "toast",
+      "text": "Could not refresh examples"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 422,
+      "kind": "label",
+      "text": "Get different examples"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 422,
+      "kind": "aria-label",
+      "text": "Get different examples"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 463,
+      "kind": "text",
+      "text": "Fetch examples"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 592,
+      "kind": "label",
+      "text": "Close"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 592,
+      "kind": "aria-label",
+      "text": "Close"
+    },
+    {
+      "screen": "Vocabulary",
+      "file": "src/components/WordDetailModal.tsx",
+      "line": 767,
+      "kind": "text",
+      "text": "Filling in the forms…"
+    }
+  ]
+}
