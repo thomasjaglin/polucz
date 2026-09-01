@@ -21,6 +21,12 @@ export interface TourStep {
   advanceOn?: TourEvent
   /** Or a button, for steps that only point something out. */
   nextLabel?: string
+  /**
+   * Advance automatically if the anchor never appears. For steps that only
+   * apply to some cards — comparatives exist on an adjective and not on a noun,
+   * and pointing a spotlight at nothing is the worst kind of tour bug.
+   */
+  skipIfMissing?: boolean
 }
 
 export const ARRIVAL_STEPS: TourStep[] = [
@@ -55,5 +61,57 @@ export const ARRIVAL_STEPS: TourStep[] = [
     anchor: 'vocab-cards',
     text: 'Tap a card to open it and see everything Polucz knows about the word.',
     advanceOn: 'card-opened',
+  },
+  {
+    anchor: 'card-declensions',
+    text: 'Every form of the word, filled in for you. This is what you will be quizzed on later.',
+    nextLabel: 'Next',
+  },
+  {
+    anchor: 'card-comparative',
+    text: 'Adjectives also compare — good, better, best.',
+    nextLabel: 'Next',
+    skipIfMissing: true,
+  },
+  {
+    anchor: 'examples-button',
+    text: 'Tap to load real sentences using this word.',
+    advanceOn: 'examples-loaded',
+  },
+  {
+    anchor: 'modal-close',
+    text: 'Close the card when you are done reading.',
+    advanceOn: 'modal-closed',
+  },
+  {
+    anchor: 'vocab-cards',
+    text: 'Now open the other one — the noun and the adjective behave differently.',
+    advanceOn: 'card-opened',
+  },
+  {
+    anchor: 'card-declensions',
+    text: 'Every form of the word, filled in for you. This is what you will be quizzed on later.',
+    nextLabel: 'Next',
+  },
+  {
+    anchor: 'card-comparative',
+    text: 'Adjectives also compare — good, better, best.',
+    nextLabel: 'Next',
+    skipIfMissing: true,
+  },
+  {
+    anchor: 'examples-button',
+    text: 'Tap to load real sentences using this word.',
+    advanceOn: 'examples-loaded',
+  },
+  {
+    anchor: 'modal-close',
+    text: 'Close the card when you are done reading.',
+    advanceOn: 'modal-closed',
+  },
+  {
+    anchor: 'nav-flashcards',
+    text: 'That is the loop: find a word, keep it, learn it. Tap Flashcards to start reviewing.',
+    advanceOn: 'nav-flashcards',
   },
 ]

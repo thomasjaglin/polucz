@@ -8,6 +8,8 @@ import {
   typeLabel,
 } from '../data/types'
 import GlassPane from './GlassPane'
+import { setAnchor } from './tour/anchors'
+import { TOUR_EXAMPLES, FAKE_LATENCY, fakeWait, tourEnrichment } from '../data/tourFixture'
 import QuizQuestionsSection from './QuizQuestionsSection'
 import GlassButton from './GlassButton'
 import MasteredBurst from './MasteredBurst'
@@ -256,7 +258,7 @@ function AdjectiveSection({ entry, mastered }: { entry: VocabAdjective; mastered
       {/* Gradation: positive (the lemma), comparative, superlative. */}
       {gradable && (
         <>
-          <div className="flex flex-col">
+          <div ref={setAnchor('card-comparative')} className="flex flex-col">
             <span className={`mb-3 font-instrument text-[12px] uppercase tracking-wider ${mastered ? 'text-holo-meta' : 'ink-tertiary'}`}>stopniowanie</span>
             <div className="flex flex-col gap-2">
               <GradeRow label="równy" form={entry.pl} mastered={mastered} />
@@ -341,7 +343,12 @@ function putCachedExamples(word: string, data: ExampleData) {
   try { localStorage.setItem(exampleKey(word), JSON.stringify(data)) } catch { /* ignore */ }
 }
 
-function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }) {
+function ExamplesSection({ word, mastered, tourActive = false, onTourEvent }: {
+  word: string
+  mastered: boolean
+  tourActive?: boolean
+  onTourEvent?: (e: 'examples-loaded' | 'modal-closed') => void
+}) {
   const [loading, setLoading] = useState(false)
   // Seed from cache so a previously-fetched card shows its examples instantly
   // (no button, no refetch).
@@ -358,6 +365,19 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
     const isRefresh = exclude.length > 0
     setLoading(true)
     if (!isRefresh) setError(false)
+
+    if (tourActive) {
+      await fakeWait(FAKE_LATENCY.examples)
+      const scripted = TOUR_EXAMPLES[word.toLowerCase()]
+      if (scripted) {
+        setExamples(scripted)
+        setSource('corpus')
+        setLoading(false)
+        onTourEvent?.('examples-loaded')
+        return
+      }
+    }
+
     try {
       const res = await llmFetch('/api/examples', { word, exclude })
       const data = await res.json()
@@ -423,6 +443,7 @@ function ExamplesSection({ word, mastered }: { word: string; mastered: boolean }
 
   return (
     <GlassButton
+      ref={setAnchor('examples-button')}
       onClick={handleFind}
       disabled={loading}
       radius={24}
@@ -456,9 +477,12 @@ interface Props {
   onEnriched: (updated: VocabEntry) => void
   onAudioReady: (id: string) => void
   onDelete: () => void
+  /** True while the arrival tour is running: no calls, scripted waits. */
+  tourActive?: boolean
+  onTourEvent?: (e: 'examples-loaded' | 'modal-closed') => void
 }
 
-export default function WordDetailModal({ entry, mastered = false, flipIn, overlayVisible, onClose, onEnriched, onAudioReady, onDelete }: Props) {
+export default function WordDetailModal({ entry, mastered = false, flipIn, overlayVisible, onClose, onEnriched, onAudioReady, onDelete, tourActive = false, onTourEvent }: Props) {
   const [enriching, setEnriching] = useState(false)
   const [enrichError, setEnrichError] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -500,9 +524,23 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
   }
 
   useEffect(() => {
+    if (tourActive) {
+      // The card really is unenriched — the tour added it the same way the app
+      // does — so the wait is followed by the grammar the bundled cards carry.
+      if (entry.enriched) return
+      let cancelled = false
+      setEnriching(true)
+      fakeWait(FAKE_LATENCY.enrich).then(() => {
+        if (cancelled) return
+        const filled = tourEnrichment(entry)
+        if (filled) onEnriched(filled)
+        setEnriching(false)
+      })
+      return () => { cancelled = true }
+    }
     if (!entry.enriched) doEnrich()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry.id])
+  }, [entry.id, tourActive])
 
   // Cache this card's TTS audio in the background while the modal is open (a
   // small, naturally-throttled batch), and mark it audio-ready on success. This
@@ -549,7 +587,8 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
       />
       <div className={`modal-content-wrapper relative z-10 flex w-full max-w-[400px] flex-col cursor-default${flipIn ? ' flip-in' : ''}`}>
           <GlassButton
-            onClick={onClose}
+            ref={setAnchor('modal-close')}
+            onClick={() => { onTourEvent?.('modal-closed'); onClose() }}
             aria-label="Close"
             radius={24}
             pane="bg-ink/10"
@@ -719,14 +758,29 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               )}
             </div>
 
-            {/* Type-specific grammatical detail */}
-            {entry.type === 'verb'      && <VerbSection entry={entry} mastered={mastered} />}
-            {entry.type === 'noun'      && <NounSection entry={entry} mastered={mastered} />}
-            {entry.type === 'adjective' && <AdjectiveSection entry={entry} mastered={mastered} />}
-            {entry.type === 'unknown'   && <FallbackSection entry={entry} />}
+            {/* Type-specific grammatical detail. During the tour the tables are
+                held back behind the same wait a freshly added card really has —
+                enrichment runs on open, and this is what that looks like. */}
+            {tourActive && enriching ? (
+              <div className="mb-4 flex w-full items-center justify-center gap-2 py-12">
+                <span className="material-symbols-rounded animate-spin ink-tertiary">progress_activity</span>
+                <span className="font-instrument text-[14px] ink-tertiary">Filling in the forms…</span>
+              </div>
+            ) : (
+              <div ref={setAnchor('card-declensions')} className="w-full">
+                {entry.type === 'verb'      && <VerbSection entry={entry} mastered={mastered} />}
+                {entry.type === 'noun'      && <NounSection entry={entry} mastered={mastered} />}
+                {entry.type === 'adjective' && <AdjectiveSection entry={entry} mastered={mastered} />}
+                {entry.type === 'unknown'   && <FallbackSection entry={entry} />}
+              </div>
+            )}
 
-            {/* Translation via DeepL */}
-            <ExamplesSection word={entry.pl} mastered={mastered} />
+            <ExamplesSection
+              word={entry.pl}
+              mastered={mastered}
+              tourActive={tourActive}
+              onTourEvent={onTourEvent}
+            />
             <QuizQuestionsSection entry={entry} />
             </div>
           </div>

@@ -391,6 +391,8 @@ export default function App() {
           onEnriched={handleEnriched}
           onAudioReady={handleAudioReady}
           onDelete={handleDeleteCard}
+          tourActive={tour.id === 'arrival'}
+          onTourEvent={tour.notify}
         />
       )}
 

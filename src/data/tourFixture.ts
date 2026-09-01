@@ -11,6 +11,9 @@
 // keeps the tour identical on every run, which is what lets a spotlight know
 // what is on screen.
 
+import type { VocabEntry } from './types'
+import deck from './starterDeck.json'
+
 export const TOUR_SENTENCE = 'Dzień dobry!'
 export const TOUR_TRANSLATION = 'Good day!'
 
@@ -54,4 +57,22 @@ export const FAKE_LATENCY = {
 /** Resolves after a scripted wait, so callers read like the real async ones. */
 export function fakeWait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+/**
+ * The filled-in grammar for a word the tour added.
+ *
+ * A card added from the translate page is genuinely unenriched — that is what
+ * the real flow produces — so after the simulated wait there would be nothing to
+ * reveal. This supplies what enrichment would have returned, from the same
+ * bundled cards the app already ships and already dictionary-checks.
+ *
+ * The user's own fields win: they added this word, so it keeps their
+ * translation and its provenance, and it is NOT marked as a starter card.
+ */
+export function tourEnrichment(entry: VocabEntry): VocabEntry | null {
+  const source = (deck as unknown as VocabEntry[]).find(c => c.id === entry.id)
+  if (!source || source.type !== entry.type) return null
+  const { id: _id, pl: _pl, en: _en, tags: _tags, starter: _starter, sourceContext: _sc, ...grammar } = source
+  return { ...entry, ...grammar, enriched: true } as VocabEntry
 }

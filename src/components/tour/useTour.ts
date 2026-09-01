@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { getAnchor } from './anchors'
 import { ARRIVAL_STEPS, type TourEvent, type TourStep } from './steps'
 import { finishTour, saveTourStep, tourStep, type TourId } from '../../lib/tourState'
 
@@ -48,6 +49,25 @@ export function useTour(): Tour {
       return i + 1
     })
   }, [id, end])
+
+  // A step marked skipIfMissing applies only to some cards — comparatives are on
+  // an adjective and not on a noun. Give the anchor a moment to mount, then move
+  // on rather than dimming the screen and pointing at nothing.
+  useEffect(() => {
+    if (!step?.skipIfMissing) return
+    let tries = 0
+    const timer = setInterval(() => {
+      if (getAnchor(step.anchor)) { clearInterval(timer); return }
+      if (++tries >= 12) {
+        clearInterval(timer)
+        setIndex(i => {
+          const list = id ? STEPS[id] ?? [] : []
+          return i + 1 >= list.length ? i : i + 1
+        })
+      }
+    }, 50)
+    return () => clearInterval(timer)
+  }, [step, id])
 
   const notify = useCallback((e: TourEvent) => {
     // Only the step that is waiting for this event reacts to it, so a stray
