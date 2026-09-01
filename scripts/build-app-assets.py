@@ -101,13 +101,12 @@ def main():
 
     # The splash icon is drawn straight into res/ rather than through
     # capacitor-assets, which only knows about launcher densities.
-    # One badge for both themes -- it is the launcher icon, and that does not
-    # change with the system theme either. Only the colour around it does.
-    import os
-    os.makedirs('android/app/src/main/res/drawable-nodpi', exist_ok=True)
-    plate, side = splash_icon('android/app/src/main/res/drawable-nodpi/splash_icon.png')
-    print(f'  splash_icon.png  {plate}x{plate}, mark {side}px '
-          f'({100*side/plate:.0f}% of the canvas), gradient full-bleed')
+    # The splash icon itself is a vector now, built by build-splash-vector.py
+    # from the SVG so it can animate. This raster plate is kept only as a
+    # reference render of the same geometry.
+    plate, side = splash_icon('assets/splash-icon-reference.png')
+    print(f'  splash-icon-reference.png  {plate}x{plate}, mark {side}px '
+          f'({100*side/plate:.0f}% of the canvas)')
 
     # Splashes match the app's own page colours, not the icon's gradient, so the
     # launch does not flash a colour the first screen never uses.

@@ -23,15 +23,24 @@
       device this app supports the template line did nothing and the launch fell
       back to a bare system default.
 
-      The splash icon is its own plate, not the launcher foreground. That canvas
-      is 288dp with content inside the inner 192dp, which at 450dpi is 810px:
-      the 192px launcher plate was being upscaled 4.2x, and the mark landed at
-      363px of the 540px allowed. drawable-nodpi/splash_icon.png is 1152px, and
-      inverts per theme: the light ground takes the dark mark.
+      The splash icon is its own drawable, not the launcher foreground. That
+      canvas is 288dp and the system masks it to a circle of the inner 192dp,
+      so 192/288 is a diameter and a square mark has to be sized by its
+      diagonal or its corners are cut.
+
+      It is a vector rather than a bitmap, generated from the logo SVG by
+      scripts/build-splash-vector.py, which lets the mark assemble piece by
+      piece and sidesteps density entirely: the old bitmap route pointed at the
+      192px launcher plate and upscaled it 4.2x at this device 450dpi.
+
+      The badge gradient lives inside the vector, so the animation did not cost
+      the colour. One badge serves both themes, as the launcher icon does; only
+      windowSplashScreenBackground changes, via values-night.
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon_anim</item>
+        <item name="windowSplashScreenAnimationDuration">510</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
