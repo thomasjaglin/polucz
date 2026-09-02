@@ -29,6 +29,32 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 const OUT = 'assets/landing'
 mkdirSync(OUT, { recursive: true })
 const deck = readFileSync('assets/landing/demo-deck.json', 'utf8')
+
+// The sentence the landing page's walkthrough is built around, and the answers
+// the app would get back for it. The network is stubbed rather than called: this
+// is a marketing capture, and a real DeepL key has no business in a build step.
+// Everything else is the app's own code path — its real UI, its real state, its
+// real rendering. Only the wire is faked.
+const SENTENCE = 'Chleb zabija ptaki'
+
+// The walkthrough is a before and an after, so the two moments need different
+// vocabularies. On the translate page the sign's words have not been kept yet —
+// seeded with them present they render "✓ In vocabulary" and the panel that says
+// "keep the two you could not have looked up" shows nothing to keep. The list and
+// flashcard panels use the full deck, where they are.
+const MINED = ['ptak', 'zabijać']
+const deckBeforeMining = JSON.stringify(
+  JSON.parse(deck).filter(c => !MINED.includes(c.pl)))
+const STUB = {
+  '/api/translate': { translation: 'Bread kills birds' },
+  '/api/analyze-sentence': {
+    words: [
+      { lemma: 'chleb',   type: 'noun', english: 'bread',   gender: 'm' },
+      { lemma: 'zabijać', type: 'verb', english: 'to kill', gender: '' },
+      { lemma: 'ptak',    type: 'noun', english: 'bird',    gender: 'm' },
+    ],
+  },
+}
 // A card is mastered when its review state says so, and the foil is one of the
 // most distinctive things the app draws — without this the shots omit it.
 // The list renders newest-first, i.e. the reverse of the fixture's order, so the
@@ -135,6 +161,81 @@ async function session(theme, fn) {
   await client.close()
 }
 
+// ─── Translate flow ──────────────────────────────────────────────────────────
+// Its own session: the stub has to be in place before anything is clicked, and
+// the page needs a DeepL key present or the button stays disabled.
+async function translateSession(theme) {
+  const client = await CDP({ host: '127.0.0.1', port: 9222 })
+  const { Page, Runtime, Emulation } = client
+  await Page.enable(); await Runtime.enable()
+  await Emulation.setDeviceMetricsOverride({ width: 430, height: 932, deviceScaleFactor: 3, mobile: true })
+  await Page.navigate({ url: 'http://127.0.0.1:4173/' }); await Page.loadEventFired()
+
+  const js = async (expression) => {
+    const r = await Runtime.evaluate({ expression, returnByValue: true, awaitPromise: true })
+    return r.exceptionDetails ? { err: r.exceptionDetails.exception?.description } : r.result.value
+  }
+
+  // A placeholder key, never sent anywhere — fetch is replaced below. Without one
+  // the page shows "Translation needs a DeepL key" and disables the button.
+  await js(`localStorage.setItem('polucz_vocab', ${JSON.stringify(deckBeforeMining)});
+            localStorage.setItem('polucz_reviews', ${JSON.stringify(reviews)});
+            localStorage.setItem('polucz_tours', ${JSON.stringify(tours)});
+            localStorage.setItem('polucz_deepl_key', 'capture-fixture-not-a-key');
+            localStorage.setItem('polucz_theme','${theme}')`)
+  await Page.reload(); await Page.loadEventFired()
+  await new Promise(r => setTimeout(r, 2600))
+
+  await js(`(() => {
+    const real = window.fetch
+    const stub = ${JSON.stringify(STUB)}
+    window.fetch = (url, opts) => {
+      const path = String(url)
+      for (const key of Object.keys(stub)) {
+        if (path.includes(key)) {
+          return Promise.resolve(new Response(JSON.stringify(stub[key]),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }))
+        }
+      }
+      return real(url, opts)
+    }
+  })()`)
+
+  // Nav: the translate page is the second item.
+  await js(`[...document.querySelectorAll('span.material-symbols-rounded')].find(s => s.textContent.trim() === 'translate')?.closest('button')?.click()`)
+  await new Promise(r => setTimeout(r, 1600))
+
+  // React owns the field's value, so writing to .value directly is ignored —
+  // the native setter plus an input event is what the component actually sees.
+  await js(`(() => {
+    const el = document.querySelector('textarea') || document.querySelector('input[type="text"]')
+    if (!el) return 'no field'
+    const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement : HTMLInputElement
+    Object.getOwnPropertyDescriptor(proto.prototype, 'value').set.call(el, ${JSON.stringify(SENTENCE)})
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  })()`)
+  await new Promise(r => setTimeout(r, 700))
+  await fullOf(Page, `screen-translate-typed-${theme}`)
+
+  await js(`[...document.querySelectorAll('button')].find(b => /^translate$/i.test(b.innerText.trim()))?.click()`)
+  await new Promise(r => setTimeout(r, 2600))
+  const got = await js(`/Bread kills birds/i.test(document.body.innerText)`)
+  console.log('  translation rendered:', got)
+  await fullOf(Page, `screen-translate-result-${theme}`)
+
+  const words = await js(`/zabijać/.test(document.body.innerText) && /ptak/.test(document.body.innerText)`)
+  console.log('  word list rendered:', words)
+  await fullOf(Page, `screen-translate-words-${theme}`)
+
+  await client.close()
+}
+
+async function fullOf(Page, name) {
+  const { data } = await Page.captureScreenshot({ format: 'png', fromSurface: true })
+  writeFileSync(`${OUT}/${name}.png`, Buffer.from(data, 'base64'))
+  console.log('  ✓', `${name}.png`)
+}
+
 for (const theme of ['light', 'dark']) {
   console.log('\n' + theme)
   await session(theme, async ({ shot, full, nav, js }) => {
@@ -176,4 +277,9 @@ for (const theme of ['light', 'dark']) {
     await shot('quiz-modes', `window.__byText('Declension quiz', 200)`)
     await nav('spatial_audio'); await full('screen-audio')
   })
+}
+
+for (const theme of ['light', 'dark']) {
+  console.log('\ntranslate ' + theme)
+  await translateSession(theme)
 }

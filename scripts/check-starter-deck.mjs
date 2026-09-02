@@ -13,14 +13,19 @@
  * What it cannot catch: a real Polish word sitting in the wrong slot. Only a
  *   speaker or a part-of-speech tagger can see that.
  *
- * Usage:  npm run check:deck        (exits non-zero on a miss)
+ * Usage:  npm run check:deck                          the shipped deck
+ *         node scripts/check-starter-deck.mjs <path>  any other deck
  */
 import nspell from 'nspell'
 import dictionary from 'dictionary-pl'
 import { readFileSync } from 'fs'
 
 const spell = nspell(dictionary)
-const cards = JSON.parse(readFileSync('src/data/starterDeck.json', 'utf8'))
+// Takes a path so the marketing fixture can be held to the same standard as the
+// shipped deck. Hand-written Polish on a landing page for a Polish-learning app
+// is exactly as embarrassing as hand-written Polish in the app.
+const DECK = process.argv[2] ?? 'src/data/starterDeck.json'
+const cards = JSON.parse(readFileSync(DECK, 'utf8'))
 
 let checked = 0
 const bad = []

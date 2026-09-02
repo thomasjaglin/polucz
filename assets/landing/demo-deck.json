@@ -449,5 +449,90 @@
    "unknown"
   ],
   "info": "Adverb. Intensifier, used before adjectives and adverbs."
+ },
+ {
+  "id": "ptak",
+  "pl": "ptak",
+  "en": "bird",
+  "type": "noun",
+  "enriched": true,
+  "left": "m.",
+  "right": "m.",
+  "tags": [
+   "noun"
+  ],
+  "gender": "m",
+  "plAlt": "",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "singular": [
+    "ptak",
+    "ptaka",
+    "ptakowi",
+    "ptaka",
+    "ptakiem",
+    "ptaku",
+    "ptaku"
+   ],
+   "plural": [
+    "ptaki",
+    "ptaków",
+    "ptakom",
+    "ptaki",
+    "ptakami",
+    "ptakach",
+    "ptaki"
+   ]
+  }
+ },
+ {
+  "id": "zabijać",
+  "pl": "zabijać",
+  "en": "to kill",
+  "type": "verb",
+  "enriched": true,
+  "left": "impf",
+  "right": "impf",
+  "tags": [
+   "verb"
+  ],
+  "conjugations": {
+   "present": [
+    "zabijam",
+    "zabijasz",
+    "zabija",
+    "zabijamy",
+    "zabijacie",
+    "zabijają"
+   ],
+   "past": [
+    "zabijałem",
+    "zabijałeś",
+    "zabijał",
+    "zabijaliśmy",
+    "zabijaliście",
+    "zabijali"
+   ],
+   "past2": [
+    "zabijałam",
+    "zabijałaś",
+    "zabijała",
+    "zabijałyśmy",
+    "zabijałyście",
+    "zabijały"
+   ]
+  },
+  "otherForm": {
+   "label": "pf form",
+   "word": "zabić"
+  }
  }
 ]
