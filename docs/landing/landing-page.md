@@ -34,6 +34,8 @@ itself. The numbers also went stale within a month.
 
 `Logo · How it works · Setup · Download · GitHub`
 
+Footer: `Privacy · GitHub · Sentences from Tatoeba (CC BY 2.0 FR)`
+
 The logo is the app mark (`assets/icon-only.png`, or the SVG at
 `public/logo-mark.svg` for crispness). Setup is promoted into the nav: it is the
 one thing standing between someone downloading this and it being useful.
@@ -296,6 +298,41 @@ and you can turn the permission back off afterwards.
 **On the Play Store:** Not yet. It is coming; this page will change when it does.
 
 **Requirements:** Android 7.0 or later.
+
+---
+
+## Privacy page — `/privacy`
+
+**To build now, populate later.** A fourth route, linked from the footer of every
+page. Play will not accept the store listing without a privacy policy at a public
+URL, so this page is a release blocker rather than a nicety — but it does not need
+its content to exist before the route does.
+
+**For now:** build the route, the layout and the footer link. Leave the body as a
+placeholder.
+
+**The content already exists** and was written from what the app actually sends,
+not from a template — that is what turned up the Google Fonts request we since
+removed. It covers: what is stored and where; the only three destinations anything
+travels to, and when; API keys and who is billed; pronunciation; exports; what the
+app never does; children; your rights; changes; contact.
+
+**Where it will come from.** `PRIVACY.md` in the app repo — beside the code it
+describes, so "read `src/lib/llmApi.ts` and check" is a claim anyone can verify in
+the same tree. The site's sync step pulls it in with the assets and the tokens, so
+the published page cannot drift from the source.
+
+**Two things still needed before it can go live:**
+
+- **A contact address.** Play requires a way to reach you. `hello@polu.cz` needs a
+  mail provider or forwarding — Vercel does DNS and hosting, not mailboxes.
+- **The app should link to it.** App settings carries a short privacy summary that
+  currently links nowhere. It should point at `polu.cz/privacy` once this resolves.
+
+**Do not let the two versions disagree.** The Privacy section on the home page is a
+summary of this page. The first draft of that section claimed translation goes to
+DeepL and "nothing else is sent", which is false — the LLM provider and Tatoeba
+both receive data. Change the summary and the policy together, or neither.
 
 ---
 
