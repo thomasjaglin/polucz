@@ -407,9 +407,22 @@ export default function ApiConfigPage({ onSave }: Props) {
         </Row>
 
         {/* A byline, not fine print: sits above the licence and privacy notes
-            and one step brighter than them. */}
+            and one step brighter than them.
+
+            target="_blank" is not decoration here. Capacitor hands a link it
+            does not recognise to the system browser, but a same-tab navigation
+            would replace the WebView with the site and strand the user in an
+            app with no address bar and no reliable way back. */}
         <p className="mt-4 font-instrument text-[14px] text-ink/70">
-          Created &amp; Designed by Thomas Jaglin
+          Created &amp; Designed by{' '}
+          <a
+            href="https://thomasjaglin.com"
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline underline-offset-4"
+          >
+            Thomas Jaglin
+          </a>
         </p>
 
         {/* The corpus is CC BY 2.0 FR: crediting Tatoeba is a licence
