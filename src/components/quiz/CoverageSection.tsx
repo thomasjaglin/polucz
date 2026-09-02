@@ -80,19 +80,17 @@ export default function CoverageSection({
 
   return (
     <div className="mt-2 flex flex-col gap-3 border-t border-ink/10 pt-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="font-instrument text-[14px] ink-tertiary">Question quality</span>
-        <span className="font-instrument text-[13px] tabular-nums ink-tertiary">
-          {slotsWithSentence} of {slotsTotal} with a sentence
-        </span>
-      </div>
+      {/* The count is the whole story: how many prompts read as sentences rather
+          than as "genitive singular of X". It was previously wrapped in a
+          "Question quality" label, a sentence explaining what the remainder do,
+          and a note about which key the LLM spends — three lines of exposition
+          around one number and a button. */}
+      <span className="font-instrument text-[13px] tabular-nums ink-tertiary">
+        {slotsWithSentence} of {slotsTotal} with a sentence
+      </span>
 
-      {missing > 0 ? (
+      {missing > 0 && (
         <>
-          <p className="font-instrument text-[13px] leading-relaxed ink-tertiary">
-            The other {missing} ask for the form directly. Real sentences give them context.
-          </p>
-
           <GlassButton
             variant="secondary"
             onClick={runCorpus}
@@ -101,7 +99,7 @@ export default function CoverageSection({
           >
             {busy === 'corpus'
               ? progress ? `Searching… ${progress.done}/${progress.total}` : 'Searching…'
-              : 'Search the corpus (free)'}
+              : 'Search the corpus'}
           </GlassButton>
 
           {hasKey && (
@@ -115,21 +113,13 @@ export default function CoverageSection({
                 ? progress && progress.total > 0
                   ? `Writing… ${progress.done}/${progress.total} — tap to stop`
                   : 'Writing…'
-                : `Write up to ${LLM_BATCH} cards with your LLM`}
+                : `Write ${LLM_BATCH} cards with your LLM`}
             </GlassButton>
           )}
-          {hasKey && busy === null && (
-            <p className="font-instrument text-[12px] ink-tertiary">
-              Uses your own API key, hardest cards first. Roughly one call per card.
-            </p>
-          )}
         </>
-      ) : (
-        <p className="font-instrument text-[13px] ink-tertiary">
-          Every form has a sentence.
-        </p>
       )}
 
+      {/* The outcome of an action the user just took, so it stays. */}
       {result && <p className="font-instrument text-[13px] ink-tertiary">{result}</p>}
       {sentences.some(q => q.source === 'corpus') && (
         <p className="font-instrument text-[11px] ink-tertiary">{CORPUS_ATTRIBUTION}</p>
