@@ -110,30 +110,52 @@ app serves it.
 
 ### 3. Features
 
-Shorter than before — the loop above already carries the story. Four blocks,
-alternating sides.
+Five blocks, alternating sides. Ordered as someone actually meets the app: the
+translator replaces something they already use, the collection is what they build
+with it, and the last three are what the collection is *for*.
 
-**a. Your list, not someone else's deck**
-Type a word, or mine it from a sentence; the app writes the card. Translation,
-part of speech, and the full grammar table — seven cases singular and plural for a
-noun, every person for a verb, all five gender-and-number columns for an adjective.
-*Asset:* `word-detail-light.png` — the `trudny` table, the single most convincing
-image on the page. Cut-out, no phone frame.
+The loop section above already told the story, so these do not retell it — each
+block earns its place by saying something the panels did not.
 
-**b. Spaced repetition that knows what "hard" means**
+**a. A translator that hands you the words, not just the sentence**
+Every other translator gives you the meaning and then throws it away. Paste Polish
+in and Polucz gives you the English *and* the words underneath it, each resolved to
+the form you would actually look up — *zabija* to `zabijać`, *ptaki* to `ptak`.
+Keep the ones you want with one tap.
+
+That is the difference between a translator and a place to keep Polish. Instead of
+a translator app, a notes app and a flashcard app, it is one list that grows every
+time you look something up.
+*Asset:* the translate screen, mid-result, with the word list showing.
+**Not yet captured** — placeholder for now.
+
+**b. A collection you built, and can go deeper into**
+Every word you keep becomes a card, and the list is the thing you are actually
+making. Filter it by type, search it, watch it grow. Tap any card and it opens: the
+full grammar table — seven cases singular and plural for a noun, every person for a
+verb, all five gender-and-number columns for an adjective — plus real example
+sentences and the word read aloud.
+
+Words you genuinely master get a holographic card. It is the only decoration in the
+app and it has to be earned.
+*Assets:* `screen-list-light.png` for the collection, and `word-detail-light.png` —
+the `trudny` table — for the modal. That table is the single most convincing image
+on the page; give it room and no phone frame.
+
+**c. Spaced repetition that knows what "hard" means**
 Swipe through cards and the schedule adapts. Hard mode turns the screen red so you
-know what you asked for. Words you have genuinely mastered are retired on purpose,
-not by accident — and they get a holographic card when they are.
+know what you asked for. Words you have truly mastered are retired on purpose,
+never by accident.
 *Asset:* `screen-flashcards-light.png`
 
-**c. A quiz built from your own words**
+**d. A quiz built from your own words**
 Fill in the blank and multiple choice, drawn from the exact forms of the words you
 added. Questions come from three sources: real sentences from a bundled corpus,
 sentences written by your own LLM, and the grammar tables themselves — that last
 one needs no key and no network at all.
 *Asset:* `quiz-modes-light.png`, cut-out.
 
-**d. Hear it out loud**
+**e. Hear it out loud**
 Pronunciation uses your phone's own speech engine. No key, no network, no waiting.
 Prepare a word once and it plays back in the audio tab as a listening drill —
 useful on a commute with the screen off.
