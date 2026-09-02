@@ -164,7 +164,7 @@ async function session(theme, fn) {
 // ─── Translate flow ──────────────────────────────────────────────────────────
 // Its own session: the stub has to be in place before anything is clicked, and
 // the page needs a DeepL key present or the button stays disabled.
-async function translateSession(theme) {
+async function translateSession(theme, seedDeck, suffix) {
   const client = await CDP({ host: '127.0.0.1', port: 9222 })
   const { Page, Runtime, Emulation } = client
   await Page.enable(); await Runtime.enable()
@@ -178,7 +178,7 @@ async function translateSession(theme) {
 
   // A placeholder key, never sent anywhere — fetch is replaced below. Without one
   // the page shows "Translation needs a DeepL key" and disables the button.
-  await js(`localStorage.setItem('polucz_vocab', ${JSON.stringify(deckBeforeMining)});
+  await js(`localStorage.setItem('polucz_vocab', ${JSON.stringify(seedDeck)});
             localStorage.setItem('polucz_reviews', ${JSON.stringify(reviews)});
             localStorage.setItem('polucz_tours', ${JSON.stringify(tours)});
             localStorage.setItem('polucz_deepl_key', 'capture-fixture-not-a-key');
@@ -215,17 +215,17 @@ async function translateSession(theme) {
     el.dispatchEvent(new Event('input', { bubbles: true }))
   })()`)
   await new Promise(r => setTimeout(r, 700))
-  await fullOf(Page, `screen-translate-typed-${theme}`)
+  await fullOf(Page, `screen-translate-typed${suffix}-${theme}`)
 
   await js(`[...document.querySelectorAll('button')].find(b => /^translate$/i.test(b.innerText.trim()))?.click()`)
   await new Promise(r => setTimeout(r, 2600))
   const got = await js(`/Bread kills birds/i.test(document.body.innerText)`)
   console.log('  translation rendered:', got)
-  await fullOf(Page, `screen-translate-result-${theme}`)
+  await fullOf(Page, `screen-translate-result${suffix}-${theme}`)
 
   const words = await js(`/zabijać/.test(document.body.innerText) && /ptak/.test(document.body.innerText)`)
   console.log('  word list rendered:', words)
-  await fullOf(Page, `screen-translate-words-${theme}`)
+  await fullOf(Page, `screen-translate-words${suffix}-${theme}`)
 
   await client.close()
 }
@@ -281,5 +281,44 @@ for (const theme of ['light', 'dark']) {
 
 for (const theme of ['light', 'dark']) {
   console.log('\ntranslate ' + theme)
-  await translateSession(theme)
+  // before: nothing kept yet, every word offers "+ Add card"
+  await translateSession(theme, deckBeforeMining, '')
+  // after: the two mined words are in, so they read "✓ In vocabulary"
+  await translateSession(theme, deck, '-after')
+}
+
+// ─── A flashcard mid-review ──────────────────────────────────────────────────
+// The flashcards screen opens on a group picker, and a panel captioned "now you
+// are learning them" showing a menu is a caption describing a different image.
+async function flashcardSession(theme) {
+  const client = await CDP({ host: '127.0.0.1', port: 9222 })
+  const { Page, Runtime, Emulation } = client
+  await Page.enable(); await Runtime.enable()
+  await Emulation.setDeviceMetricsOverride({ width: 430, height: 932, deviceScaleFactor: 3, mobile: true })
+  await Page.navigate({ url: 'http://127.0.0.1:4173/' }); await Page.loadEventFired()
+  const js = async (expression) => {
+    const r = await Runtime.evaluate({ expression, returnByValue: true, awaitPromise: true })
+    return r.exceptionDetails ? { err: r.exceptionDetails.exception?.description } : r.result.value
+  }
+  await js(`localStorage.setItem('polucz_vocab', ${JSON.stringify(deck)});
+            localStorage.setItem('polucz_reviews', ${JSON.stringify(reviews)});
+            localStorage.setItem('polucz_tours', ${JSON.stringify(tours)});
+            localStorage.setItem('polucz_theme','${theme}')`)
+  await Page.reload(); await Page.loadEventFired()
+  await new Promise(r => setTimeout(r, 2600))
+
+  await js(`[...document.querySelectorAll('span.material-symbols-rounded')].find(s => s.textContent.trim() === 'dynamic_feed')?.closest('button')?.click()`)
+  await new Promise(r => setTimeout(r, 1600))
+  await js(`[...document.querySelectorAll('button')].find(b => /go through everything/i.test(b.innerText))?.click()`)
+  await new Promise(r => setTimeout(r, 2200))
+
+  const inRun = await js(`!/or pick a group/i.test(document.body.innerText)`)
+  console.log('  in a review run:', inRun)
+  await fullOf(Page, `screen-flashcard-card-${theme}`)
+  await client.close()
+}
+
+for (const theme of ['light', 'dark']) {
+  console.log('\nflashcard ' + theme)
+  await flashcardSession(theme)
 }
