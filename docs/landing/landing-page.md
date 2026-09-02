@@ -62,25 +62,45 @@ guided tour ends on the line this section is built around:
 
 > **Find a word. Keep it. Learn it.**
 
-Eight panels, comic-strip layout, each a step. Panels 1–2 are the "in the wild"
-moment; 3–6 are the app; 7–8 are the payoff.
+Eight panels, comic-strip layout. Panels 1–2 are the moment in the wild; 3–6 are
+the app; 7–8 are the payoff.
+
+**The worked example runs through all eight**, and it is a real photograph taken in
+Poland: a round red sign reading **CHLEB ZABIJA PTAKI** — *bread kills birds*.
+
+Three words carry the whole argument for the app, because two of them are not in
+the form you would look up:
+
+| on the sign | look it up as | what it is |
+|---|---|---|
+| **chleb** | `chleb` | masculine noun, already the dictionary form |
+| **zabija** | **`zabijać`** | verb, third person singular |
+| **ptaki** | **`ptak`** | masculine noun, accusative plural |
+
+Someone splitting that sentence by hand searches for *zabija* and *ptaki* and finds
+nothing. Polucz resolves them and fills in the conjugation and the declension. The
+panels demonstrate that rather than asserting it.
 
 | # | Panel | Caption |
 |---|---|---|
-| 1 | Polish text in the wild — a comic panel, a sign, a message | You are reading something Polish and one phrase stops you. |
+| 1 | The sign, photographed — `CHLEB ZABIJA PTAKI` | You are somewhere in Poland and a sign stops you. Three words, and you are sure of one. |
 | 2 | The phrase highlighted, being copied | Highlight it. Copy it. |
-| 3 | Translate page, phrase pasted in | Paste it into Polucz. |
-| 4 | Translate page, English shown | Tap Translate. Now you know what it said. |
-| 5 | The identified words listed underneath | Polucz picks out the individual words — not just the sentence. |
-| 6 | Adding two of them | Keep the ones worth keeping. |
-| 7 | Vocabulary list, the new cards in it | They are in your list, grammar already filled in. |
+| 3 | Translate page, the Polish pasted in | Paste it into Polucz. |
+| 4 | Translate page, English shown | *Bread kills birds.* Now you know what it said. |
+| 5 | The three words listed underneath, lemmatised | And Polucz found the words behind the words — *zabija* is `zabijać`, *ptaki* is `ptak`. |
+| 6 | Adding `zabijać` and `ptak` | Keep the two you could not have looked up. |
+| 7 | Vocabulary list with both cards in it | They are in your list, every form already filled in. |
 | 8 | A flashcard mid-review | And now you are learning them. |
 
-**Artwork note.** Panel 1 needs original or properly-licensed art. The mockup used
-a Dragon Ball page, which cannot ship — it is Shueisha's. Either commission the
-style, use a public-domain comic, or make the source text something ownable: a
-café menu, a station sign, a message from a friend. A message thread may in fact
-be the most relatable of the three.
+**Photo note.** Own photograph, so there are no rights to clear. Needs rotating 90°
+and cropping tight on the sign so the willow branches do not compete. Runner-up if
+it fails at final size: `ZAKAZ KĄPIELI — GROZI PORAŻENIEM PRĄDEM`, grammatically
+even richer (*prądem* is instrumental) but a weaker photograph.
+
+**Asset note for the capture script.** Panels 3–8 must show the app holding *these*
+words, not the demo deck's. Add `ptak` and `zabijać` to `demo-deck.json` and drive
+the translate flow with this sentence, so the screenshots and the photograph agree.
+Placeholders until then.
 
 **Closing line under the panels:** That is the whole loop. Everything else in the
 app serves it.
