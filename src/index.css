@@ -89,7 +89,11 @@
      white and dark labels alike -- at full strength the label sits at 2.7:1.
      Light needs no help: dark ink on the same wash measures 8:1. */
   --btn-wash-opacity: 0.35;
-  --mastered-base-opacity: 0.3;
+  --mastered-base-opacity: 0.4;
+  --holo-shimmer-opacity: 0.26;
+  --holo-shimmer-gain: 1.08;
+  --holo-cosmos-opacity: 0.26;
+  --holo-glitter-opacity: 0.42;
   --blob-opacity: 0.6;
   --page-bg: #121212;
   /* The base wash AppBackground paints under the page gradient. */
@@ -118,6 +122,10 @@ html.theme-light {
   --blob-opacity: 0.4;
   --btn-wash-opacity: 0.7;
   --mastered-base-opacity: 0.4;
+  --holo-shimmer-opacity: 0.6;
+  --holo-shimmer-gain: 1.25;
+  --holo-cosmos-opacity: 0.4;
+  --holo-glitter-opacity: 0.68;
   --page-bg: #F7F4F1;               /* warm off-white; a pure white reads clinical under glass */
   --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(255, 253, 251, 0.92) 62.02%, rgba(247, 244, 241, 0.75) 100%);
   --nav-scrim: linear-gradient(to top, #F7F4F1 14%, rgba(247, 244, 241, 0.72) 42%, transparent 100%);
@@ -511,20 +519,48 @@ html.theme-light .kube-glass-bg::after {
   z-index: 1;
   background-image:
     /* metallic specular sheen sweep */
-    linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.42) 47%, rgba(255, 240, 210, 0.28) 50%, transparent 60%),
-    /* gold + prismatic foil bands */
-    repeating-linear-gradient(115deg,
-      rgba(255, 215, 120, 0.42) 0%,
-      rgba(255, 120, 200, 0.34) 7%,
-      rgba(120, 200, 255, 0.34) 14%,
-      rgba(150, 255, 190, 0.34) 21%,
-      rgba(255, 215, 120, 0.42) 28%);
-  background-size: 300% 300%, 220% 220%;
+    linear-gradient(135deg, transparent 38%, rgba(255, 255, 255, 0.42) 47%, rgba(255, 240, 210, 0.28) 50%, transparent 60%),
+    /* Gold + prismatic foil streaks on a true diagonal. 115deg sat only 25
+       degrees off vertical and read as upright stripes.
+
+       The gaps are the point. A repeating gradient whose stops run colour to
+       colour tiles the card edge to edge with foil; putting transparency either
+       side of a narrow prismatic run turns it into separate streaks with dark
+       card between them. Period 22%, of which only 6% carries colour. */
+    repeating-linear-gradient(135deg,
+      transparent 0%,
+      transparent 8%,
+      rgba(255, 215, 120, 0.42) 9%,
+      rgba(255, 120, 200, 0.34) 10.5%,
+      rgba(120, 200, 255, 0.34) 12%,
+      rgba(150, 255, 190, 0.34) 13.5%,
+      transparent 15%,
+      transparent 22%);
+  /* The streak layer is scaled far less than before: background-size multiplies
+     the band width on screen, so 220% was undoing the narrow period. */
+  background-size: 300% 300%, 130% 130%;
   /* Position + hue follow the device tilt (see holoMotion.ts) — no auto-loop. */
   background-position: var(--holo-shift, 50%) 50%, var(--holo-shift, 50%) 50%;
-  filter: hue-rotate(var(--holo-hue, 0deg)) brightness(1.25) saturate(1.75) contrast(1.2);
+  /* Only a swathe of the card is foil at any moment, and the swathe travels with
+     the tilt. Without this the whole surface shines at once, which reads as a
+     printed pattern rather than as light moving across a real card. */
+  -webkit-mask-image: linear-gradient(135deg,
+    transparent 26%, #000 44%, #000 56%, transparent 74%);
+  mask-image: linear-gradient(135deg,
+    transparent 26%, #000 44%, #000 56%, transparent 74%);
+  -webkit-mask-size: 260% 260%;
+  mask-size: 260% 260%;
+  -webkit-mask-position: var(--holo-shift, 50%) var(--holo-y, 50%);
+  mask-position: var(--holo-shift, 50%) var(--holo-y, 50%);
+  filter: hue-rotate(var(--holo-hue, 0deg)) brightness(var(--holo-shimmer-gain))
+          saturate(1.75) contrast(1.2);
   mix-blend-mode: color-dodge;
-  opacity: 0.4;                  /* subtle at rest */
+  /* Held back at rest and paid out as the phone tilts. --pointer-from-center is
+     already maintained by holoMotion.ts: 0 lying flat, 1 at full lean. Per theme
+     because color-dodge on a dark card has far more headroom than overlay on a
+     pale one, so the same number is not the same brightness. */
+  opacity: calc(var(--holo-shimmer-opacity) *
+                (0.22 + 0.78 * var(--pointer-from-center, 0)));
   transition: opacity 0.6s ease;
   will-change: filter, background-position;
 }
@@ -545,19 +581,21 @@ html.theme-light .kube-glass-bg::after {
   /* overlay (not color-dodge) so the sparkle takes on the colour of the foil
      beneath it — coloured glints rather than blown-out white. */
   mix-blend-mode: overlay;
-  opacity: 0.72;                 /* slightly muted so the specks aren't bright white */
+  /* Per theme. overlay lifts a speck much harder against a dark card than a
+     pale one, so dark needs a lower number to land at the same subtlety. */
+  opacity: var(--holo-glitter-opacity);
   transition: opacity 0.6s ease;
   /* Reveal streaks aligned to the shimmer's sheen (same 115deg / 300% / path /
      duration) so it reads as one light. One bright main band (full sparkle,
      over the specular sheen) plus smaller lower-alpha satellite bands so the
      grain also peeks through faintly over the surrounding prismatic foil. */
-  -webkit-mask-image: linear-gradient(115deg,
+  -webkit-mask-image: linear-gradient(135deg,
     transparent 26%, rgba(0,0,0,0.22) 29%, transparent 33%,
     rgba(0,0,0,0.32) 38%, transparent 42%,
     rgba(0,0,0,0.85) 46%, #000 48%, rgba(0,0,0,0.85) 50%, transparent 54%,
     rgba(0,0,0,0.30) 59%, transparent 63%,
     rgba(0,0,0,0.20) 69%, transparent 73%);
-          mask-image: linear-gradient(115deg,
+          mask-image: linear-gradient(135deg,
     transparent 26%, rgba(0,0,0,0.22) 29%, transparent 33%,
     rgba(0,0,0,0.32) 38%, transparent 42%,
     rgba(0,0,0,0.85) 46%, #000 48%, rgba(0,0,0,0.85) 50%, transparent 54%,
@@ -741,7 +779,6 @@ html.theme-light .holo-edge {
    down — on a pale base the same opacity reads far heavier. */
 html.theme-light .holo-shimmer {
   mix-blend-mode: overlay;
-  opacity: 0.72;
 }
 html.theme-light .card-mastered:hover .holo-shimmer,
 html.theme-light .card-mastered:active .holo-shimmer {
@@ -749,7 +786,6 @@ html.theme-light .card-mastered:active .holo-shimmer {
 }
 html.theme-light .holo-glitter {
   mix-blend-mode: overlay;
-  opacity: 0.68;
 }
 /* cosmos-shine is the modal's extra layer — the list card never renders it,
    which is why the modal came out paler than the cards despite sharing a base.
@@ -759,7 +795,6 @@ html.theme-light .holo-glitter {
    are fine either way. */
 html.theme-light .cosmos-shine {
   mix-blend-mode: overlay;
-  opacity: 0.55;
 }
 
 /* The modal turns the sweep up (.holo-full .holo-shimmer) for the same reason
@@ -1008,6 +1043,12 @@ html.theme-light .holo-full button * {
     calc(10% + (var(--pointer-from-left, 0.5) * 80%)) calc(10% + (var(--pointer-from-top, 0.5) * 80%));
   filter: brightness(1) contrast(1) saturate(0.8);
   mix-blend-mode: color-dodge;
+  /* The star field was the real reason a mastered card shone edge to edge: it
+     covers the whole surface, ran at full strength on dark, and unlike the
+     sheen it never responded to tilt. Now it is held back and partly paid out
+     with the lean, like the rest of the foil. */
+  opacity: calc(var(--holo-cosmos-opacity) *
+                (0.55 + 0.45 * var(--pointer-from-center, 0)));
 }
 .cosmos-shine::before {
   z-index: 2;
