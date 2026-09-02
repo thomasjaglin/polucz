@@ -1,0 +1,453 @@
+[
+ {
+  "id": "kawa",
+  "pl": "kawa",
+  "en": "coffee",
+  "type": "noun",
+  "enriched": true,
+  "left": "nom",
+  "right": "f",
+  "tags": [
+   "noun"
+  ],
+  "gender": "f.",
+  "plAlt": "kawy",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "singular": [
+    "kawa",
+    "kawy",
+    "kawie",
+    "kawę",
+    "kawą",
+    "kawie",
+    "kawo"
+   ],
+   "plural": [
+    "kawy",
+    "kaw",
+    "kawom",
+    "kawy",
+    "kawami",
+    "kawach",
+    "kawy"
+   ]
+  }
+ },
+ {
+  "id": "dom",
+  "pl": "dom",
+  "en": "house",
+  "type": "noun",
+  "enriched": true,
+  "left": "nom",
+  "right": "m",
+  "tags": [
+   "noun"
+  ],
+  "gender": "m.",
+  "plAlt": "domy",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "singular": [
+    "dom",
+    "domu",
+    "domowi",
+    "dom",
+    "domem",
+    "domu",
+    "domu"
+   ],
+   "plural": [
+    "domy",
+    "domów",
+    "domom",
+    "domy",
+    "domami",
+    "domach",
+    "domy"
+   ]
+  }
+ },
+ {
+  "id": "książka",
+  "pl": "książka",
+  "en": "book",
+  "type": "noun",
+  "enriched": true,
+  "left": "nom",
+  "right": "f",
+  "tags": [
+   "noun"
+  ],
+  "gender": "f.",
+  "plAlt": "książki",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "singular": [
+    "książka",
+    "książki",
+    "książce",
+    "książkę",
+    "książką",
+    "książce",
+    "książko"
+   ],
+   "plural": [
+    "książki",
+    "książek",
+    "książkom",
+    "książki",
+    "książkami",
+    "książkach",
+    "książki"
+   ]
+  }
+ },
+ {
+  "id": "pies",
+  "pl": "pies",
+  "en": "dog",
+  "type": "noun",
+  "enriched": true,
+  "left": "nom",
+  "right": "m",
+  "tags": [
+   "noun"
+  ],
+  "gender": "m.",
+  "plAlt": "psy",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "singular": [
+    "pies",
+    "psa",
+    "psu",
+    "psa",
+    "psem",
+    "psie",
+    "psie"
+   ],
+   "plural": [
+    "psy",
+    "psów",
+    "psom",
+    "psy",
+    "psami",
+    "psach",
+    "psy"
+   ]
+  }
+ },
+ {
+  "id": "mówić",
+  "pl": "mówić",
+  "en": "to speak",
+  "type": "verb",
+  "enriched": true,
+  "left": "impf",
+  "right": "impf",
+  "tags": [
+   "verb"
+  ],
+  "conjugations": {
+   "present": [
+    "mówię",
+    "mówisz",
+    "mówi",
+    "mówimy",
+    "mówicie",
+    "mówią"
+   ],
+   "past": [
+    "mówiłem",
+    "mówiłeś",
+    "mówił",
+    "mówiliśmy",
+    "mówiliście",
+    "mówili"
+   ],
+   "past2": [
+    "mówiłam",
+    "mówiłaś",
+    "mówiła",
+    "mówiłyśmy",
+    "mówiłyście",
+    "mówiły"
+   ]
+  },
+  "otherForm": {
+   "label": "pf form",
+   "word": "powiedzieć"
+  }
+ },
+ {
+  "id": "czytać",
+  "pl": "czytać",
+  "en": "to read",
+  "type": "verb",
+  "enriched": true,
+  "left": "impf",
+  "right": "impf",
+  "tags": [
+   "verb"
+  ],
+  "conjugations": {
+   "present": [
+    "czytam",
+    "czytasz",
+    "czyta",
+    "czytamy",
+    "czytacie",
+    "czytają"
+   ],
+   "past": [
+    "czytałem",
+    "czytałeś",
+    "czytał",
+    "czytaliśmy",
+    "czytaliście",
+    "czytali"
+   ],
+   "past2": [
+    "czytałam",
+    "czytałaś",
+    "czytała",
+    "czytałyśmy",
+    "czytałyście",
+    "czytały"
+   ]
+  },
+  "otherForm": {
+   "label": "pf form",
+   "word": "przeczytać"
+  }
+ },
+ {
+  "id": "jeść",
+  "pl": "jeść",
+  "en": "to eat",
+  "type": "verb",
+  "enriched": true,
+  "left": "impf",
+  "right": "impf",
+  "tags": [
+   "verb"
+  ],
+  "conjugations": {
+   "present": [
+    "jem",
+    "jesz",
+    "je",
+    "jemy",
+    "jecie",
+    "jedzą"
+   ],
+   "past": [
+    "jadłem",
+    "jadłeś",
+    "jadł",
+    "jedliśmy",
+    "jedliście",
+    "jedli"
+   ],
+   "past2": [
+    "jadłam",
+    "jadłaś",
+    "jadła",
+    "jadłyśmy",
+    "jadłyście",
+    "jadły"
+   ]
+  },
+  "otherForm": {
+   "label": "pf form",
+   "word": "zjeść"
+  }
+ },
+ {
+  "id": "trudny",
+  "pl": "trudny",
+  "en": "difficult",
+  "type": "adjective",
+  "enriched": true,
+  "left": "nom",
+  "right": "m",
+  "tags": [
+   "adjective"
+  ],
+  "comparative": "trudniejszy",
+  "superlative": "najtrudniejszy",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "masculine": [
+    "trudny",
+    "trudnego",
+    "trudnemu",
+    "trudnego/trudny",
+    "trudnym",
+    "trudnym",
+    "trudny"
+   ],
+   "feminine": [
+    "trudna",
+    "trudnej",
+    "trudnej",
+    "trudną",
+    "trudną",
+    "trudnej",
+    "trudna"
+   ],
+   "neuter": [
+    "trudne",
+    "trudnego",
+    "trudnemu",
+    "trudne",
+    "trudnym",
+    "trudnym",
+    "trudne"
+   ],
+   "pluralMasc": [
+    "trudni",
+    "trudnych",
+    "trudnym",
+    "trudnych",
+    "trudnymi",
+    "trudnych",
+    "trudni"
+   ],
+   "pluralNonMasc": [
+    "trudne",
+    "trudnych",
+    "trudnym",
+    "trudne",
+    "trudnymi",
+    "trudnych",
+    "trudne"
+   ]
+  }
+ },
+ {
+  "id": "piękny",
+  "pl": "piękny",
+  "en": "beautiful",
+  "type": "adjective",
+  "enriched": true,
+  "left": "nom",
+  "right": "m",
+  "tags": [
+   "adjective"
+  ],
+  "comparative": "piękniejszy",
+  "superlative": "najpiękniejszy",
+  "declensions": {
+   "cases": [
+    "mianownik",
+    "dopełniacz",
+    "celownik",
+    "biernik",
+    "narzędnik",
+    "miejscownik",
+    "wołacz"
+   ],
+   "masculine": [
+    "piękny",
+    "pięknego",
+    "pięknemu",
+    "pięknego/piękny",
+    "pięknym",
+    "pięknym",
+    "piękny"
+   ],
+   "feminine": [
+    "piękna",
+    "pięknej",
+    "pięknej",
+    "piękną",
+    "piękną",
+    "pięknej",
+    "piękna"
+   ],
+   "neuter": [
+    "piękne",
+    "pięknego",
+    "pięknemu",
+    "piękne",
+    "pięknym",
+    "pięknym",
+    "piękne"
+   ],
+   "pluralMasc": [
+    "piękni",
+    "pięknych",
+    "pięknym",
+    "pięknych",
+    "pięknymi",
+    "pięknych",
+    "piękni"
+   ],
+   "pluralNonMasc": [
+    "piękne",
+    "pięknych",
+    "pięknym",
+    "piękne",
+    "pięknymi",
+    "pięknych",
+    "piękne"
+   ]
+  }
+ },
+ {
+  "id": "bardzo",
+  "pl": "bardzo",
+  "en": "very",
+  "type": "unknown",
+  "enriched": true,
+  "left": "adv",
+  "right": "adv",
+  "tags": [
+   "unknown"
+  ],
+  "info": "Adverb. Intensifier, used before adjectives and adverbs."
+ }
+]

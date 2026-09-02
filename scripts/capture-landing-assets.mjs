@@ -8,8 +8,11 @@
  *     around them, drop shadow kept
  *   - whole screens with the gradient intact, for phone mockups
  *
- * It seeds the bundled starter deck, never the real vocabulary: no personal data
- * belongs in a marketing image.
+ * It seeds assets/landing/demo-deck.json, never the real vocabulary: no personal
+ * data belongs in a marketing image. That fixture is not the shipped starter deck
+ * either — the app now welcomes you with just dzień and dobry, and a two-card list
+ * makes a poor screenshot. Ten words, one of every card shape, one of them mastered
+ * so the foil appears.
  *
  * The glass surfaces sample whatever is behind them, so on a transparent canvas they
  * would come out nearly invisible. FILL below gives them a stand-in frosted fill —
@@ -25,7 +28,22 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs'
 
 const OUT = 'assets/landing'
 mkdirSync(OUT, { recursive: true })
-const deck = readFileSync('src/data/starterDeck.json', 'utf8')
+const deck = readFileSync('assets/landing/demo-deck.json', 'utf8')
+// A card is mastered when its review state says so, and the foil is one of the
+// most distinctive things the app draws — without this the shots omit it.
+// The list renders newest-first, i.e. the reverse of the fixture's order, so the
+// mastered word has to sit near the END of demo-deck.json to appear near the top.
+// Every walkthrough marked finished, or each page offers its tour card over
+// the shot. The store keys an id to a RECORD; a bare status string is ignored.
+const tours = JSON.stringify(Object.fromEntries(
+  ['arrival', 'flashcards', 'quiz', 'audio'].map(id => [id, { status: 'done' }])))
+const reviews = JSON.stringify({
+  'piękny': {
+    interval: 180, easeFactor: 2.5, reviewCount: 14, conquered: true,
+    conquerProgress: 3, lastReviewed: '2026-09-01',
+    dueDate: '2027-03-01',
+  },
+})
 const PAD = 44
 
 const FILL = {
@@ -48,12 +66,12 @@ const HELPERS = `
 `
 
 async function session(theme, fn) {
-  const client = await CDP({ port: 9222 })
+  const client = await CDP({ host: '127.0.0.1', port: 9222 })
   const { Page, Runtime, Emulation } = client
   await Page.enable(); await Runtime.enable()
   await Emulation.setDeviceMetricsOverride({ width: 430, height: 932, deviceScaleFactor: 3, mobile: true })
-  await Page.navigate({ url: 'http://localhost:4173/' }); await Page.loadEventFired()
-  await Runtime.evaluate({ expression: `localStorage.setItem('polucz_vocab', ${JSON.stringify(deck)}); localStorage.setItem('polucz_theme','${theme}')` })
+  await Page.navigate({ url: 'http://127.0.0.1:4173/' }); await Page.loadEventFired()
+  await Runtime.evaluate({ expression: `localStorage.setItem('polucz_vocab', ${JSON.stringify(deck)}); localStorage.setItem('polucz_reviews', ${JSON.stringify(reviews)}); localStorage.setItem('polucz_theme','${theme}'); localStorage.setItem('polucz_tours', ${JSON.stringify(tours)})` })
   await Page.reload(); await Page.loadEventFired()
   await new Promise(r => setTimeout(r, 2600))
   await Runtime.evaluate({ expression: HELPERS })
@@ -122,21 +140,40 @@ for (const theme of ['light', 'dark']) {
   await session(theme, async ({ shot, full, nav, js }) => {
     await full('screen-list')
     await shot('card', `document.querySelector('.card-cv')`)
-    await shot('filter-pane', `window.__byText('26 words', 260)`)
+    await shot('filter-pane', `window.__byText('10 words', 260)`)
     await shot('bottom-nav', `document.querySelector('[class*="fixed bottom-"]')`)
 
-    // Word detail — the click handler sits on the inner .perspective element.
-    await js(`document.querySelector('.perspective')?.click()`)
+    // Word detail — open `trudny` specifically, not whichever card happens to sort
+    // first: the landing copy names that table as its most convincing image.
+    // The click handler sits on the inner .perspective element.
+    await js(`[...document.querySelectorAll('.perspective')].find(e => /trudny/.test(e.innerText))?.click()`)
     await new Promise(r => setTimeout(r, 2000))
     const opened = await js(`/mianownik|dopełniacz|Examples|Forms/i.test(document.body.innerText)`)
     console.log('  detail modal open:', opened)
-    if (opened) { await full('screen-detail'); await shot('word-detail', `window.__byText('difficult', 900)`) }
-    await js(`[...document.querySelectorAll('button')].find(b => /close/.test(b.innerText))?.click()`)
-    await new Promise(r => setTimeout(r, 1200))
+    if (opened) {
+      await full('screen-detail')
+      // The tightest element that still holds both the headword and the paradigm.
+      // Matching on a class is brittle here — the modal's wrapper classes have
+      // changed twice — whereas "the smallest box containing all of it" does not.
+      await shot('word-detail', `
+        (() => {
+          const hit = [...document.querySelectorAll('div')].filter(el => {
+            const t = el.innerText || ''
+            return t.includes('difficult') && /STOPNIOWANIE|POJEDYNCZA|MIANOWNIK/i.test(t)
+          })
+          if (!hit.length) return null
+          return hit.reduce((best, el) =>
+            el.scrollHeight * el.scrollWidth < best.scrollHeight * best.scrollWidth ? el : best)
+        })()`)
+    }
+    await js(`[...document.querySelectorAll('span.material-symbols-rounded')].find(s => s.textContent.trim() === 'close')?.closest('button')?.click()`)
+    await new Promise(r => setTimeout(r, 1400))
+    const stillOpen = await js(`/STOPNIOWANIE|POJEDYNCZA/i.test(document.body.innerText)`)
+    if (stillOpen) console.log('  WARNING: modal did not close — later shots would be of it')
 
     await nav('dynamic_feed'); await full('screen-flashcards')
     await nav('question_mark'); await full('screen-quiz')
-    await shot('quiz-modes', `window.__byText('Declension Quiz', 200)`)
+    await shot('quiz-modes', `window.__byText('Declension quiz', 200)`)
     await nav('spatial_audio'); await full('screen-audio')
   })
 }

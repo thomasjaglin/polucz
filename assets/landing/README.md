@@ -1,10 +1,24 @@
 # Landing page assets
 
-Captured from the shipping app with `scripts/capture-landing-assets.mjs`.
-Assets were captured with a bundled sample vocabulary, never the real one —
-nothing personal appears in a marketing image. (They predate the switch to the
-two-word *dzień dobry* welcome, so the list shots still show a longer list;
-re-run the capture script if you want them to match the shipping first run.)
+Captured from the shipping app with `npm run build && npx vite preview --host
+127.0.0.1 --port 4173`, headless Chrome on `--remote-debugging-port=9222`, then
+`node scripts/capture-landing-assets.mjs`.
+
+The fixture is `demo-deck.json` in this folder — **never** the real vocabulary,
+so nothing personal can reach a marketing image. It is not the shipped starter
+deck either: the app welcomes a new user with just *dzień* and *dobry*, and a
+two-card list makes a poor screenshot. Ten words instead, one of every card shape
+the app can draw — four nouns, three verbs, two adjectives and one with no
+paradigm at all — lifted from the 26-word deck the app used to install, so every
+form is still the dictionary-checked one.
+
+`piękny` is seeded as mastered so the holographic foil appears. The list renders
+newest-first, i.e. the reverse of the fixture's order, so a word has to sit near
+the END of `demo-deck.json` to appear near the top of a screenshot.
+
+Both hosts must be pinned to `127.0.0.1`: Vite and Chrome otherwise disagree
+about whether `localhost` means IPv4 or IPv6, and the capture silently records
+Chrome's error page instead of the app.
 
 ## Transparent element cut-outs
 
@@ -13,11 +27,11 @@ straight onto any background.
 
 | File | What it is | Size (pt) |
 |---|---|---|
-| `card-{light,dark}.png` | One vocabulary card — *trudny / difficult* | 378 × 99 |
+| `card-{light,dark}.png` | One vocabulary card — *bardzo / very* | 378 × 99 |
 | `filter-pane-{light,dark}.png` | Type filters, search and word count | 378 × 97 |
 | `bottom-nav-{light,dark}.png` | The floating navigation pill | 262 × 62 |
-| `quiz-modes-{light,dark}.png` | A quiz-mode row | 378 × 87 |
-| `word-detail-{light,dark}.png` | The full word card with its declension table | 382 × 1287 |
+| `quiz-modes-{light,dark}.png` | Both quiz modes | 378 × 190 |
+| `word-detail-{light,dark}.png` | The full word card with its declension table — *trudny* | 382 × 1043 |
 
 **One caveat.** The app's glass has no colour of its own — it samples whatever is
 behind it. On a transparent canvas there is nothing to sample, so the capture gives
