@@ -10,7 +10,6 @@ import {
 import GlassPane from './GlassPane'
 import { setAnchor } from './tour/anchors'
 import { TOUR_EXAMPLES, FAKE_LATENCY, fakeWait, tourEnrichment } from '../data/tourFixture'
-import QuizQuestionsSection from './QuizQuestionsSection'
 import GlassButton from './GlassButton'
 import MasteredBurst from './MasteredBurst'
 import MasteredLightBands from './MasteredLightBands'
@@ -781,7 +780,6 @@ export default function WordDetailModal({ entry, mastered = false, flipIn, overl
               tourActive={tourActive}
               onTourEvent={onTourEvent}
             />
-            <QuizQuestionsSection entry={entry} />
             </div>
           </div>
         </div>
