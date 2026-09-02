@@ -362,33 +362,39 @@ export default function ApiConfigPage({ onSave }: Props) {
           not have. */}
       {(voice === 'missing' || voice === 'unknown') && (
         <Section title="Pronunciation">
-          <Row
-            label={voice === 'missing' ? MISSING_VOICE_MESSAGE : 'Could not check the speech engine'}
-            hint={voice === 'missing'
+          {/* Full width, stacked. A Row would put this beside the button and
+              squeeze a two-line explanation into a column narrow enough to
+              wrap it four times — and unlike every other row on this page,
+              there is no compact control to sit opposite, only a call to
+              action. So it takes the same shape as the API sections: what is
+              wrong, what it costs you, then the way to fix it. */}
+          <h3 className="mb-2 font-instrument text-[15px] font-semibold text-ink">
+            {voice === 'missing' ? MISSING_VOICE_MESSAGE : 'Could not check the speech engine'}
+          </h3>
+          <p className="mb-6 font-instrument text-[13px] leading-relaxed ink-tertiary">
+            {voice === 'missing'
               ? 'Polish words will be silent until one is added. Everything else works.'
               : 'Pronunciation may not work on this device.'}
+          </p>
+          <SolidButton
+            onClick={async () => {
+              const opened = await openVoiceSettings()
+              haptics.tap()
+              if (opened === 'none') {
+                setVoiceNote('This device has no screen for that. Look under Settings \u2192 System \u2192 Languages & input \u2192 Text-to-speech output.')
+                return
+              }
+              setVoiceNote(opened === 'settings'
+                ? 'Opened text-to-speech settings \u2014 add Polish under your engine\u2019s language data.'
+                : null)
+              // Re-ask on the way back rather than assuming it worked.
+              setVoice(null)
+              polishVoiceStatus().then(setVoice)
+            }}
+            className="w-full"
           >
-            <button
-              onClick={async () => {
-                const opened = await openVoiceSettings()
-                haptics.tap()
-                if (opened === 'none') {
-                  setVoiceNote('This device has no screen for that. Look under Settings → System → Languages & input → Text-to-speech output.')
-                  return
-                }
-                setVoiceNote(opened === 'settings'
-                  ? 'Opened text-to-speech settings — add Polish under your engine’s language data.'
-                  : null)
-                // Re-ask on the way back rather than assuming it worked.
-                setVoice(null)
-                polishVoiceStatus().then(setVoice)
-              }}
-              className="relative flex h-[40px] shrink-0 items-center justify-center overflow-hidden rounded-full border border-ink/20 px-5 transition-all hover:scale-[1.02] active:scale-[0.98] group"
-            >
-              <GlassPane borderRadius={20} className="absolute inset-0 z-0 rounded-full bg-ink/5 transition-colors group-hover:bg-ink/10" />
-              <span className="relative z-10 font-instrument text-[14px] text-ink/70">Add a voice</span>
-            </button>
-          </Row>
+            Add a voice
+          </SolidButton>
           {voiceNote && (
             <p className="mt-4 font-instrument text-[13px] leading-relaxed ink-tertiary">{voiceNote}</p>
           )}
