@@ -32,7 +32,7 @@ itself. The numbers also went stale within a month.
 
 ## Navigation
 
-`Logo · How it works · Setup · Download · GitHub`
+`Logo · Download · Setup · GitHub`
 
 Footer: `Privacy · GitHub · Sentences from Tatoeba (CC BY 2.0 FR)`
 
@@ -46,13 +46,14 @@ one thing standing between someone downloading this and it being useful.
 
 ### 1. Hero
 
-- **Eyebrow:** Polish vocabulary, on your terms
-- **Headline:** **The words you actually need, drilled until they stick**
-- **Sub:** You come across a Polish word. Polucz fills in the translation, the
-  full declension or conjugation, and real example sentences — then schedules it
-  for review, quizzes you on every form, and reads it aloud.
-- **Primary CTA:** Download for Android · **Secondary:** How it works
-- **Under the buttons, small:** Free · No account · Your words stay on your phone
+- **Eyebrow:** Build your own Polish vocabulary!
+- **Headline:** **The words you actually encounter, explained and learned.**
+- **Sub:** You come across a Polish sentence or word. Polucz gives you the translation, 
+the basic forms of those words. Add the words and you can play them outloud, check full 
+declension tables, conjugations, usage example and can play flashcard and quiz games to
+learn those words productively.
+- **Primary CTA:** Download .apk for Android · **Secondary:** How to set up the app
+- **Under the buttons, small:** Free · No account · No catch
 - **Visual:** the app mark, then `screen-list-light.png` in a phone frame with
   `card-light.png` and `filter-pane-light.png` floating out at the edges.
 
@@ -138,7 +139,78 @@ Prepare a word once and it plays back in the audio tab as a listening drill —
 useful on a commute with the screen off.
 *Asset:* `screen-audio-light.png`
 
-### 4. Privacy — short, plain, and accurate
+### 4. How it works — the diagram
+
+Placed after the features and leading into the privacy section, so the privacy
+claims read as consequences of the shape rather than as assertions about it.
+
+One picture, placed after the features and carrying the privacy section that
+follows it. Every competing app routes you through its own server: you → their
+backend → their AI → their copy of your vocabulary. Polucz's whole argument is the
+missing middle, and that is a shape, not a paragraph.
+
+**What it shows.** Your phone in the centre, holding everything. Three thin arrows
+leaving it, each only when you have set up a key. And, drawn rather than stated,
+the empty space where a server would be.
+
+```
+                    ┌──────────────────────────────────────┐
+                    │            YOUR PHONE                │
+                    │                                      │
+                    │   your words · review schedule       │
+                    │   your API keys · 124k Polish        │
+                    │   sentences · the device's voice     │
+                    └───────┬──────────┬──────────┬────────┘
+                            │          │          │
+                        only if you have set up a key
+                            │          │          │
+                            ▼          ▼          ▼
+                       ┌────────┐ ┌─────────┐ ┌─────────┐
+                       │ DeepL  │ │ your AI │ │ Tatoeba │
+                       └────────┘ └─────────┘ └─────────┘
+                      the text you  the word    one word,
+                      asked to      you are     as a search
+                      translate     looking up  query
+
+                    ╳  no Polucz server
+                    ╳  no account
+                    ╳  no copy of your words anywhere else
+```
+
+**Label the arrows with what actually travels.** Not "sends data" — the exact
+thing, matching the privacy policy word for word. That makes one diagram do two
+jobs: it explains the product and it evidences the privacy claim, which is far
+more convincing than a paragraph asserting the same.
+
+**A second, smaller state beside it — the app with no keys at all:**
+
+```
+                    ┌──────────────────────────────────────┐
+                    │            YOUR PHONE                │
+                    │                                      │
+                    │   flashcards · quizzes · pronun-     │
+                    │   ciation · browsing · export        │
+                    └──────────────────────────────────────┘
+
+                         no arrows. no network at all.
+```
+
+That second frame is the one people will not expect, and it is true: with no keys
+configured the app makes no network request whatsoever, and the fonts are bundled
+so even launching it is silent.
+
+**Build notes.**
+
+- The three outbound nodes are *not* Polucz's services and should not look like
+  features. Draw them plainly — small, outlined, clearly outside the phone.
+- The crossed-out server is the punchline. It needs to read as deliberate absence,
+  not as a missing image.
+- Animate on scroll if anything on the page animates: phone first, then the arrows
+  drawing outward, then the crossed-out server appearing last. The order is the
+  argument.
+- Both themes. The arrows are the accent colour; the crossed-out row is quiet.
+
+### 5. Privacy — short, plain, and accurate
 
 > **This section was factually wrong in the first draft** and must not regress. The
 > old copy said translation goes to DeepL and *"nothing else is sent"*. Untrue: the
@@ -161,7 +233,7 @@ before you paste one in.
 
 *Link:* Read the full privacy policy →
 
-### 5. Open source
+### 6. Open source
 
 Open source under GPL-3.0. The source is on GitHub, and a fork that gets
 distributed ships its source too. If you would rather check the privacy claims
@@ -169,7 +241,7 @@ than take them on trust, every network call the app makes is in one file.
 
 *Link:* github.com/thomasjaglin/polucz
 
-### 6. FAQ
+### 7. FAQ
 
 **Is there an iPhone version?**
 No, and none is planned. Pronunciation uses Android's own speech engine, so the
@@ -197,7 +269,7 @@ Only where you put it. Export writes a JSON file to your Downloads folder whenev
 you ask; import reads it back on a new phone. There is no cloud sync, which means
 nothing to breach and nothing to lose access to.
 
-### 7. Footer CTA
+### 8. Footer CTA
 
 **Ready to start?** Free on Android. No account, no subscription, no ads.
 Download for Android →
