@@ -89,6 +89,7 @@
      white and dark labels alike -- at full strength the label sits at 2.7:1.
      Light needs no help: dark ink on the same wash measures 8:1. */
   --btn-wash-opacity: 0.35;
+  --mastered-base-opacity: 0.3;
   --blob-opacity: 0.6;
   --page-bg: #121212;
   /* The base wash AppBackground paints under the page gradient. */
@@ -116,6 +117,7 @@ html.theme-light {
      opacity reads far heavier and drags the controls over it down. */
   --blob-opacity: 0.4;
   --btn-wash-opacity: 0.7;
+  --mastered-base-opacity: 0.4;
   --page-bg: #F7F4F1;               /* warm off-white; a pure white reads clinical under glass */
   --app-base: radial-gradient(62% 67.44% at 47.57% 50.05%, rgba(255, 253, 251, 0.92) 62.02%, rgba(247, 244, 241, 0.75) 100%);
   --nav-scrim: linear-gradient(to top, #F7F4F1 14%, rgba(247, 244, 241, 0.72) 42%, transparent 100%);
@@ -619,7 +621,16 @@ html.theme-light .mastered-glow {
 /* ─── Mastered card: per-type base ────────────────────────── */
 /* Was an inline style, which could only ever carry one palette. In CSS it can
    carry two, so the foil inverts with the theme instead of staying a dark
-   island in a light page. */
+   island in a light page.
+
+   The base is not painted at full strength. It sits over the card's ordinary
+   glass, so its opacity is what decides how far a mastered card travels from a
+   normal one — at 1 the row of them read as four different apps. Everything
+   above it (cosmos, glitter, shimmer) blends against whatever this leaves, so
+   this one number quiets the whole stack rather than just the colour. */
+.mastered-base {
+  opacity: var(--mastered-base-opacity);
+}
 .mastered-base[data-mastered-type="verb"]      { background: linear-gradient(135deg, #9B4FB0, #3A3AB5 55%, #1FB4CC); }
 .mastered-base[data-mastered-type="noun"]      { background: linear-gradient(135deg, #8A2E2E, #D07A2A 55%, #A0A830); }
 .mastered-base[data-mastered-type="adjective"] { background: linear-gradient(135deg, #1A5A30, #2AA840 55%, #145A3A); }
