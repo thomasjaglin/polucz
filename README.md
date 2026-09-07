@@ -1,5 +1,10 @@
 # Polucz
 
+**[Download the APK](https://polu.cz/polucz-1.0.0.apk)** — version 1.0.0 · 5.4 MB ·
+Android 7.0 or later. Not on the Play Store yet, so Android will ask you to allow
+installs from this source; [polu.cz/download](https://polu.cz/download) explains
+that prompt. Everything else lives at [polu.cz](https://polu.cz).
+
 A Polish vocabulary trainer for Android. Cards you write yourself, spaced
 repetition, pronunciation, and a quiz that builds its own questions on the
 device.
